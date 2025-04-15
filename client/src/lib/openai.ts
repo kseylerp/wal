@@ -49,7 +49,36 @@ export function parseTripsFromResponse(response: any): TripData[] | undefined {
   }
   
   try {
-    return response.tripData;
+    const trips = response.tripData;
+    
+    // Ensure all trips have properly typed data
+    const validatedTrips = trips.map((trip: any) => {
+      // Make sure journey segments have proper typing
+      if (trip.journey && trip.journey.segments) {
+        trip.journey.segments = trip.journey.segments.map((segment: any) => {
+          return {
+            ...segment,
+            // Ensure geometry is LineString type
+            geometry: {
+              type: 'LineString' as const,
+              coordinates: segment.geometry.coordinates
+            }
+          };
+        });
+      }
+      
+      // Log the trip data for debugging
+      console.log('Processed trip data:', {
+        title: trip.title,
+        location: trip.location,
+        markers: trip.markers ? trip.markers.length : 0,
+        segments: trip.journey ? trip.journey.segments.length : 0
+      });
+      
+      return trip;
+    });
+    
+    return validatedTrips;
   } catch (error) {
     console.error('Error parsing trip data:', error);
     return undefined;

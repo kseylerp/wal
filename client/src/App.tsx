@@ -8,18 +8,7 @@ import MapTest from "@/pages/MapTest";
 
 function Router() {
   return (
-    <div>
-      <nav className="bg-primary/20 py-2 mb-4">
-        <div className="container mx-auto flex gap-4 px-4">
-          <Link href="/">
-            <span className="text-primary hover:underline cursor-pointer">Chat</span>
-          </Link>
-          <Link href="/map-test">
-            <span className="text-primary hover:underline cursor-pointer">Map Test</span>
-          </Link>
-        </div>
-      </nav>
-      
+    <div className="h-screen flex flex-col">
       <Switch>
         <Route path="/" component={ChatInterface} />
         <Route path="/map-test" component={MapTest} />
