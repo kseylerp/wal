@@ -72,7 +72,7 @@ export function useChat() {
         id: uuidv4(),
         role: 'assistant',
         content: response.answer,
-        thinking: response.thinking,
+        thinking: response.thinking || '',
         timestamp: new Date().toISOString(),
         tripData,
       };

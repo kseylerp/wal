@@ -4,7 +4,7 @@ import { Message, TripData } from '../types/chat';
 
 export async function sendChatMessage(messages: Message[], userMessage: string): Promise<{
   answer: string;
-  thinking?: string;
+  thinking: string;
   tripData?: TripData[];
 }> {
   try {

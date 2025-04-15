@@ -3,7 +3,11 @@ import { Message } from '@/types/chat';
 import MessageBubble from './MessageBubble';
 import ThinkingIndicator from './ThinkingIndicator';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { formatThinking } from '@/lib/openai';
+// Create local formatThinking function
+const formatThinking = (thinking: string): string => {
+  if (!thinking) return '';
+  return thinking.replace(/\n/g, '<br />');
+};
 
 interface ChatContainerProps {
   messages: Message[];

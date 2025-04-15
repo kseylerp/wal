@@ -310,7 +310,7 @@ export async function processChatMessage(messages: Message[], userMessage: strin
         ...formattedMessages
       ],
       temperature: 1,
-      tools: tools,
+      tools: tools as any,
       tool_choice: "auto"
     });
 

@@ -3,7 +3,7 @@ import mapboxgl from 'mapbox-gl';
 import { JourneyMapProps, SegmentOption } from '@/types/trip';
 
 // Environment variable is injected at build time
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
+const MAPBOX_TOKEN = import.meta.env.MAPBOX_TOKEN || '';
 
 const JourneyMap: React.FC<JourneyMapProps> = ({
   mapId,
