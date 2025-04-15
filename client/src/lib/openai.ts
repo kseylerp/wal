@@ -24,23 +24,11 @@ export async function sendChatMessage(messages: Message[], userMessage: string):
     }
 
     const data = await response.json();
-    
-    // Server returns { userMessage, aiMessage } format
-    // Convert it to the expected format for the client
-    if (data.aiMessage) {
-      return {
-        answer: data.aiMessage.content || '',
-        thinking: data.aiMessage.thinking || '',
-        tripData: data.aiMessage.tripData,
-      };
-    } else {
-      // Fallback for backwards compatibility
-      return {
-        answer: data.answer || '',
-        thinking: data.thinking || '',
-        tripData: data.tripData,
-      };
-    }
+    return {
+      answer: data.answer,
+      thinking: data.thinking,
+      tripData: data.tripData,
+    };
   } catch (error) {
     console.error('Error sending chat message:', error);
     throw error;

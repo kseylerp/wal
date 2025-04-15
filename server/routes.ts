@@ -1,9 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import crypto from "crypto";
 import { storage } from "./storage";
 import { processChatMessage } from "./api/chat";
-import { getTripPlans } from "./api/openai";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // prefix all routes with /api
@@ -35,33 +33,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         message: 'An error occurred while processing your request',
         error: error instanceof Error ? error.message : String(error)
-      });
-    }
-  });
-  
-  // Trip planning endpoint using OpenAI assistant
-  app.post("/api/trip-plans", async (req, res) => {
-    try {
-      const { query } = req.body;
-      
-      if (!query || typeof query !== 'string') {
-        return res.status(400).json({ error: "Missing or invalid query parameter" });
-      }
-      
-      const openaiKey = process.env.OPENAI_API_KEY;
-      if (!openaiKey) {
-        return res.status(500).json({ error: "OpenAI API key not available. Please set OPENAI_API_KEY environment variable." });
-      }
-      
-      console.log("Generating trip plan for query:", query);
-      const tripPlans = await getTripPlans(query);
-      
-      res.json(tripPlans);
-    } catch (error: any) {
-      console.error('Error generating trip plans:', error);
-      res.status(500).json({ 
-        error: "Failed to generate trip plans", 
-        message: error.message || "Unknown error"
       });
     }
   });
