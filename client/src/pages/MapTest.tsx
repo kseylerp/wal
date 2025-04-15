@@ -478,7 +478,7 @@ const MapTest: React.FC = () => {
   };
   
   // Toggle a route's visibility
-  const toggleRoute = (activityId: string, activity: Activity) => {
+  const toggleRoute = async (activityId: string, activity: Activity) => {
     const map = mapRef.current;
     if (!map) return;
     
@@ -493,7 +493,7 @@ const MapTest: React.FC = () => {
       }
       
       // Show the new active route
-      addRouteToMap(map, activityId, activity);
+      await addRouteToMap(map, activityId, activity);
       setActiveRoute(activityId);
       
       // If location references exist, fly to the route
@@ -515,6 +515,9 @@ const MapTest: React.FC = () => {
           duration: 1000
         });
       }
+      
+      // Add a message to show what activity was selected
+      console.log(`Route activated: ${activity.title} (${activity.type}) - ${activityId}`);
     }
   };
 
