@@ -31,11 +31,15 @@ const TripCard: React.FC<TripCardProps> = ({
     setIsMapExpanded(!isMapExpanded);
   };
 
-  // Convert distance from meters to miles
-  const totalDistanceMiles = ((journey.totalDistance || 0) / 1609.34).toFixed(1);
+  // Convert distance from meters to miles with safety checks
+  const totalDistanceMiles = journey && journey.totalDistance 
+    ? (journey.totalDistance / 1609.34).toFixed(1) 
+    : '0.0';
   
-  // Convert duration from seconds to hours
-  const totalDurationHours = ((journey.totalDuration || 0) / 3600).toFixed(1);
+  // Convert duration from seconds to hours with safety checks
+  const totalDurationHours = journey && journey.totalDuration 
+    ? (journey.totalDuration / 3600).toFixed(1) 
+    : '0.0';
 
   return (
     <div className="border rounded-lg overflow-hidden shadow-md bg-white mb-4">

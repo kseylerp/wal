@@ -53,7 +53,7 @@ export interface JourneySegment {
   distance: number;
   duration: number;
   geometry: {
-    type: string;
+    type: 'LineString';
     coordinates: [number, number][];
   };
   terrain?: 'trail' | 'paved' | 'rocky' | 'mixed';

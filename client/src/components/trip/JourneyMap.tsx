@@ -179,21 +179,20 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
             // If directions API fails, fall back to using the provided geometry
             console.warn(`Using provided geometry for segment ${i} (${segment.mode})`);
             
-            // Make sure the geometry is properly typed for GeoJSON
-            const geoJSONGeometry = {
-              type: 'LineString' as const,
-              coordinates: segment.geometry.coordinates
-            };
-            
+            // Add source with the geometry from the segment
             initialMap.addSource(`route-${i}`, {
               type: 'geojson',
               data: {
                 type: 'Feature',
                 properties: {},
-                geometry: geoJSONGeometry
+                geometry: {
+                  type: 'LineString',
+                  coordinates: segment.geometry.coordinates
+                }
               }
             });
             
+            // Add layer for this source
             initialMap.addLayer({
               id: `route-${i}`,
               type: 'line',
@@ -219,11 +218,29 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
         }
       }
 
-      // Add markers for points of interest
-      markers.forEach(marker => {
-        new mapboxgl.Marker()
+      // Add markers for points of interest with different colors
+      markers.forEach((marker, index) => {
+        // Determine marker color based on its position in the array
+        let color = '#3b82f6'; // Default blue for waypoints
+        
+        // Starting point is green, ending point is red, others are blue or custom
+        if (index === 0) color = '#22c55e'; // Green for starting point
+        else if (index === markers.length - 1) color = '#ef4444'; // Red for final destination
+        
+        // Create a detailed popup with information
+        const popup = new mapboxgl.Popup({ offset: 25 })
+          .setHTML(`
+            <div class="p-2">
+              <h3 class="font-bold">${marker.name}</h3>
+              <p class="text-gray-600 text-sm">${index === 0 ? 'Starting Point' : 
+                index === markers.length - 1 ? 'Final Destination' : 'Waypoint'}</p>
+            </div>
+          `);
+        
+        // Create and add the marker to the map
+        new mapboxgl.Marker({ color })
           .setLngLat(marker.coordinates)
-          .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(`<h3>${marker.name}</h3>`))
+          .setPopup(popup)
           .addTo(initialMap);
       });
 
