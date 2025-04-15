@@ -56,7 +56,7 @@ const TripPlanner: React.FC = () => {
     
     try {
       // Call the API to get trip suggestions
-      const response = await apiRequest('/api/trip-plans', {
+      const response = await fetch('/api/trip-plans', {
         method: 'POST',
         body: JSON.stringify({ query }),
         headers: {
@@ -64,8 +64,12 @@ const TripPlanner: React.FC = () => {
         }
       });
       
-      // Cast the response to TripResponse
-      const tripResponse = response as unknown as TripResponse;
+      if (!response.ok) {
+        throw new Error(`Error from server: ${response.status}`);
+      }
+      
+      // Parse the JSON response
+      const tripResponse = await response.json() as TripResponse;
       
       if (!tripResponse || !tripResponse.trips || tripResponse.trips.length === 0) {
         throw new Error('No trip suggestions received');
