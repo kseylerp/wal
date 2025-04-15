@@ -6,6 +6,13 @@ import { processChatMessage } from "./api/chat";
 export async function registerRoutes(app: Express): Promise<Server> {
   // prefix all routes with /api
   
+  // Config endpoint to safely expose necessary environment variables to the client
+  app.get('/api/config', (req, res) => {
+    res.json({
+      mapboxToken: process.env.MAPBOX_TOKEN || '',
+    });
+  });
+  
   // Chat API endpoint
   app.post('/api/chat', async (req, res) => {
     try {

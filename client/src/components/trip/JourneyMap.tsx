@@ -2,8 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { JourneyMapProps, SegmentOption } from '@/types/trip';
 
-// Environment variable is injected at build time
-const MAPBOX_TOKEN = import.meta.env.MAPBOX_TOKEN || '';
+// Will be set from the main component via props
+let MAPBOX_TOKEN = '';
 
 const JourneyMap: React.FC<JourneyMapProps> = ({
   mapId,
@@ -25,20 +25,50 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
   useEffect(() => {
     if (!mapContainerRef.current) return;
     
-    mapboxgl.accessToken = MAPBOX_TOKEN;
+    // Create a flag for cleanup
+    let mapCreated = false;
     
-    mapRef.current = new mapboxgl.Map({
-      container: mapContainerRef.current,
-      style: 'mapbox://styles/mapbox/outdoors-v11',
-      center,
-      zoom,
-    });
-
-    // Add navigation control
-    mapRef.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-
+    // Initialize map when token is available
+    const initMap = async () => {
+      // Wait for token if not available
+      if (!MAPBOX_TOKEN) {
+        try {
+          const response = await fetch('/api/config');
+          const data = await response.json();
+          MAPBOX_TOKEN = data.mapboxToken;
+        } catch (error) {
+          console.error('Failed to fetch MapBox token:', error);
+          return;
+        }
+      }
+      
+      if (!MAPBOX_TOKEN) {
+        console.error('MapBox token is not available');
+        return;
+      }
+      
+      mapboxgl.accessToken = MAPBOX_TOKEN;
+      
+      // Check if component is still mounted
+      if (!mapContainerRef.current) return;
+      
+      mapRef.current = new mapboxgl.Map({
+        container: mapContainerRef.current,
+        style: 'mapbox://styles/mapbox/outdoors-v11',
+        center,
+        zoom,
+      });
+      
+      mapCreated = true;
+      
+      // Add navigation control
+      mapRef.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    };
+    
+    initMap();
+    
     return () => {
-      if (mapRef.current) {
+      if (mapCreated && mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
       }
