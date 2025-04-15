@@ -81,6 +81,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Trip planning endpoint with Claude
+  app.post("/api/claude-trip-plans", async (req, res) => {
+    try {
+      const { query } = req.body;
+      
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ error: "Missing or invalid query parameter" });
+      }
+      
+      // Check for Claude API key
+      if (!process.env.ANTHROPIC_API_KEY) {
+        return res.status(500).json({ error: "Anthropic API key not available" });
+      }
+      
+      console.log("Generating trip plan with Claude for query:", query);
+      const tripPlans = await getClaudeTripPlans(query);
+      
+      res.json(tripPlans);
+    } catch (error: any) {
+      console.error('Error generating trip plans with Claude:', error);
+      res.status(500).json({ 
+        error: "Failed to generate trip plans with Claude", 
+        message: error.message || "Unknown error"
+      });
+    }
+  });
+  
   // Trip planning endpoint using OpenAI assistant
   app.post("/api/trip-plans", async (req, res) => {
     try {

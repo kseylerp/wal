@@ -56,7 +56,14 @@ export async function processClaudeMessage(messages: Message[], userMessage: str
     });
     
     // Return Claude's response text
-    return response.content[0].text;
+    const content = response.content[0];
+    if (content.type !== 'text') {
+      throw new Error("Expected text response from Claude");
+    }
+    
+    // Type assertion to safely access the text property
+    const textBlock = content as { type: 'text', text: string };
+    return textBlock.text;
   } catch (error) {
     console.error("Error in processClaudeMessage:", error);
     throw error;
@@ -99,12 +106,9 @@ export async function getClaudeTripPlans(query: string): Promise<TripResponse> {
       throw new Error("Expected text response from Claude");
     }
     
-    // Ensure we're working with a text type response
-    if (content.type !== 'text') {
-      throw new Error('Expected text response from Claude');
-    }
-    
-    const textContent = content.text;
+    // We've verified it's a text type, so we can safely access the text property
+    const textBlock = content as { type: 'text', text: string };
+    const textContent = textBlock.text;
     
     // Try to extract JSON from the text response
     const jsonMatch = textContent.match(/```json\n([\s\S]*?)\n```/) || 
