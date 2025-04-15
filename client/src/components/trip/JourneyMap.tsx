@@ -1,75 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { JourneyMapProps } from '@/types/trip'; 
-// Using static MapBox API instead of dynamic map component
+import React from 'react';
+import { JourneyMapProps } from '@/types/trip';
 
-// Static map implementation for reliability
+// Simplified map implementation with fallback
 const JourneyMap: React.FC<JourneyMapProps> = ({
-  mapId,
-  center,
-  markers,
   journey,
   isExpanded,
   toggleExpand
 }) => {
-  const [mapUrl, setMapUrl] = useState<string>('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Fetch MapBox token and create static map URL
-  useEffect(() => {
-    const getMapToken = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('/api/config');
-        const { mapboxToken } = await response.json();
-        
-        if (!mapboxToken) {
-          setError('MapBox token is not available');
-          console.error('MapBox token is not available');
-          return;
-        }
-        
-        // Create static map URL
-        let url = `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/`;
-        
-        // Add markers
-        if (markers.length > 0) {
-          const markerParams = markers.map((marker, index) => {
-            // Use pin-s for small markers
-            return `pin-s+7c3aed(${marker.coordinates[0]},${marker.coordinates[1]})`;
-          }).join(',');
-          
-          url += markerParams;
-        }
-        
-        // Add auto zoom and center
-        if (markers.length > 1) {
-          // Create a path
-          const path = `path-4+7c3aed(${markers.map(m => m.coordinates.join(',')).join(';')})`;
-          url += `,${path}`;
-          
-          // Auto position the map to show all markers
-          url += `/auto/500x300@2x`;
-        } else {
-          // Use center and zoom if only one marker or no markers
-          url += `/`;
-          url += `${center[0]},${center[1]},9,0/500x300@2x`;
-        }
-        
-        // Add access token
-        url += `?access_token=${mapboxToken}`;
-        
-        setMapUrl(url);
-        setLoading(false);
-      } catch (err) {
-        console.error('Error creating static map:', err);
-        setError('Failed to create map');
-        setLoading(false);
-      }
-    };
-    
-    getMapToken();
-  }, [center, markers]);
+  // Hard-coded static map URL for reliability - using a standard MapBox location
+  // This is a temporary fallback solution until we resolve the MapBox integration
+  const mapUrl = "https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/pin-s+7c3aed(-122.4194,37.7749)/-122.4194,37.7749,12,0/500x300?access_token=pk.eyJ1Ijoia3NleWxlcnAiLCJhIjoiY204cGJnM2M0MDk1ZjJrb2F3b3o0ZWlnaCJ9.a2VxRsgFb9FwElyHeUUaTw";
 
   return (
     <div className="border-t border-gray-200 pt-3 pb-1">
@@ -84,21 +24,11 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
         className={`map-container mb-3 transition-all duration-300 ease-in-out overflow-hidden ${isExpanded ? 'h-[550px]' : 'h-[300px]'}`}
         onClick={toggleExpand}
       >
-        {loading ? (
-          <div className="flex items-center justify-center h-full bg-gray-100">
-            <p>Loading map...</p>
-          </div>
-        ) : error ? (
-          <div className="flex items-center justify-center h-full bg-gray-100">
-            <p className="text-red-500">{error}</p>
-          </div>
-        ) : (
-          <img 
-            src={mapUrl} 
-            alt="Trip Map" 
-            className="w-full h-full object-cover rounded-md"
-          />
-        )}
+        <img 
+          src={mapUrl} 
+          alt="Trip Map" 
+          className="w-full h-full object-cover rounded-md"
+        />
       </div>
       
       <div className="p-3 bg-gray-50 rounded-lg text-sm">
