@@ -346,8 +346,9 @@ const MapTest: React.FC = () => {
           // Add all route segments
           for (let i = 0; i < ROUTE_SEGMENTS.length; i++) {
             const segment = ROUTE_SEGMENTS[i];
+            const segmentIndex = i; // Get original segment index from journey data
             
-            // Fetch directions from our proxy endpoint
+            // First try to fetch directions from our proxy endpoint
             const routeData = await fetchDirections(
               segment.start,
               segment.end,
@@ -355,18 +356,42 @@ const MapTest: React.FC = () => {
             );
             
             if (routeData && routeData.geometry) {
-              // Log route details
-              console.log(`Route ${i} details:`, {
+              // Log route details from API
+              console.log(`Route ${i} details from API:`, {
                 distance: `${(routeData.distance / 1609.34).toFixed(2)} miles`,
                 duration: `${Math.floor(routeData.duration / 60)} minutes`,
                 mode: segment.profile
               });
               
-              // Add route to map
+              // Add API route to map
               addRouteToMap(map, routeData.geometry, `route-${i}`, segment.color);
               setRoutesLoaded(prev => prev + 1);
             } else {
-              console.error(`Failed to fetch directions for segment ${i}`);
+              console.log(`No API route found for segment ${i}, using provided geometry`);
+              
+              // Fall back to using the geometry data provided in the JSON
+              const originalSegment = TRIP_DATA.journey.segments[segmentIndex];
+              
+              if (originalSegment && originalSegment.geometry) {
+                console.log(`Using provided geometry for segment ${i} (${originalSegment.mode})`);
+                
+                // Calculate rough distance using provided data
+                const distanceInMiles = (originalSegment.distance / 1609.34).toFixed(2);
+                const durationInMinutes = Math.floor(originalSegment.duration / 60);
+                
+                console.log(`Segment ${i} (${originalSegment.mode}):`, {
+                  from: originalSegment.from,
+                  to: originalSegment.to,
+                  distance: `${distanceInMiles} miles`,
+                  duration: `${durationInMinutes} minutes`
+                });
+                
+                // Add custom route to map using journey segment geometry
+                addRouteToMap(map, originalSegment.geometry, `route-${i}`, segment.color);
+                setRoutesLoaded(prev => prev + 1);
+              } else {
+                console.error(`Failed to fetch or create directions for segment ${i}`);
+              }
             }
           }
           
@@ -428,7 +453,7 @@ const MapTest: React.FC = () => {
               .addTo(map);
           });
           
-          // Calculate bounds to fit all points
+          // Calculate bounds to fit all points and routes
           const bounds = new mapboxgl.LngLatBounds();
           
           // Add all waypoints to bounds
@@ -439,6 +464,15 @@ const MapTest: React.FC = () => {
           // Add all activity points to bounds
           ACTIVITY_POINTS.forEach(point => {
             bounds.extend(point.coordinates as mapboxgl.LngLatLike);
+          });
+          
+          // Add all route coordinates to the bounds
+          TRIP_DATA.journey.segments.forEach(segment => {
+            if (segment.geometry && segment.geometry.coordinates) {
+              segment.geometry.coordinates.forEach(coord => {
+                bounds.extend(coord as mapboxgl.LngLatLike);
+              });
+            }
           });
           
           // Fit map to show all waypoints with padding
