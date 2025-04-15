@@ -20,10 +20,10 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 
   const formatMessageContent = (content: string) => {
     return content.split('\n').map((line, index) => (
-      <React.Fragment key={index}>
+      <div key={index} className="inline">
         {line}
         {index < content.split('\n').length - 1 && <br />}
-      </React.Fragment>
+      </div>
     ));
   };
 

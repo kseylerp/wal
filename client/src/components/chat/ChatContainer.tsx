@@ -63,12 +63,14 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
           <div className="p-4">
             <h3 className="text-lg font-semibold mb-2">AI Thinking Process</h3>
             <div className="text-sm text-gray-700 whitespace-pre-wrap">
-              {thinkingDialog.content.split('\n').map((line, i) => (
-                <React.Fragment key={i}>
-                  {line}
-                  <br />
-                </React.Fragment>
-              ))}
+              {thinkingDialog.content.split('\n').map((line, i) => {
+                return (
+                  <div key={i}>
+                    {line}
+                    {i < thinkingDialog.content.split('\n').length - 1 && <br />}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </DialogContent>
