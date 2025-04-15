@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
+import MapboxDirections from '@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions';
+import '@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions.css';
 import { JourneyMapProps, SegmentOption } from '@/types/trip';
 
 // Will be configured by the initialization
@@ -54,7 +56,7 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
       
       mapRef.current = new mapboxgl.Map({
         container: mapContainerRef.current,
-        style: 'mapbox://styles/mapbox/outdoors-v11',
+        style: 'mapbox://styles/kseylerp/cm9i685b0002001so3k3f81v1',
         center,
         zoom,
       });
@@ -63,6 +65,21 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
       
       // Add navigation control
       mapRef.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+      // Add directions control
+      const directions = new MapboxDirections({
+        accessToken: mapboxgl.accessToken,
+        unit: 'metric',
+        profile: 'mapbox/walking',
+        alternatives: true,
+        congestion: true,
+        steps: true,
+        controls: {
+          instructions: true
+        }
+      });
+      
+      mapRef.current.addControl(directions, 'top-left');
     };
     
     initMap();
