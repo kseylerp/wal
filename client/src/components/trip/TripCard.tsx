@@ -61,11 +61,9 @@ const TripCard: React.FC<TripCardProps> = ({
     
     // If activity contains "hike", "walk", "trek", let's select a related segment
     if (activityLower.includes('hike') || activityLower.includes('walk') || activityLower.includes('trek')) {
-      // Find a related segment
+      // Find a walking segment since that's most appropriate
       const segmentIndex = journey.segments.findIndex(segment => 
-        segment.mode === 'walking' || 
-        segment.mode === 'hiking' || 
-        segment.mode === 'trekking'
+        segment.mode === 'walking'
       );
       
       if (segmentIndex >= 0) {
@@ -109,6 +107,7 @@ const TripCard: React.FC<TripCardProps> = ({
           markers={markers}
           journey={journey}
           selectedSegment={selectedSegment}
+          selectedLocation={selectedLocation}
           onSegmentChange={handleSegmentChange}
           isExpanded={isMapExpanded}
           toggleExpand={toggleMapExpand}

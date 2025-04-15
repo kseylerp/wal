@@ -221,7 +221,107 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
       }
     });
 
+    // Fly to the segment
+    const coordinates = segment.geometry.coordinates;
+    if (coordinates.length > 0) {
+      mapRef.current.flyTo({
+        center: coordinates[Math.floor(coordinates.length / 2)],
+        zoom: 12,
+        essential: true
+      });
+    }
+
   }, [selectedSegment, journey]);
+  
+  // Handle selected location
+  useEffect(() => {
+    if (!mapRef.current || !selectedLocation) return;
+    
+    // Remove existing highlighted location if any
+    if (mapRef.current.getLayer('selected-location-point')) {
+      mapRef.current.removeLayer('selected-location-point');
+    }
+    
+    if (mapRef.current.getLayer('selected-location-pulse')) {
+      mapRef.current.removeLayer('selected-location-pulse');
+    }
+    
+    if (mapRef.current.getSource('selected-location')) {
+      (mapRef.current.getSource('selected-location') as mapboxgl.GeoJSONSource).setData({
+        type: 'Feature',
+        properties: {},
+        geometry: {
+          type: 'Point',
+          coordinates: selectedLocation.coordinates
+        }
+      });
+    } else {
+      mapRef.current.addSource('selected-location', {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          properties: {},
+          geometry: {
+            type: 'Point',
+            coordinates: selectedLocation.coordinates
+          }
+        }
+      });
+    }
+    
+    // Add pulse animation layer
+    mapRef.current.addLayer({
+      id: 'selected-location-pulse',
+      type: 'circle',
+      source: 'selected-location',
+      paint: {
+        'circle-radius': [
+          'interpolate',
+          ['linear'],
+          ['zoom'],
+          7, 10,
+          16, 30
+        ],
+        'circle-color': '#4287f5',
+        'circle-opacity': 0.4,
+        'circle-stroke-width': 2,
+        'circle-stroke-color': '#4287f5',
+      }
+    });
+    
+    // Add point layer
+    mapRef.current.addLayer({
+      id: 'selected-location-point',
+      type: 'circle',
+      source: 'selected-location',
+      paint: {
+        'circle-radius': [
+          'interpolate',
+          ['linear'],
+          ['zoom'],
+          7, 5,
+          16, 10
+        ],
+        'circle-color': '#4287f5',
+        'circle-stroke-width': 2,
+        'circle-stroke-color': '#ffffff',
+      }
+    });
+    
+    // Add popup for the location
+    new mapboxgl.Popup()
+      .setLngLat(selectedLocation.coordinates)
+      .setHTML(`<h3 class="text-sm font-medium">${selectedLocation.name}</h3>`)
+      .addTo(mapRef.current);
+      
+    // Fly to location
+    mapRef.current.flyTo({
+      center: selectedLocation.coordinates,
+      zoom: 12,
+      essential: true
+    });
+    
+  }, [selectedLocation]);
 
   // Handle segment change
   const handleSegmentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
