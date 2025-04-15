@@ -36,6 +36,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  
+  // Proxy endpoint for MapBox Directions API
+  app.get('/api/directions', async (req, res) => {
+    try {
+      // Extract parameters from query
+      const { profile, coordinates } = req.query;
+      
+      if (!profile || !coordinates) {
+        return res.status(400).json({ 
+          error: "Missing required parameters: profile and coordinates" 
+        });
+      }
+      
+      // Validate profile
+      if (!['driving', 'walking', 'cycling'].includes(profile as string)) {
+        return res.status(400).json({ 
+          error: "Invalid profile. Must be one of: driving, walking, cycling" 
+        });
+      }
+      
+      // Get MapBox token
+      const token = process.env.MAPBOX_TOKEN || process.env.MAPBOX_PUBLIC_TOKEN;
+      if (!token) {
+        return res.status(500).json({ error: "MapBox token not configured" });
+      }
+      
+      // Build MapBox Directions API URL
+      const url = `https://api.mapbox.com/directions/v5/mapbox/${profile}/${coordinates}?geometries=geojson&steps=true&access_token=${token}`;
+      
+      // Fetch data from MapBox API
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        return res.status(response.status).json({ 
+          error: "MapBox Directions API error", 
+          details: errorData 
+        });
+      }
+      
+      const data = await response.json();
+      
+      // Return the data to the client
+      res.json(data);
+    } catch (error) {
+      console.error("Error proxying request to MapBox Directions API:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch directions data",
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
 
   // Create HTTP server
   const httpServer = createServer(app);

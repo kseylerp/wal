@@ -1,8 +1,17 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
-import { JourneyMapProps } from '@/types/trip';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import { Journey, Marker } from '@/types/chat';
 
-// Interactive map implementation using iframe as fallback
+interface JourneyMapProps {
+  mapId: string;
+  center: [number, number];
+  markers: Marker[];
+  journey: Journey;
+  isExpanded: boolean;
+  toggleExpand: () => void;
+}
+
 const JourneyMap: React.FC<JourneyMapProps> = ({
   mapId,
   center,
@@ -11,192 +20,282 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
   isExpanded,
   toggleExpand
 }) => {
-  const [useIframe, setUseIframe] = useState(false);
-  const [mapboxToken, setMapboxToken] = useState('');
-  const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<mapboxgl.Map | null>(null);
-  
-  // Fetch the MapBox token first
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const map = useRef<mapboxgl.Map | null>(null);
+  const [mapboxToken, setMapboxToken] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [routesLoaded, setRoutesLoaded] = useState<number>(0);
+
+  // Fetch MapBox token on component mount
   useEffect(() => {
     const fetchToken = async () => {
       try {
         const response = await fetch('/api/config');
         const data = await response.json();
-        const token = data.mapboxToken;
-        
-        if (token) {
-          setMapboxToken(token);
-          mapboxgl.accessToken = token;
+        if (data.mapboxToken) {
+          setMapboxToken(data.mapboxToken);
         } else {
-          console.error('MapBox token is not available');
-          setUseIframe(true);
+          setError('No MapBox token available');
+          setLoading(false);
         }
-      } catch (error) {
-        console.error('Error fetching MapBox token:', error);
-        setUseIframe(true);
+      } catch (err) {
+        setError('Failed to fetch MapBox token');
+        setLoading(false);
+        console.error('Error fetching token:', err);
       }
     };
-    
+
     fetchToken();
   }, []);
-  
-  // Initialize the map when we have the token
-  useEffect(() => {
-    if (!mapboxToken || !mapContainerRef.current || useIframe) {
-      return;
-    }
-    
+
+  // Fetch directions data from API for a segment
+  const fetchDirections = async (
+    start: [number, number],
+    end: [number, number],
+    profile: 'driving' | 'walking' | 'cycling'
+  ) => {
     try {
-      // Initialize the map - cast the container ref to avoid type issues
-      const map = new mapboxgl.Map({
-        container: mapContainerRef.current as HTMLElement,
-        style: 'mapbox://styles/mapbox/streets-v12', // Use a standard style
-        center: center,
-        zoom: 9
-      });
+      // Use our backend proxy to fetch directions
+      const coordinates = `${start[0]},${start[1]};${end[0]},${end[1]}`;
+      const url = `/api/directions?profile=${profile}&coordinates=${coordinates}`;
       
-      mapRef.current = map;
+      console.log(`Fetching directions from: ${url}`);
+      const response = await fetch(url);
       
-      // Add controls
-      map.addControl(new mapboxgl.NavigationControl());
+      if (!response.ok) {
+        throw new Error(`API responded with status: ${response.status}`);
+      }
       
-      // Configure the map on load
-      map.on('load', () => {
-        console.log('Map loaded successfully');
+      const data = await response.json();
+      
+      if (data.routes && data.routes.length > 0) {
+        return {
+          geometry: data.routes[0].geometry,
+          distance: data.routes[0].distance, // in meters
+          duration: data.routes[0].duration, // in seconds
+          legs: data.routes[0].legs
+        };
+      } else {
+        return null;
+      }
+    } catch (err) {
+      console.error('Error fetching directions:', err);
+      return null;
+    }
+  };
+
+  // Add a source and layer for a route to the map
+  const addRouteToMap = (
+    mapInstance: mapboxgl.Map,
+    routeData: any,
+    segmentId: string,
+    mode: string
+  ) => {
+    // Choose color based on mode of transport
+    const color = 
+      mode === 'walking' ? '#10b981' : // green
+      mode === 'driving' ? '#3b82f6' : // blue
+      mode === 'cycling' ? '#f59e0b' : // amber
+      '#6366f1'; // indigo (default)
+    
+    // Add a source for the route
+    mapInstance.addSource(segmentId, {
+      type: 'geojson',
+      data: {
+        type: 'Feature',
+        properties: {},
+        geometry: routeData.geometry
+      }
+    });
+    
+    // Add a layer to display the route
+    mapInstance.addLayer({
+      id: segmentId,
+      type: 'line',
+      source: segmentId,
+      layout: {
+        'line-join': 'round',
+        'line-cap': 'round'
+      },
+      paint: {
+        'line-color': color,
+        'line-width': 5,
+        'line-opacity': 0.75
+      }
+    });
+    
+    console.log(`Route ${segmentId} added to map (${mode})`);
+  };
+
+  // Initialize map when token is available and component is mounted
+  useEffect(() => {
+    if (!mapboxToken || !mapContainer.current) return;
+
+    mapboxgl.accessToken = mapboxToken;
+    setLoading(true);
+
+    const initialMap = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/outdoors-v12',
+      center: center,
+      zoom: 9
+    });
+
+    map.current = initialMap;
+
+    initialMap.on('load', async () => {
+      console.log('Map loaded successfully!');
+      
+      // Process each journey segment to get real route data
+      for (let i = 0; i < journey.segments.length; i++) {
+        const segment = journey.segments[i];
         
-        // Add markers
-        markers.forEach(marker => {
-          const el = document.createElement('div');
-          el.className = 'marker';
-          el.style.backgroundColor = '#7c3aed';
-          el.style.width = '20px';
-          el.style.height = '20px';
-          el.style.borderRadius = '50%';
-          el.style.border = '2px solid white';
+        try {
+          // Extract start and end points
+          const segmentStartCoords = segment.geometry.coordinates[0] as [number, number];
+          const segmentEndCoords = segment.geometry.coordinates[segment.geometry.coordinates.length - 1] as [number, number];
           
-          new mapboxgl.Marker(el)
-            .setLngLat(marker.coordinates)
-            .setPopup(new mapboxgl.Popup().setHTML(`<h3>${marker.name}</h3>`))
-            .addTo(map);
-        });
-        
-        // Draw route line
-        if (markers.length >= 2) {
-          try {
-            map.addSource('route', {
+          // For each segment, fetch directions data from MapBox API via our proxy
+          const routeData = await fetchDirections(
+            segmentStartCoords,
+            segmentEndCoords,
+            segment.mode as 'driving' | 'walking' | 'cycling'
+          );
+          
+          if (routeData) {
+            // Add the route to the map
+            addRouteToMap(initialMap, routeData, `route-${i}`, segment.mode);
+            setRoutesLoaded(prev => prev + 1);
+            
+            // Log the route info
+            console.log(`Segment ${i} (${segment.mode}):`, {
+              from: segment.from,
+              to: segment.to,
+              distance: `${(routeData.distance / 1609.34).toFixed(2)} miles`,
+              duration: `${Math.floor(routeData.duration / 60)} minutes`
+            });
+          } else {
+            // If directions API fails, fall back to using the provided geometry
+            console.warn(`Using provided geometry for segment ${i} (${segment.mode})`);
+            
+            // Make sure the geometry is properly typed for GeoJSON
+            const geoJSONGeometry = {
+              type: 'LineString' as const,
+              coordinates: segment.geometry.coordinates
+            };
+            
+            initialMap.addSource(`route-${i}`, {
               type: 'geojson',
               data: {
                 type: 'Feature',
                 properties: {},
-                geometry: {
-                  type: 'LineString',
-                  coordinates: markers.map(marker => marker.coordinates)
-                }
+                geometry: geoJSONGeometry
               }
             });
             
-            map.addLayer({
-              id: 'route',
+            initialMap.addLayer({
+              id: `route-${i}`,
               type: 'line',
-              source: 'route',
+              source: `route-${i}`,
               layout: {
                 'line-join': 'round',
                 'line-cap': 'round'
               },
               paint: {
-                'line-color': '#7c3aed',
-                'line-width': 4
+                'line-color': segment.mode === 'walking' ? '#10b981' : 
+                              segment.mode === 'driving' ? '#3b82f6' : 
+                              segment.mode === 'cycling' ? '#f59e0b' : 
+                              '#6366f1',
+                'line-width': 5,
+                'line-opacity': 0.75
               }
             });
-          } catch (error) {
-            console.error('Error adding route:', error);
+            
+            setRoutesLoaded(prev => prev + 1);
           }
+        } catch (err) {
+          console.error(`Error processing segment ${i}:`, err);
         }
-        
-        // Fit bounds to show all markers
-        if (markers.length > 0) {
-          const bounds = new mapboxgl.LngLatBounds();
-          markers.forEach(marker => bounds.extend(marker.coordinates));
-          map.fitBounds(bounds, { padding: 50 });
-        }
+      }
+
+      // Add markers for points of interest
+      markers.forEach(marker => {
+        new mapboxgl.Marker()
+          .setLngLat(marker.coordinates)
+          .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(`<h3>${marker.name}</h3>`))
+          .addTo(initialMap);
       });
+
+      // Fit map to show the entire journey
+      if (journey.bounds && journey.bounds.length === 2) {
+        initialMap.fitBounds(journey.bounds as mapboxgl.LngLatBoundsLike, {
+          padding: 50
+        });
+      }
       
-      map.on('error', (e) => {
-        console.error('MapBox error:', e);
-        setUseIframe(true);
-      });
-      
-    } catch (error) {
-      console.error('Error creating MapBox map:', error);
-      setUseIframe(true);
-    }
-    
-    // Clean up
+      setLoading(false);
+    });
+
+    // Clean up on unmount
     return () => {
-      if (mapRef.current) {
-        mapRef.current.remove();
-        mapRef.current = null;
+      if (map.current) {
+        map.current.remove();
       }
     };
-  }, [mapboxToken, center, markers, useIframe]);
-  
+  }, [mapboxToken, center, markers, journey]);
+
   return (
-    <div className="border-t border-gray-200 pt-3 pb-1">
-      <h4 className="font-medium text-gray-900 mb-2 flex items-center">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary mr-2" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-        </svg>
-        Journey Map
-      </h4>
-      
-      {/* MapBox GL JS container */}
-      {!useIframe && (
-        <div 
-          ref={mapContainerRef}
-          className={`map-container mb-3 transition-all duration-300 ease-in-out ${isExpanded ? 'h-[550px]' : 'h-[300px]'}`}
-          onClick={toggleExpand}
-        />
-      )}
-      
-      {/* Fallback iframe solution */}
-      {useIframe && mapboxToken && (
-        <iframe 
-          width="100%" 
-          height={isExpanded ? '550' : '300'} 
-          src={`https://api.mapbox.com/styles/v1/mapbox/streets-v12.html?title=false&access_token=${mapboxToken}&zoomwheel=false#9/${center[1]}/${center[0]}`}
-          title="Trip Map" 
-          className="border-none rounded-md mb-3"
-        />
-      )}
-      
-      {/* Loading state */}
-      {!mapboxToken && !useIframe && (
-        <div className={`flex items-center justify-center bg-gray-100 rounded-md mb-3 ${isExpanded ? 'h-[550px]' : 'h-[300px]'}`}>
-          <p>Loading map...</p>
+    <div className="relative border rounded-lg overflow-hidden shadow-md">
+      {error && (
+        <div className="p-4 bg-red-100 text-red-700">
+          <p>{error}</p>
         </div>
       )}
       
-      <div className="p-3 bg-gray-50 rounded-lg text-sm">
-        <p className="mb-1 font-medium">Map Instructions:</p>
-        <p>• Click on the map to expand/collapse it</p>
-        <p>• Purple route line shows your journey path</p>
-        <p>• Map markers show all your destinations</p>
-        <p>• Total distance: {(journey.totalDistance * 0.621371).toFixed(1)} miles</p>
-      </div>
-      
-      {/* Display journey details */}
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <div className="bg-gray-50 p-2 rounded-lg">
-          <div className="text-xs text-gray-500">Trip Duration</div>
-          <div className="font-medium">{Math.round(journey.totalDuration / 3600)} hours</div>
-        </div>
-        <div className="bg-gray-50 p-2 rounded-lg">
-          <div className="text-xs text-gray-500">Travel Mode</div>
-          <div className="font-medium capitalize">
-            {journey.segments[0]?.mode || 'Mixed'}
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 z-10">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary mx-auto mb-2"></div>
+            <p className="text-gray-700">Loading map data...</p>
+            {routesLoaded > 0 && (
+              <p className="text-xs text-gray-500 mt-1">
+                Routes loaded: {routesLoaded}/{journey.segments.length}
+              </p>
+            )}
           </div>
         </div>
-      </div>
+      )}
+      
+      <div 
+        ref={mapContainer} 
+        className={`w-full transition-all duration-300 ease-in-out ${isExpanded ? 'h-96' : 'h-64'}`}
+        style={{ minHeight: isExpanded ? '24rem' : '16rem' }}
+      />
+      
+      <button 
+        onClick={toggleExpand}
+        className="absolute top-2 right-2 bg-white p-2 rounded-full shadow-md hover:bg-gray-100 transition-colors"
+        aria-label={isExpanded ? "Collapse map" : "Expand map"}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          {isExpanded ? (
+            <>
+              <polyline points="4 14 10 14 10 20"></polyline>
+              <polyline points="20 10 14 10 14 4"></polyline>
+              <line x1="14" y1="10" x2="21" y2="3"></line>
+              <line x1="3" y1="21" x2="10" y2="14"></line>
+            </>
+          ) : (
+            <>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <polyline points="9 21 3 21 3 15"></polyline>
+              <line x1="21" y1="3" x2="14" y2="10"></line>
+              <line x1="3" y1="21" x2="10" y2="14"></line>
+            </>
+          )}
+        </svg>
+      </button>
     </div>
   );
 };

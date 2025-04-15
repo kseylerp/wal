@@ -77,22 +77,38 @@ const MapTest: React.FC = () => {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [routesLoaded, setRoutesLoaded] = useState(0);
 
-  // Fetch directions from Mapbox API
+  // Fetch directions from our proxy to the Mapbox API
   const fetchDirections = async (
     start: [number, number],
     end: [number, number],
-    profile: 'driving' | 'walking' | 'cycling',
-    token: string
+    profile: 'driving' | 'walking' | 'cycling'
   ) => {
     try {
-      const url = `https://api.mapbox.com/directions/v5/mapbox/${profile}/${start[0]},${start[1]};${end[0]},${end[1]}?steps=true&geometries=geojson&access_token=${token}`;
+      // Use our backend proxy instead of directly calling MapBox API
+      const coordinates = `${start[0]},${start[1]};${end[0]},${end[1]}`;
+      const url = `/api/directions?profile=${profile}&coordinates=${coordinates}`;
+      
+      console.log(`Fetching directions from: ${url}`);
       const response = await fetch(url);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error response from directions API:', errorData);
+        return null;
+      }
+      
       const data = await response.json();
       
       if (data.routes && data.routes.length > 0) {
-        return data.routes[0].geometry;
+        // Return both geometry and additional route details
+        return {
+          geometry: data.routes[0].geometry,
+          distance: data.routes[0].distance, // in meters
+          duration: data.routes[0].duration, // in seconds
+          legs: data.routes[0].legs
+        };
       } else {
-        console.error('No routes found:', data);
+        console.error('No routes found in response:', data);
         return null;
       }
     } catch (err) {
@@ -187,17 +203,23 @@ const MapTest: React.FC = () => {
           for (let i = 0; i < ROUTE_SEGMENTS.length; i++) {
             const segment = ROUTE_SEGMENTS[i];
             
-            // Fetch directions from MapBox API
-            const geometry = await fetchDirections(
+            // Fetch directions from our proxy endpoint
+            const routeData = await fetchDirections(
               segment.start,
               segment.end,
-              segment.profile,
-              token
+              segment.profile
             );
             
-            if (geometry) {
+            if (routeData && routeData.geometry) {
+              // Log route details
+              console.log(`Route ${i} details:`, {
+                distance: `${(routeData.distance / 1609.34).toFixed(2)} miles`,
+                duration: `${Math.floor(routeData.duration / 60)} minutes`,
+                mode: segment.profile
+              });
+              
               // Add route to map
-              addRouteToMap(map, geometry, `route-${i}`, segment.color);
+              addRouteToMap(map, routeData.geometry, `route-${i}`, segment.color);
               setRoutesLoaded(prev => prev + 1);
             } else {
               console.error(`Failed to fetch directions for segment ${i}`);
