@@ -2,6 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
+/* MapBox custom styling */
+.map-container {
+  width: 100%;
+  position: relative;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.mapboxgl-ctrl-directions {
+  max-height: 550px;
+  overflow-y: auto;
+  width: 300px !important;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+}
+
+.mapboxgl-ctrl-directions .directions-control-instructions {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* Fix for custom MapBox markers */
+.marker {
+  cursor: pointer;
+  z-index: 2;
+}
+
+/* Fix for directions panel */
+.mapbox-directions-component.mapbox-directions-route-details {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.mapbox-directions-component-keyline {
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+  border-radius: 0.25rem;
+}
+
 @layer base {
   * {
     @apply border-border;

@@ -20,11 +20,8 @@ export interface TripCardProps {
 export interface JourneyMapProps {
   mapId: string;
   center: [number, number];
-  zoom: number;
   markers: Marker[];
   journey: Journey;
-  selectedSegment?: string;
-  onSegmentChange?: (segmentId: string) => void;
   isExpanded: boolean;
   toggleExpand: () => void;
 }

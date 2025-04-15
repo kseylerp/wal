@@ -31,7 +31,6 @@ const TripCard: React.FC<TripCardProps> = ({
   onModifyRequest
 }) => {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [selectedSegment, setSelectedSegment] = useState('segment1');
   const [isMapExpanded, setIsMapExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<'itinerary' | 'about'>('itinerary');
 
@@ -41,10 +40,6 @@ const TripCard: React.FC<TripCardProps> = ({
 
   const toggleMapExpand = () => {
     setIsMapExpanded(!isMapExpanded);
-  };
-
-  const handleSegmentChange = (segmentId: string) => {
-    setSelectedSegment(segmentId);
   };
 
   return (
@@ -73,7 +68,7 @@ const TripCard: React.FC<TripCardProps> = ({
             
             <div className="flex items-center text-white">
               <Map className="h-4 w-4 mr-1" />
-              <span className="text-sm font-medium">{journey.totalDistance.toFixed(1)} km</span>
+              <span className="text-sm font-medium">{(journey.totalDistance * 0.621371).toFixed(1)} miles</span>
             </div>
           </div>
         </div>
@@ -91,11 +86,8 @@ const TripCard: React.FC<TripCardProps> = ({
         <JourneyMap
           mapId={id}
           center={mapCenter}
-          zoom={6}
           markers={markers}
           journey={journey}
-          selectedSegment={selectedSegment}
-          onSegmentChange={handleSegmentChange}
           isExpanded={isMapExpanded}
           toggleExpand={toggleMapExpand}
         />
@@ -118,7 +110,7 @@ const TripCard: React.FC<TripCardProps> = ({
               Total Distance
             </div>
             <div className="text-gray-900 font-medium">
-              {journey.totalDistance.toFixed(1)} km
+              {(journey.totalDistance * 0.621371).toFixed(1)} miles
             </div>
           </div>
         </div>
@@ -187,7 +179,7 @@ const TripCard: React.FC<TripCardProps> = ({
                     <h4 className="font-medium text-gray-900">Journey Details</h4>
                   </div>
                   <div className="bg-gray-50 p-3 rounded-lg space-y-2">
-                    <p><strong>Total Distance:</strong> {journey.totalDistance.toFixed(1)} km</p>
+                    <p><strong>Total Distance:</strong> {(journey.totalDistance * 0.621371).toFixed(1)} miles</p>
                     <p><strong>Total Duration:</strong> {Math.round(journey.totalDuration / 3600)} hours</p>
                     <p><strong>Travel Modes:</strong> {journey.segments.map(s => s.mode.charAt(0).toUpperCase() + s.mode.slice(1)).join(', ')}</p>
                     {journey.segments.some(s => s.terrain) && (
