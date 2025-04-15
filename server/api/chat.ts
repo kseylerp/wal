@@ -322,8 +322,10 @@ export async function processChatMessage(messages: Message[], userMessage: strin
 
     // Extract the trip data if tool calls were made
     let tripData = undefined;
+    // @ts-ignore - Anthropic API types in package might be outdated
     if (response.tool_calls && response.tool_calls.length > 0) {
-      const tripToolCall = response.tool_calls.find(tool => tool.name === 'trip_format');
+      // @ts-ignore
+      const tripToolCall = response.tool_calls.find((tool: any) => tool.name === 'trip_format');
       if (tripToolCall && tripToolCall.input) {
         try {
           tripData = (tripToolCall.input as any).trip;

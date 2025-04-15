@@ -163,7 +163,10 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
       (mapRef.current.getSource('selected-segment') as mapboxgl.GeoJSONSource).setData({
         type: 'Feature',
         properties: {},
-        geometry: segment.geometry
+        geometry: {
+          type: "LineString",
+          coordinates: segment.geometry.coordinates
+        }
       });
     } else {
       mapRef.current.addSource('selected-segment', {
@@ -171,7 +174,10 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
         data: {
           type: 'Feature',
           properties: {},
-          geometry: segment.geometry
+          geometry: {
+            type: "LineString",
+            coordinates: segment.geometry.coordinates
+          }
         }
       });
     }
