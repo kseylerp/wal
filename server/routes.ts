@@ -4,7 +4,6 @@ import crypto from "crypto";
 import { storage } from "./storage";
 import { processChatMessage } from "./api/chat";
 import { getTripPlans } from "./api/openai";
-import { getClaudeTripPlans, processClaudeMessage } from "./api/anthropic";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // prefix all routes with /api
@@ -36,74 +35,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         message: 'An error occurred while processing your request',
         error: error instanceof Error ? error.message : String(error)
-      });
-    }
-  });
-  
-  // Claude Chat API endpoint
-  app.post('/api/claude-chat', async (req, res) => {
-    try {
-      const { messages, userMessage } = req.body;
-      
-      if (!userMessage || typeof userMessage !== 'string') {
-        return res.status(400).json({ message: 'Invalid message format. userMessage is required.' });
-      }
-      
-      // Check for Claude API key
-      if (!process.env.ANTHROPIC_API_KEY) {
-        return res.status(500).json({ error: "Anthropic API key not available" });
-      }
-      
-      // Process the chat message with Claude
-      const claudeResponse = await processClaudeMessage(messages, userMessage);
-      
-      // Return the Claude response
-      res.json({
-        userMessage: {
-          id: crypto.randomUUID(),
-          role: 'user',
-          content: userMessage,
-          timestamp: new Date().toISOString(),
-        },
-        aiMessage: {
-          id: crypto.randomUUID(),
-          role: 'assistant',
-          content: claudeResponse,
-          timestamp: new Date().toISOString(),
-        }
-      });
-    } catch (error) {
-      console.error('Error in Claude chat endpoint:', error);
-      res.status(500).json({ 
-        message: 'An error occurred while processing your request with Claude',
-        error: error instanceof Error ? error.message : String(error)
-      });
-    }
-  });
-  
-  // Trip planning endpoint with Claude
-  app.post("/api/claude-trip-plans", async (req, res) => {
-    try {
-      const { query } = req.body;
-      
-      if (!query || typeof query !== 'string') {
-        return res.status(400).json({ error: "Missing or invalid query parameter" });
-      }
-      
-      // Check for Claude API key
-      if (!process.env.ANTHROPIC_API_KEY) {
-        return res.status(500).json({ error: "Anthropic API key not available" });
-      }
-      
-      console.log("Generating trip plan with Claude for query:", query);
-      const tripPlans = await getClaudeTripPlans(query);
-      
-      res.json(tripPlans);
-    } catch (error: any) {
-      console.error('Error generating trip plans with Claude:', error);
-      res.status(500).json({ 
-        error: "Failed to generate trip plans with Claude", 
-        message: error.message || "Unknown error"
       });
     }
   });
