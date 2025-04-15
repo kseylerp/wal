@@ -1,16 +1,145 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import mapboxgl from 'mapbox-gl';
 import { JourneyMapProps } from '@/types/trip';
 
-// Simplified map implementation with fallback
+// Interactive map implementation using iframe as fallback
 const JourneyMap: React.FC<JourneyMapProps> = ({
+  mapId,
+  center,
+  markers,
   journey,
   isExpanded,
   toggleExpand
 }) => {
-  // Hard-coded static map URL for reliability - using a standard MapBox location
-  // This is a temporary fallback solution until we resolve the MapBox integration
-  const mapUrl = "https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/pin-s+7c3aed(-122.4194,37.7749)/-122.4194,37.7749,12,0/500x300?access_token=pk.eyJ1Ijoia3NleWxlcnAiLCJhIjoiY204cGJnM2M0MDk1ZjJrb2F3b3o0ZWlnaCJ9.a2VxRsgFb9FwElyHeUUaTw";
-
+  const [useIframe, setUseIframe] = useState(false);
+  const [mapboxToken, setMapboxToken] = useState('');
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
+  
+  // Fetch the MapBox token first
+  useEffect(() => {
+    const fetchToken = async () => {
+      try {
+        const response = await fetch('/api/config');
+        const data = await response.json();
+        const token = data.mapboxToken;
+        
+        if (token) {
+          setMapboxToken(token);
+          mapboxgl.accessToken = token;
+        } else {
+          console.error('MapBox token is not available');
+          setUseIframe(true);
+        }
+      } catch (error) {
+        console.error('Error fetching MapBox token:', error);
+        setUseIframe(true);
+      }
+    };
+    
+    fetchToken();
+  }, []);
+  
+  // Initialize the map when we have the token
+  useEffect(() => {
+    if (!mapboxToken || !mapContainerRef.current || useIframe) {
+      return;
+    }
+    
+    try {
+      // Initialize the map - cast the container ref to avoid type issues
+      const map = new mapboxgl.Map({
+        container: mapContainerRef.current as HTMLElement,
+        style: 'mapbox://styles/mapbox/streets-v12', // Use a standard style
+        center: center,
+        zoom: 9
+      });
+      
+      mapRef.current = map;
+      
+      // Add controls
+      map.addControl(new mapboxgl.NavigationControl());
+      
+      // Configure the map on load
+      map.on('load', () => {
+        console.log('Map loaded successfully');
+        
+        // Add markers
+        markers.forEach(marker => {
+          const el = document.createElement('div');
+          el.className = 'marker';
+          el.style.backgroundColor = '#7c3aed';
+          el.style.width = '20px';
+          el.style.height = '20px';
+          el.style.borderRadius = '50%';
+          el.style.border = '2px solid white';
+          
+          new mapboxgl.Marker(el)
+            .setLngLat(marker.coordinates)
+            .setPopup(new mapboxgl.Popup().setHTML(`<h3>${marker.name}</h3>`))
+            .addTo(map);
+        });
+        
+        // Draw route line
+        if (markers.length >= 2) {
+          try {
+            map.addSource('route', {
+              type: 'geojson',
+              data: {
+                type: 'Feature',
+                properties: {},
+                geometry: {
+                  type: 'LineString',
+                  coordinates: markers.map(marker => marker.coordinates)
+                }
+              }
+            });
+            
+            map.addLayer({
+              id: 'route',
+              type: 'line',
+              source: 'route',
+              layout: {
+                'line-join': 'round',
+                'line-cap': 'round'
+              },
+              paint: {
+                'line-color': '#7c3aed',
+                'line-width': 4
+              }
+            });
+          } catch (error) {
+            console.error('Error adding route:', error);
+          }
+        }
+        
+        // Fit bounds to show all markers
+        if (markers.length > 0) {
+          const bounds = new mapboxgl.LngLatBounds();
+          markers.forEach(marker => bounds.extend(marker.coordinates));
+          map.fitBounds(bounds, { padding: 50 });
+        }
+      });
+      
+      map.on('error', (e) => {
+        console.error('MapBox error:', e);
+        setUseIframe(true);
+      });
+      
+    } catch (error) {
+      console.error('Error creating MapBox map:', error);
+      setUseIframe(true);
+    }
+    
+    // Clean up
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, [mapboxToken, center, markers, useIframe]);
+  
   return (
     <div className="border-t border-gray-200 pt-3 pb-1">
       <h4 className="font-medium text-gray-900 mb-2 flex items-center">
@@ -20,16 +149,32 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
         Journey Map
       </h4>
       
-      <div 
-        className={`map-container mb-3 transition-all duration-300 ease-in-out overflow-hidden ${isExpanded ? 'h-[550px]' : 'h-[300px]'}`}
-        onClick={toggleExpand}
-      >
-        <img 
-          src={mapUrl} 
-          alt="Trip Map" 
-          className="w-full h-full object-cover rounded-md"
+      {/* MapBox GL JS container */}
+      {!useIframe && (
+        <div 
+          ref={mapContainerRef}
+          className={`map-container mb-3 transition-all duration-300 ease-in-out ${isExpanded ? 'h-[550px]' : 'h-[300px]'}`}
+          onClick={toggleExpand}
         />
-      </div>
+      )}
+      
+      {/* Fallback iframe solution */}
+      {useIframe && mapboxToken && (
+        <iframe 
+          width="100%" 
+          height={isExpanded ? '550' : '300'} 
+          src={`https://api.mapbox.com/styles/v1/mapbox/streets-v12.html?title=false&access_token=${mapboxToken}&zoomwheel=false#9/${center[1]}/${center[0]}`}
+          title="Trip Map" 
+          className="border-none rounded-md mb-3"
+        />
+      )}
+      
+      {/* Loading state */}
+      {!mapboxToken && !useIframe && (
+        <div className={`flex items-center justify-center bg-gray-100 rounded-md mb-3 ${isExpanded ? 'h-[550px]' : 'h-[300px]'}`}>
+          <p>Loading map...</p>
+        </div>
+      )}
       
       <div className="p-3 bg-gray-50 rounded-lg text-sm">
         <p className="mb-1 font-medium">Map Instructions:</p>
