@@ -23,10 +23,6 @@ export interface JourneyMapProps {
   markers: Marker[];
   journey: Journey;
   selectedSegment?: string;
-  selectedLocation?: {
-    name: string;
-    coordinates: [number, number];
-  } | null;
   onSegmentChange?: (segmentId: string) => void;
   isExpanded: boolean;
   toggleExpand: () => void;
@@ -35,7 +31,6 @@ export interface JourneyMapProps {
 export interface ItineraryListProps {
   itinerary: ItineraryDay[];
   suggestedGuides: string[];
-  onSelectActivity?: (day: number, activityIndex: number, activityName: string) => void;
 }
 
 export interface SegmentOption {

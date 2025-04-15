@@ -19,13 +19,9 @@ const TripCard: React.FC<TripCardProps> = ({
   itinerary,
   onModifyRequest
 }) => {
-  const [isDetailsOpen, setIsDetailsOpen] = useState(true); // Default to open
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [selectedSegment, setSelectedSegment] = useState('segment1');
   const [isMapExpanded, setIsMapExpanded] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState<{
-    name: string;
-    coordinates: [number, number];
-  } | null>(null);
 
   const toggleDetails = () => {
     setIsDetailsOpen(!isDetailsOpen);
@@ -37,44 +33,6 @@ const TripCard: React.FC<TripCardProps> = ({
 
   const handleSegmentChange = (segmentId: string) => {
     setSelectedSegment(segmentId);
-  };
-  
-  const handleActivitySelect = (day: number, activityIndex: number, activityName: string) => {
-    // Find a marker that matches this activity by name (approximate match)
-    const activityLower = activityName.toLowerCase();
-    const matchingMarker = markers.find(marker => 
-      marker.name.toLowerCase().includes(activityLower) || 
-      activityLower.includes(marker.name.toLowerCase())
-    );
-    
-    if (matchingMarker) {
-      setSelectedLocation(matchingMarker);
-    } else {
-      // If no direct marker match, look for locations mentioned in the activity
-      for (const marker of markers) {
-        if (activityLower.includes(marker.name.toLowerCase())) {
-          setSelectedLocation(marker);
-          break;
-        }
-      }
-    }
-    
-    // If activity contains "hike", "walk", "trek", let's select a related segment
-    if (activityLower.includes('hike') || activityLower.includes('walk') || activityLower.includes('trek')) {
-      // Find a walking segment since that's most appropriate
-      const segmentIndex = journey.segments.findIndex(segment => 
-        segment.mode === 'walking'
-      );
-      
-      if (segmentIndex >= 0) {
-        setSelectedSegment(`segment${segmentIndex + 1}`);
-      }
-    }
-    
-    // Ensure the map is expanded when an activity is selected
-    if (!isMapExpanded) {
-      setIsMapExpanded(true);
-    }
   };
 
   return (
@@ -107,7 +65,6 @@ const TripCard: React.FC<TripCardProps> = ({
           markers={markers}
           journey={journey}
           selectedSegment={selectedSegment}
-          selectedLocation={selectedLocation}
           onSegmentChange={handleSegmentChange}
           isExpanded={isMapExpanded}
           toggleExpand={toggleMapExpand}
@@ -131,8 +88,7 @@ const TripCard: React.FC<TripCardProps> = ({
         {isDetailsOpen && (
           <ItineraryList 
             itinerary={itinerary} 
-            suggestedGuides={suggestedGuides}
-            onSelectActivity={handleActivitySelect}
+            suggestedGuides={suggestedGuides} 
           />
         )}
         
