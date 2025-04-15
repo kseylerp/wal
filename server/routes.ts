@@ -15,7 +15,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Invalid message format. userMessage is required.' });
       }
       
-      // Process the chat message with Claude
+      // Process the chat message with OpenAI
       const response = await processChatMessage(messages, userMessage);
       
       // Return the AI response
