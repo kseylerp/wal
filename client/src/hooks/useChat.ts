@@ -68,7 +68,6 @@ export function useChat() {
       const tripData = parseTripsFromResponse(response);
       console.log("Client received response:", { 
         hasAnswer: !!response.answer,
-        hasThinking: !!response.thinking,
         hasTripData: !!response.tripData, 
         tripData: response.tripData ? JSON.stringify(response.tripData).substring(0, 100) + "..." : "No trip data"
       });
@@ -78,7 +77,6 @@ export function useChat() {
         id: uuidv4(),
         role: 'assistant',
         content: response.answer,
-        thinking: response.thinking,
         timestamp: new Date().toISOString(),
         tripData,
       };

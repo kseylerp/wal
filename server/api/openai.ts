@@ -94,7 +94,7 @@ export async function processChatMessage(messages: Message[], userMessage: strin
     // Call OpenAI API
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
-      messages: formattedMessages,
+      messages: formattedMessages as any, // Type assertion to bypass TypeScript error
       max_tokens: 4000,
       temperature: 1,
       response_format: { type: "json_object" }

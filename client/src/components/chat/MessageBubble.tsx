@@ -1,7 +1,6 @@
 import React from 'react';
 import { Message } from '@/types/chat';
 import TripCard from '../trip/TripCard';
-import { formatThinking } from '@/lib/anthropic';
 
 interface MessageBubbleProps {
   message: Message;
