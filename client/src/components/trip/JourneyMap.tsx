@@ -1,31 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import MapboxDirections from '@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions';
-import '@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions.css';
-import { JourneyMapProps } from '@/types/trip';
+import React, { useEffect, useState } from 'react';
+import { JourneyMapProps } from '@/types/trip'; 
+// Using static MapBox API instead of dynamic map component
 
-// Will be configured by the initialization
-let MAPBOX_TOKEN = '';
-
-// Add custom CSS to make map controls visible
-const addMapStyles = () => {
-  const style = document.createElement('style');
-  style.textContent = `
-    .mapboxgl-ctrl-directions {
-      max-height: 100%;
-      overflow-y: auto;
-      width: 300px !important;
-    }
-    .directions-control {
-      width: 100%;
-    }
-    .mapboxgl-marker {
-      cursor: pointer;
-    }
-  `;
-  document.head.appendChild(style);
-};
-
+// Static map implementation for reliability
 const JourneyMap: React.FC<JourneyMapProps> = ({
   mapId,
   center,
@@ -34,170 +11,65 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
   isExpanded,
   toggleExpand
 }) => {
-  const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<mapboxgl.Map | null>(null);
-  const directionsRef = useRef<any>(null);
+  const [mapUrl, setMapUrl] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Initialize map
+  // Fetch MapBox token and create static map URL
   useEffect(() => {
-    if (!mapContainerRef.current) return;
-    
-    // Add custom CSS
-    addMapStyles();
-    
-    // Create a flag for cleanup
-    let mapCreated = false;
-    
-    // Initialize map when token is available
-    const initMap = async () => {
-      // Wait for token if not available
-      if (!MAPBOX_TOKEN) {
-        try {
-          const response = await fetch('/api/config');
-          const data = await response.json();
-          MAPBOX_TOKEN = data.mapboxToken || '';
-        } catch (error) {
-          console.error('Failed to fetch MapBox token:', error);
-          return; // Exit if token can't be fetched
-        }
-      }
-      
-      if (!MAPBOX_TOKEN) {
-        console.error('MapBox token is not available');
-        return; // Exit if token is not available
-      }
-      
-      mapboxgl.accessToken = MAPBOX_TOKEN;
-      
-      // Check if component is still mounted
-      if (!mapContainerRef.current) return;
-      
+    const getMapToken = async () => {
       try {
-        mapRef.current = new mapboxgl.Map({
-          container: mapContainerRef.current,
-          style: 'mapbox://styles/kseylerp/cm9i685b0002001so3k3f81v1',
-          center,
-          zoom: 8,
-          attributionControl: false
-        });
+        setLoading(true);
+        const response = await fetch('/api/config');
+        const { mapboxToken } = await response.json();
         
-        mapCreated = true;
-        
-        // Add navigation control
-        mapRef.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-        
-        // Add attribution control
-        mapRef.current.addControl(new mapboxgl.AttributionControl({
-          compact: true
-        }));
-        
-        // Add directions control
-        directionsRef.current = new MapboxDirections({
-          accessToken: mapboxgl.accessToken,
-          unit: 'imperial', // Use imperial units as requested
-          profile: 'mapbox/driving',
-          alternatives: true,
-          congestion: true,
-          steps: true,
-          controls: {
-            inputs: true,
-            instructions: true,
-            profileSwitcher: true
-          }
-        });
-        
-        // Cast to any to avoid TypeScript error with IControl interface
-        mapRef.current.addControl(directionsRef.current as any, 'top-left');
-      } catch (error) {
-        console.error('Error initializing map:', error);
-      }
-    };
-    
-    initMap();
-    
-    return () => {
-      if (mapCreated && mapRef.current) {
-        mapRef.current.remove();
-        mapRef.current = null;
-      }
-    };
-  }, [mapId]);
-
-  // Add markers on map load
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-    
-    const onMapLoad = () => {
-      console.log('Map loaded, adding markers');
-      
-      // Clear existing markers
-      const existingMarkers = document.querySelectorAll('.mapboxgl-marker');
-      existingMarkers.forEach(marker => marker.remove());
-      
-      // Add markers for all points
-      markers.forEach((marker, index) => {
-        const el = document.createElement('div');
-        el.className = 'marker';
-        el.style.backgroundColor = '#7c3aed';
-        el.style.width = '24px';
-        el.style.height = '24px';
-        el.style.borderRadius = '50%';
-        el.style.display = 'flex';
-        el.style.justifyContent = 'center';
-        el.style.alignItems = 'center';
-        el.style.border = '2px solid white';
-        el.style.boxShadow = '0 0 0 1px #7c3aed';
-        
-        new mapboxgl.Marker({ element: el })
-          .setLngLat(marker.coordinates)
-          .setPopup(new mapboxgl.Popup().setHTML(`<h3 class="text-sm font-medium">${marker.name}</h3>`))
-          .addTo(map);
-      });
-      
-      // Set the first and last points as origin and destination in the directions control
-      if (directionsRef.current && markers.length >= 2) {
-        try {
-          const firstMarker = markers[0];
-          const lastMarker = markers[markers.length - 1];
-          
-          // Set origin and destination with a slight delay to ensure the directions control is ready
-          setTimeout(() => {
-            try {
-              directionsRef.current.setOrigin(firstMarker.coordinates);
-              directionsRef.current.setDestination(lastMarker.coordinates);
-              
-              // Add waypoints for markers in between (currently handled by letting the user click on markers)
-              if (markers.length > 2) {
-                console.log(`${markers.length - 2} waypoints available. Click on markers to add them to your route.`);
-              }
-            } catch (error) {
-              console.error('Error setting origin/destination:', error);
-            }
-          }, 1000);
-        } catch (error) {
-          console.error('Error accessing directions control:', error);
+        if (!mapboxToken) {
+          setError('MapBox token is not available');
+          console.error('MapBox token is not available');
+          return;
         }
-      }
-      
-      // Fit bounds if journey has bounds
-      if (journey.bounds && journey.bounds.length === 2) {
-        map.fitBounds(journey.bounds as [[number, number], [number, number]], {
-          padding: { top: 50, bottom: 50, left: 50, right: 50 }
-        });
+        
+        // Create static map URL
+        let url = `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/`;
+        
+        // Add markers
+        if (markers.length > 0) {
+          const markerParams = markers.map((marker, index) => {
+            // Use pin-s for small markers
+            return `pin-s+7c3aed(${marker.coordinates[0]},${marker.coordinates[1]})`;
+          }).join(',');
+          
+          url += markerParams;
+        }
+        
+        // Add auto zoom and center
+        if (markers.length > 1) {
+          // Create a path
+          const path = `path-4+7c3aed(${markers.map(m => m.coordinates.join(',')).join(';')})`;
+          url += `,${path}`;
+          
+          // Auto position the map to show all markers
+          url += `/auto/500x300@2x`;
+        } else {
+          // Use center and zoom if only one marker or no markers
+          url += `/`;
+          url += `${center[0]},${center[1]},9,0/500x300@2x`;
+        }
+        
+        // Add access token
+        url += `?access_token=${mapboxToken}`;
+        
+        setMapUrl(url);
+        setLoading(false);
+      } catch (err) {
+        console.error('Error creating static map:', err);
+        setError('Failed to create map');
+        setLoading(false);
       }
     };
     
-    if (map.loaded()) {
-      onMapLoad();
-    } else {
-      map.on('load', onMapLoad);
-    }
-    
-    return () => {
-      map.off('load', onMapLoad);
-    };
-  }, [journey, markers, mapRef.current]);
+    getMapToken();
+  }, [center, markers]);
 
   return (
     <div className="border-t border-gray-200 pt-3 pb-1">
@@ -209,18 +81,46 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
       </h4>
       
       <div 
-        ref={mapContainerRef} 
-        className={`map-container mb-3 transition-all duration-300 ease-in-out ${isExpanded ? 'h-[550px]' : 'h-[300px]'}`}
+        className={`map-container mb-3 transition-all duration-300 ease-in-out overflow-hidden ${isExpanded ? 'h-[550px]' : 'h-[300px]'}`}
         onClick={toggleExpand}
-      />
+      >
+        {loading ? (
+          <div className="flex items-center justify-center h-full bg-gray-100">
+            <p>Loading map...</p>
+          </div>
+        ) : error ? (
+          <div className="flex items-center justify-center h-full bg-gray-100">
+            <p className="text-red-500">{error}</p>
+          </div>
+        ) : (
+          <img 
+            src={mapUrl} 
+            alt="Trip Map" 
+            className="w-full h-full object-cover rounded-md"
+          />
+        )}
+      </div>
       
       <div className="p-3 bg-gray-50 rounded-lg text-sm">
         <p className="mb-1 font-medium">Map Instructions:</p>
         <p>• Click on the map to expand/collapse it</p>
-        <p>• Origin and destination are automatically set from your trip points</p>
-        <p>• Click markers to add them as waypoints on your route</p>
-        <p>• Change travel mode in the profile switcher (car, walking, cycling)</p>
-        <p>• Distances shown in miles (imperial units)</p>
+        <p>• Purple route line shows your journey path</p>
+        <p>• Map markers show all your destinations</p>
+        <p>• Total distance: {(journey.totalDistance * 0.621371).toFixed(1)} miles</p>
+      </div>
+      
+      {/* Display journey details */}
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="bg-gray-50 p-2 rounded-lg">
+          <div className="text-xs text-gray-500">Trip Duration</div>
+          <div className="font-medium">{Math.round(journey.totalDuration / 3600)} hours</div>
+        </div>
+        <div className="bg-gray-50 p-2 rounded-lg">
+          <div className="text-xs text-gray-500">Travel Mode</div>
+          <div className="font-medium capitalize">
+            {journey.segments[0]?.mode || 'Mixed'}
+          </div>
+        </div>
       </div>
     </div>
   );
