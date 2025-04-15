@@ -10,14 +10,130 @@ type RouteSegment = {
   profile: 'driving' | 'walking' | 'cycling';
 };
 
-// Define main waypoints for our journey
-const WAYPOINTS: { name: string; coordinates: [number, number] }[] = [
-  { name: "Sedona Airport", coordinates: [-111.79012, 34.84857] },
-  { name: "Mystic Trail B&B", coordinates: [-111.76129, 34.86054] },
-  { name: "Boynton Canyon Vortex", coordinates: [-111.85056, 34.90868] }
-];
+// Use actual data from the OpenAI API response
+const TRIP_DATA = {
+  "id": "denali-wilderness-explorer",
+  "title": "Denali Wilderness Explorer",
+  "description": "An adventurous journey into the heart of Denali National Park, featuring cycling on remote roads, hiking on pristine trails, and a thrilling rafting experience on the Nenana River.",
+  "whyWeChoseThis": "Based on your interest in biking, hiking, and rafting in a natural setting, this Denali adventure offers all three activities in a less crowded area of Alaska. The trip balances moderate-intensity outdoor activities with incredible wildlife viewing opportunities in one of America's most pristine wilderness areas.",
+  "difficultyLevel": "Intermediate",
+  "priceEstimate": "$2,800 - $3,500 per person",
+  "duration": "7 Days",
+  "location": "Denali Backcountry, Alaska",
+  "suggestedGuides": [
+    "Alaska Wildland Adventures",
+    "Denali Backcountry Guides",
+    "Alaska Alpine Adventures"
+  ],
+  "mapCenter": [-149.7804, 63.7203],
+  "markers": [
+    {
+      "name": "Savage River Area",
+      "coordinates": [-149.7804, 63.7203]
+    },
+    {
+      "name": "Wonder Lake",
+      "coordinates": [-150.8805, 63.4952]
+    }
+  ],
+  "journey": {
+    "segments": [
+      {
+        "mode": "cycling",
+        "from": "Savage River",
+        "to": "Igloo Mountain Trail",
+        "distance": 15000,
+        "duration": 5400,
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [-149.7804, 63.7203],
+            [-149.8505, 63.6805],
+            [-149.9204, 63.6405],
+            [-150.005, 63.6005]
+          ]
+        }
+      },
+      {
+        "mode": "hiking",
+        "from": "Igloo Mountain Trail",
+        "to": "Sable Pass",
+        "distance": 8000,
+        "duration": 8400,
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [-150.005, 63.6005],
+            [-150.0252, 63.5905],
+            [-150.0654, 63.5855],
+            [-150.105, 63.5805]
+          ]
+        }
+      },
+      {
+        "mode": "rafting",
+        "from": "Teklanika River",
+        "to": "Nenana Canyon",
+        "distance": 20000,
+        "duration": 10800,
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [-150.105, 63.5805],
+            [-150.1505, 63.6205],
+            [-150.2254, 63.6805],
+            [-150.3, 63.7805]
+          ]
+        }
+      }
+    ],
+    "totalDistance": 43000,
+    "totalDuration": 24600,
+    "bounds": [[-150.8805, 63.4952], [-149.7804, 63.7803]]
+  },
+  "itinerary": [
+    {
+      "day": 1,
+      "title": "Arrival and Orientation",
+      "description": "Arrive in Anchorage and transfer to your accommodation near Denali National Park. Meet your guides and review the trip itinerary.",
+      "activities": [
+        "Anchorage to Denali transfer (3 hours)",
+        "Welcome dinner and trip briefing",
+        "Equipment check and preparation"
+      ],
+      "accommodations": "Denali Backcountry Lodge"
+    },
+    {
+      "day": 2,
+      "title": "Cycling the Park Road",
+      "description": "Begin your adventure cycling along the restricted-access Denali Park Road, with stunning views and wildlife sightings.",
+      "activities": [
+        "Morning wildlife briefing",
+        "Guided cycling tour (15 miles)",
+        "Picnic lunch at scenic overlook",
+        "Wildlife spotting (caribou, moose, and possibly bears)"
+      ],
+      "accommodations": "Wilderness Campsite - Savage River"
+    },
+    {
+      "day": 3,
+      "title": "Igloo Mountain Hike",
+      "description": "Hike the scenic trail around Igloo Mountain, offering panoramic views of the Alaska Range.",
+      "activities": [
+        "Guided morning hike (5 miles)",
+        "Alpine wildflower identification",
+        "Packed wilderness lunch",
+        "Photography session at Sable Pass"
+      ],
+      "accommodations": "Wilderness Campsite - Igloo Creek"
+    }
+  ]
+};
 
-// Define hiking activity points along the trail
+// Extract waypoints from the markers in the trip data
+const WAYPOINTS = TRIP_DATA.markers;
+
+// Create activity points for each day of the itinerary
 const ACTIVITY_POINTS: { 
   name: string; 
   coordinates: [number, number]; 
@@ -25,48 +141,76 @@ const ACTIVITY_POINTS: {
   description: string;
 }[] = [
   { 
-    name: "Forest Meditation Spot", 
-    coordinates: [-111.78234, 34.87123],
-    type: 'meditation',
-    description: "Peaceful spot for morning meditation practice"
-  },
-  { 
-    name: "Red Rock Viewpoint", 
-    coordinates: [-111.81529, 34.88964],
+    name: "Wildlife Viewing Area", 
+    coordinates: [-149.8505, 63.6805],
     type: 'viewpoint',
-    description: "Breathtaking views of surrounding red rock formations"
+    description: "Excellent spot for viewing caribou and moose"
   },
   { 
-    name: "Natural Spring", 
-    coordinates: [-111.83782, 34.90127],
-    type: 'water',
-    description: "Fresh natural spring water - safe to drink after filtering"
+    name: "Photography Location", 
+    coordinates: [-150.0252, 63.5905],
+    type: 'photo',
+    description: "Beautiful vantage point for photos of Denali"
   },
   { 
-    name: "Energy Vortex Spot", 
-    coordinates: [-111.84500, 34.90500],
+    name: "Alpine Meditation Site", 
+    coordinates: [-150.0654, 63.5855],
     type: 'meditation',
-    description: "Known energy vortex location - perfect for spiritual practice"
+    description: "Peaceful location for morning meditation"
+  },
+  { 
+    name: "Mountain Water Source", 
+    coordinates: [-150.1505, 63.6205],
+    type: 'water',
+    description: "Fresh glacier water - safe to drink after filtering"
+  },
+  { 
+    name: "Rest Area", 
+    coordinates: [-150.2254, 63.6805],
+    type: 'rest',
+    description: "Sheltered rest stop with views of the valley"
   }
 ];
 
-// Define route segments
-const ROUTE_SEGMENTS: RouteSegment[] = [
-  {
-    start: WAYPOINTS[0].coordinates,
-    end: WAYPOINTS[1].coordinates,
-    color: '#3b82f6', // blue
-    name: 'Airport to B&B',
-    profile: 'driving'
-  },
-  {
-    start: WAYPOINTS[1].coordinates,
-    end: WAYPOINTS[2].coordinates,
-    color: '#22c55e', // green
-    name: 'Hiking Trail',
-    profile: 'walking'
+// Map the journey segments to valid MapBox Directions API profiles
+const ROUTE_SEGMENTS: RouteSegment[] = TRIP_DATA.journey.segments.map((segment, index) => {
+  // Get start and end coordinates from segment geometry
+  const startCoords = segment.geometry.coordinates[0] as [number, number];
+  const endCoords = segment.geometry.coordinates[segment.geometry.coordinates.length - 1] as [number, number];
+  
+  // Map custom activity types to valid MapBox profiles
+  let profile: 'driving' | 'walking' | 'cycling';
+  let color: string;
+  
+  switch(segment.mode) {
+    case 'cycling':
+      profile = 'cycling';
+      color = '#f59e0b'; // amber
+      break;
+    case 'hiking':
+    case 'walking':
+      // Hiking and walking use the walking profile
+      profile = 'walking';
+      color = '#10b981'; // green 
+      break;
+    case 'rafting':
+      // MapBox doesn't have rafting, so use walking with a different color
+      profile = 'walking';
+      color = '#3b82f6'; // blue for rafting
+      break;
+    default:
+      profile = 'driving';
+      color = '#3b82f6'; // blue
   }
-];
+  
+  return {
+    start: startCoords,
+    end: endCoords,
+    color,
+    name: `${segment.from} to ${segment.to} (${segment.mode})`,
+    profile
+  };
+});
 
 const MapTest: React.FC = () => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -244,7 +388,7 @@ const MapTest: React.FC = () => {
             
             // Create and add the marker
             new mapboxgl.Marker({ color, scale: 1.0 })
-              .setLngLat(waypoint.coordinates)
+              .setLngLat(waypoint.coordinates as [number, number])
               .setPopup(popup)
               .addTo(map);
           });
@@ -279,7 +423,7 @@ const MapTest: React.FC = () => {
               scale: 0.8, // Slightly smaller than main waypoints
               // Use different shapes for different types if we had SVG icons
             })
-              .setLngLat(point.coordinates)
+              .setLngLat(point.coordinates as [number, number])
               .setPopup(popup)
               .addTo(map);
           });
@@ -331,9 +475,24 @@ const MapTest: React.FC = () => {
   
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-2">Interactive Trip Map with Activities</h1>
-      <p className="text-gray-600 mb-4">
-        Sample implementation showing how trip data from OpenAI API responses will be displayed as interactive maps with routes and activities
+      <h1 className="text-2xl font-bold mb-2">{TRIP_DATA.title}</h1>
+      <div className="flex flex-col md:flex-row gap-2 mb-4">
+        <span className="bg-primary/10 text-primary text-xs px-2 py-1 rounded">
+          {TRIP_DATA.location}
+        </span>
+        <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
+          {TRIP_DATA.duration}
+        </span>
+        <span className="bg-amber-100 text-amber-700 text-xs px-2 py-1 rounded">
+          {TRIP_DATA.difficultyLevel}
+        </span>
+        <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">
+          {TRIP_DATA.priceEstimate}
+        </span>
+      </div>
+      
+      <p className="text-gray-700 mb-4">
+        {TRIP_DATA.description}
       </p>
       
       {loading && (
@@ -355,33 +514,83 @@ const MapTest: React.FC = () => {
         style={{ minHeight: '600px' }}
       />
       
-      <div className="p-4 bg-gray-100 rounded">
-        <h2 className="font-bold mb-2">Map Status:</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          <div>
-            <span className="font-medium">Map Token:</span> 
-            <span className="ml-2">{mapboxToken ? '✅' : '❌'}</span>
-          </div>
-          <div>
-            <span className="font-medium">Map Created:</span> 
-            <span className="ml-2">{mapRef.current ? '✅' : '❌'}</span>
-          </div>
-          <div>
-            <span className="font-medium">Map Loaded:</span> 
-            <span className="ml-2">{mapLoaded ? '✅' : '❌'}</span>
-          </div>
-          <div>
-            <span className="font-medium">Routes Loaded:</span> 
-            <span className="ml-2">{routesLoaded}/{ROUTE_SEGMENTS.length}</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="p-4 bg-gray-50 rounded shadow-sm">
+          <h3 className="font-bold mb-2">Trip Highlights</h3>
+          <p className="text-gray-600 mb-4">{TRIP_DATA.whyWeChoseThis}</p>
+          
+          <h4 className="font-medium text-sm mb-2">SUGGESTED GUIDES</h4>
+          <ul className="list-disc pl-5 mb-4">
+            {TRIP_DATA.suggestedGuides.map((guide, i) => (
+              <li key={i} className="text-sm text-gray-700">{guide}</li>
+            ))}
+          </ul>
+          
+          <h4 className="font-medium text-sm mb-2">KEY LOCATIONS</h4>
+          <div className="space-y-2">
+            {WAYPOINTS.map((waypoint, i) => (
+              <div key={i} className="flex items-start">
+                <div className="w-2 h-2 rounded-full bg-primary mt-1.5 flex-shrink-0"></div>
+                <div className="ml-2">
+                  <p className="text-sm font-medium">{waypoint.name}</p>
+                  <p className="text-xs text-gray-500">
+                    Coordinates: {waypoint.coordinates[1].toFixed(4)}, {waypoint.coordinates[0].toFixed(4)}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
         
-        <div className="mt-4">
-          <h3 className="font-medium mb-2">Map Legend:</h3>
-          
+        <div className="p-4 bg-gray-50 rounded shadow-sm">
+          <h3 className="font-bold mb-2">Itinerary Preview</h3>
+          <div className="space-y-4">
+            {TRIP_DATA.itinerary.map((day) => (
+              <div key={day.day} className="border-l-2 border-primary/30 pl-3">
+                <h4 className="font-medium">Day {day.day}: {day.title}</h4>
+                <p className="text-sm text-gray-600 mb-2">{day.description}</p>
+                <div className="text-xs space-y-1">
+                  {day.activities.slice(0, 2).map((activity, i) => (
+                    <div key={i} className="flex items-start">
+                      <span className="text-primary mt-0.5">•</span>
+                      <span className="ml-1 text-gray-700">{activity}</span>
+                    </div>
+                  ))}
+                  {day.activities.length > 2 && (
+                    <div className="italic text-gray-500">+ {day.activities.length - 2} more activities</div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      
+      <div className="p-4 bg-gray-100 rounded">
+        <h2 className="font-bold mb-2">Map Elements:</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+          <div>
+            <span className="font-medium">Routes:</span> 
+            <span className="ml-2">{routesLoaded}/{ROUTE_SEGMENTS.length}</span>
+          </div>
+          <div>
+            <span className="font-medium">Waypoints:</span> 
+            <span className="ml-2">{WAYPOINTS.length}</span>
+          </div>
+          <div>
+            <span className="font-medium">Activities:</span> 
+            <span className="ml-2">{ACTIVITY_POINTS.length}</span>
+          </div>
+          <div>
+            <span className="font-medium">Total Distance:</span> 
+            <span className="ml-2">{(TRIP_DATA.journey.totalDistance / 1609.34).toFixed(1)} miles</span>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Routes legend */}
           <div className="mb-3">
-            <h4 className="text-sm text-gray-600 mb-1">Route Types:</h4>
+            <h4 className="text-sm font-medium text-gray-600 mb-1">Transportation Modes:</h4>
             <div className="flex flex-col space-y-1">
               {ROUTE_SEGMENTS.map((segment, i) => (
                 <div key={i} className="flex items-center">
@@ -389,7 +598,7 @@ const MapTest: React.FC = () => {
                     className="w-4 h-4 mr-2 rounded-full" 
                     style={{ backgroundColor: segment.color }} 
                   />
-                  <span className="text-sm">{segment.name} ({segment.profile})</span>
+                  <span className="text-sm">{segment.name}</span>
                 </div>
               ))}
             </div>
@@ -397,10 +606,10 @@ const MapTest: React.FC = () => {
           
           {/* Activity points legend */}
           <div>
-            <h4 className="text-sm text-gray-600 mb-1">Activity Points:</h4>
+            <h4 className="text-sm font-medium text-gray-600 mb-1">Activity Types:</h4>
             <div className="grid grid-cols-2 gap-x-4 gap-y-1">
               <div className="flex items-center">
-                <div className="w-3 h-3 mr-2 rounded-full bg-f97316" style={{ backgroundColor: '#f97316' }} />
+                <div className="w-3 h-3 mr-2 rounded-full" style={{ backgroundColor: '#f97316' }} />
                 <span className="text-sm">Viewpoint</span>
               </div>
               <div className="flex items-center">
@@ -420,10 +629,6 @@ const MapTest: React.FC = () => {
                 <span className="text-sm">Photo Spot</span>
               </div>
             </div>
-          </div>
-          
-          <div className="mt-3 text-xs text-gray-500">
-            Click on any marker to view details. Routes are calculated using real MapBox Directions API.
           </div>
         </div>
       </div>
