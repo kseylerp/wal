@@ -8,9 +8,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Config endpoint to safely expose necessary environment variables to the client
   app.get('/api/config', (req, res) => {
-    console.log('MapBox token available:', Boolean(process.env.MAPBOX_PUBLIC_TOKEN));
+    // Use public token for client-side, fall back to API key if needed
+    const publicToken = process.env.MAPBOX_PUBLIC_TOKEN;
+    const apiKey = process.env.MAPBOX_API_KEY || process.env.MAPBOX_TOKEN;
+    
+    // Log availability of tokens
+    console.log('MapBox public token available:', Boolean(publicToken));
+    console.log('MapBox API key available:', Boolean(apiKey));
+    
     res.json({
-      mapboxToken: process.env.MAPBOX_PUBLIC_TOKEN || '',
+      mapboxToken: publicToken || apiKey || '',
     });
   });
   

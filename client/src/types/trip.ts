@@ -31,6 +31,7 @@ export interface JourneyMapProps {
 export interface ItineraryListProps {
   itinerary: ItineraryDay[];
   suggestedGuides: string[];
+  onSelectActivity?: (day: number, activityIndex: number, activityName: string) => void;
 }
 
 export interface SegmentOption {
