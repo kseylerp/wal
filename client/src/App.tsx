@@ -14,19 +14,19 @@ function Router() {
       <header className="bg-white border-b shadow-sm">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <Link href="/">
-              <a className="font-bold text-xl text-primary">AdventureAI</a>
+            <Link href="/" className="font-bold text-xl text-primary">
+              AdventureAI
             </Link>
           </div>
           <nav className="flex items-center space-x-6">
-            <Link href="/">
-              <a className="text-gray-700 hover:text-primary">Chat</a>
+            <Link href="/" className="text-gray-700 hover:text-primary">
+              Chat
             </Link>
-            <Link href="/trip-planner">
-              <a className="text-gray-700 hover:text-primary">Trip Planner</a>
+            <Link href="/trip-planner" className="text-gray-700 hover:text-primary">
+              Trip Planner
             </Link>
-            <Link href="/map-test">
-              <a className="text-gray-700 hover:text-primary">Map Test</a>
+            <Link href="/map-test" className="text-gray-700 hover:text-primary">
+              Map Test
             </Link>
           </nav>
         </div>
