@@ -1,139 +1,25 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { COLORADO_TRIP_DATA, prepareMapSegments } from '@/lib/tripData';
 
 type RouteSegment = {
+  index: number;
   start: [number, number]; // [longitude, latitude]
-  end: [number, number];    // [longitude, latitude]
+  end: [number, number];   // [longitude, latitude]
   color: string;
   name: string;
   profile: 'driving' | 'walking' | 'cycling';
+  originalSegment: any;
 };
 
-// Use actual data from the OpenAI API response
-const TRIP_DATA = {
-  "id": "denali-wilderness-explorer",
-  "title": "Denali Wilderness Explorer",
-  "description": "An adventurous journey into the heart of Denali National Park, featuring cycling on remote roads, hiking on pristine trails, and a thrilling rafting experience on the Nenana River.",
-  "whyWeChoseThis": "Based on your interest in biking, hiking, and rafting in a natural setting, this Denali adventure offers all three activities in a less crowded area of Alaska. The trip balances moderate-intensity outdoor activities with incredible wildlife viewing opportunities in one of America's most pristine wilderness areas.",
-  "difficultyLevel": "Intermediate",
-  "priceEstimate": "$2,800 - $3,500 per person",
-  "duration": "7 Days",
-  "location": "Denali Backcountry, Alaska",
-  "suggestedGuides": [
-    "Alaska Wildland Adventures",
-    "Denali Backcountry Guides",
-    "Alaska Alpine Adventures"
-  ],
-  "mapCenter": [-149.7804, 63.7203],
-  "markers": [
-    {
-      "name": "Savage River Area",
-      "coordinates": [-149.7804, 63.7203]
-    },
-    {
-      "name": "Wonder Lake",
-      "coordinates": [-150.8805, 63.4952]
-    }
-  ],
-  "journey": {
-    "segments": [
-      {
-        "mode": "cycling",
-        "from": "Savage River",
-        "to": "Igloo Mountain Trail",
-        "distance": 15000,
-        "duration": 5400,
-        "geometry": {
-          "type": "LineString",
-          "coordinates": [
-            [-149.7804, 63.7203],
-            [-149.8505, 63.6805],
-            [-149.9204, 63.6405],
-            [-150.005, 63.6005]
-          ]
-        }
-      },
-      {
-        "mode": "hiking",
-        "from": "Igloo Mountain Trail",
-        "to": "Sable Pass",
-        "distance": 8000,
-        "duration": 8400,
-        "geometry": {
-          "type": "LineString",
-          "coordinates": [
-            [-150.005, 63.6005],
-            [-150.0252, 63.5905],
-            [-150.0654, 63.5855],
-            [-150.105, 63.5805]
-          ]
-        }
-      },
-      {
-        "mode": "rafting",
-        "from": "Teklanika River",
-        "to": "Nenana Canyon",
-        "distance": 20000,
-        "duration": 10800,
-        "geometry": {
-          "type": "LineString",
-          "coordinates": [
-            [-150.105, 63.5805],
-            [-150.1505, 63.6205],
-            [-150.2254, 63.6805],
-            [-150.3, 63.7805]
-          ]
-        }
-      }
-    ],
-    "totalDistance": 43000,
-    "totalDuration": 24600,
-    "bounds": [[-150.8805, 63.4952], [-149.7804, 63.7803]]
-  },
-  "itinerary": [
-    {
-      "day": 1,
-      "title": "Arrival and Orientation",
-      "description": "Arrive in Anchorage and transfer to your accommodation near Denali National Park. Meet your guides and review the trip itinerary.",
-      "activities": [
-        "Anchorage to Denali transfer (3 hours)",
-        "Welcome dinner and trip briefing",
-        "Equipment check and preparation"
-      ],
-      "accommodations": "Denali Backcountry Lodge"
-    },
-    {
-      "day": 2,
-      "title": "Cycling the Park Road",
-      "description": "Begin your adventure cycling along the restricted-access Denali Park Road, with stunning views and wildlife sightings.",
-      "activities": [
-        "Morning wildlife briefing",
-        "Guided cycling tour (15 miles)",
-        "Picnic lunch at scenic overlook",
-        "Wildlife spotting (caribou, moose, and possibly bears)"
-      ],
-      "accommodations": "Wilderness Campsite - Savage River"
-    },
-    {
-      "day": 3,
-      "title": "Igloo Mountain Hike",
-      "description": "Hike the scenic trail around Igloo Mountain, offering panoramic views of the Alaska Range.",
-      "activities": [
-        "Guided morning hike (5 miles)",
-        "Alpine wildflower identification",
-        "Packed wilderness lunch",
-        "Photography session at Sable Pass"
-      ],
-      "accommodations": "Wilderness Campsite - Igloo Creek"
-    }
-  ]
-};
+// Use the actual trip data from the OpenAI response
+const TRIP_DATA = COLORADO_TRIP_DATA;
 
 // Extract waypoints from the markers in the trip data
 const WAYPOINTS = TRIP_DATA.markers;
 
-// Create activity points for each day of the itinerary
+// Create activity points along the routes
 const ACTIVITY_POINTS: { 
   name: string; 
   coordinates: [number, number]; 
@@ -141,76 +27,45 @@ const ACTIVITY_POINTS: {
   description: string;
 }[] = [
   { 
-    name: "Wildlife Viewing Area", 
-    coordinates: [-149.8505, 63.6805],
+    name: "Horse Gulch Trailhead", 
+    coordinates: [-107.8654, 37.2698],
     type: 'viewpoint',
-    description: "Excellent spot for viewing caribou and moose"
+    description: "Starting point for the warm-up rides with multiple trail options"
   },
   { 
-    name: "Photography Location", 
-    coordinates: [-150.0252, 63.5905],
+    name: "Million Dollar Highway Overlook", 
+    coordinates: [-107.7559, 37.5683],
     type: 'photo',
-    description: "Beautiful vantage point for photos of Denali"
+    description: "Breathtaking views of the San Juan Mountains and the winding highway below"
   },
   { 
-    name: "Alpine Meditation Site", 
-    coordinates: [-150.0654, 63.5855],
+    name: "American Basin", 
+    coordinates: [-107.5411, 37.9284],
     type: 'meditation',
-    description: "Peaceful location for morning meditation"
+    description: "Beautiful alpine basin with wildflowers en route to Handies Peak"
   },
   { 
-    name: "Mountain Water Source", 
-    coordinates: [-150.1505, 63.6205],
+    name: "Ouray Hot Springs", 
+    coordinates: [-107.6734, 38.0247],
     type: 'water',
-    description: "Fresh glacier water - safe to drink after filtering"
+    description: "Natural hot springs perfect for recovery after hiking"
   },
   { 
-    name: "Rest Area", 
-    coordinates: [-150.2254, 63.6805],
+    name: "Blue Lakes Trailhead", 
+    coordinates: [-107.7814, 37.9867],
     type: 'rest',
-    description: "Sheltered rest stop with views of the valley"
+    description: "Stunning alpine lakes with towering peaks, great for a lunch break"
+  },
+  { 
+    name: "Animas River Put-in", 
+    coordinates: [-107.8821, 37.3182],
+    type: 'photo',
+    description: "Where the rafting adventure begins, with views of the river canyon"
   }
 ];
 
-// Map the journey segments to valid MapBox Directions API profiles
-const ROUTE_SEGMENTS: RouteSegment[] = TRIP_DATA.journey.segments.map((segment, index) => {
-  // Get start and end coordinates from segment geometry
-  const startCoords = segment.geometry.coordinates[0] as [number, number];
-  const endCoords = segment.geometry.coordinates[segment.geometry.coordinates.length - 1] as [number, number];
-  
-  // Map custom activity types to valid MapBox profiles
-  let profile: 'driving' | 'walking' | 'cycling';
-  let color: string;
-  
-  switch(segment.mode) {
-    case 'cycling':
-      profile = 'cycling';
-      color = '#f59e0b'; // amber
-      break;
-    case 'hiking':
-    case 'walking':
-      // Hiking and walking use the walking profile
-      profile = 'walking';
-      color = '#10b981'; // green 
-      break;
-    case 'rafting':
-      // MapBox doesn't have rafting, so use walking with a different color
-      profile = 'walking';
-      color = '#3b82f6'; // blue for rafting
-      break;
-    default:
-      profile = 'driving';
-      color = '#3b82f6'; // blue
-  }
-  
-  return {
-    start: startCoords,
-    end: endCoords,
-    color,
-    name: `${segment.from} to ${segment.to} (${segment.mode})`,
-    profile
-  };
-});
+// Process the journey segments to use with MapBox
+const ROUTE_SEGMENTS: RouteSegment[] = prepareMapSegments(TRIP_DATA);
 
 const MapTest: React.FC = () => {
   const mapContainerRef = useRef<HTMLDivElement>(null);

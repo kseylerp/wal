@@ -47,7 +47,7 @@ export interface Journey {
 }
 
 export interface JourneySegment {
-  mode: 'walking' | 'driving' | 'cycling' | 'transit';
+  mode: 'walking' | 'driving' | 'cycling' | 'transit' | 'biking' | 'hiking' | 'rafting';
   from: string;
   to: string;
   distance: number;

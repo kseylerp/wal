@@ -1,0 +1,134 @@
+{
+  "trips": [
+    {
+      "name": "San Juans Wild Loop: Camp, Bike, Hike & Raft",
+      "region": "San Juan Mountains (Durango/Silverton/Ouray/Lake City)",
+      "duration_days": 10,
+      "themes": ["mountain biking", "alpine hiking", "whitewater rafting", "remote camping"],
+      "intensity": "high",
+      "family_friendly": true,
+      "overview": "Loop journey through Colorado's wildest peaks. Bike the alpine passes, summit remote 13ers, raft the Animas River, and camp beneath the stars.",
+      "itinerary": [
+        {
+          "days": [1, 2],
+          "location": "Durango",
+          "activities": [
+            "Gear check, acclimatize, and explore historic town",
+            "Warm-up mountain bike ride on Horse Gulch Trail System (intermediate/advanced options)",
+            "Gear up for camping (outdoor shops, provisions)"
+          ],
+          "lodging": "Downtown hostel or airbnb"
+        },
+        {
+          "days": [3, 4, 5],
+          "location": "Silverton/Engineer Pass",
+          "activities": [
+            "Bike/4x4 up Cinnamon/Engineer Pass (rental shuttle possible for bikes)",
+            "Setup basecamp near Lake City (backcountry camping, permitted)",
+            "Summit Handies Peak (14er, moderate advanced hike, 5.5mi round trip)",
+            "Explore alpine lakes, short hikes, or wildflower photography"
+          ],
+          "lodging": "Remote tent camping (3 nights)"
+        },
+        {
+          "days": [6, 7],
+          "location": "Ouray",
+          "activities": [
+            "Shuttle to Ouray, soak in local hot springs",
+            "Epic hike on Blue Lakes or Bear Creek National Recreation Trail (10+ mi option)",
+            "Optional Via Ferrata (youth harnesses available, guided only)"
+          ],
+          "lodging": "Cabin or Ouray Campground"
+        },
+        {
+          "days": [8, 9],
+          "location": "Durango/Animas River",
+          "activities": [
+            "Full-day whitewater raft on Upper Animas (class IV sections can be adjusted, 12+ welcome w/ some wilderness trips)",
+            "Alternate: Lower Animas (Class II-III, suitable for younger paddlers)",
+            "Bike the Animas River Greenway (easy scenic post-rafting recovery)"
+          ],
+          "lodging": "Riverside campground or hostel"
+        },
+        {
+          "day": 10,
+          "location": "Durango",
+          "activities": [
+            "Town stroll, artisan breakfast, head out"
+          ],
+          "lodging": "N/A (depart)"
+        }
+      ],
+      "local_operators": [
+        "San Juan Expeditions (bike/hiking guides)",
+        "Mountain Waters Rafting (Durango)",
+        "San Juan Backcountry (bike shuttles and 4x4 support)"
+      ],
+      "notes": [
+        "Possible to reverse route, adjust camp days for weather.",
+        "Remote camping: be bear-aware, all camping needs to be at least 200 ft from water sources.",
+        "Permits may be needed for backcountry, check specific areas."
+      ]
+    },
+    {
+      "name": "Arkansas Valley Adventure Circuit: Peaks, Trails & Rapids",
+      "region": "Upper Arkansas Valley (Buena Vista/Salida/San Isabel Forest)",
+      "duration_days": 10,
+      "themes": ["mountain biking", "alpine hiking", "family-friendly whitewater", "forest camping"],
+      "intensity": "high",
+      "family_friendly": true,
+      "overview": "Base out of two mountain towns with epic singletrack, summit hikes, and world-class rafting. Camp riverside, ride through the pines, and hike Colorado’s highest peaks.",
+      "itinerary": [
+        {
+          "days": [1, 2],
+          "location": "Salida",
+          "activities": [
+            "Settle in, adjust to altitude, walk the historic downtown.",
+            "Evening bike ride: S-Mountain trails or Arkansas Hills system (intermediate-advanced MTB)."
+          ],
+          "lodging": "Local motel/hostel or tent at Salida East BLM Campground"
+        },
+        {
+          "days": [3, 4, 5],
+          "location": "Buena Vista/Collegiate Peaks",
+          "activities": [
+            "Camp at Harvard City or Riverside CG (3 nights, forest setting).",
+            "Summit hike: Mt. Yale or hike up to Kroenke Lake (alpine, moderate-difficult).",
+            "Bike the Midland Trail to Tunnel Drive: epic views, fun tunnels, advanced terrain.",
+            "Half-day rock climbing session with local guide (child harnesses available, optional)."
+          ],
+          "lodging": "Forest Service camping (3 nights)"
+        },
+        {
+          "days": [6, 7, 8],
+          "location": "Buena Vista/Numbers & Browns Canyon",
+          "activities": [
+            "Full-day raft Browns Canyon National Monument (Class III-IV, 12+ great for youth).",
+            "Optional: Numbers Section (Class IV; depends on outfitter/flow, discuss 12 yo comfort beforehand).",
+            "Short hikes to river overlooks, fishing, relaxation."
+          ],
+          "lodging": "Buena Vista in-town hostel or tent camping"
+        },
+        {
+          "days": [9, 10],
+          "location": "Salida/Cottonwood Pass",
+          "activities": [
+            "Morning ride up Cottonwood Pass (paved, legendary climb) or hike Ptarmigan Lake Trail (alpine basin, wildflowers).",
+            "Return to Salida: town meal, soak at Mt. Princeton Hot Springs, then depart."
+          ],
+          "lodging": "Local motel or depart"
+        }
+      ],
+      "local_operators": [
+        "Independent Whitewater (rafting)",
+        "Salida Bike Company (rentals, guide)",
+        "Buena Vista Mountain Adventures (hiking, climbing)"
+      ],
+      "notes": [
+        "Arkansas Valley has campgrounds with reservation and some first-come options.",
+        "Browns Canyon best rafted June–August; Class IV if flows permit and child meets outfitter threshold.",
+        "Bring layers; nights get cold even in summer."
+      ]
+    }
+  ]
+}
