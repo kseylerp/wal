@@ -70,11 +70,13 @@ When generating coordinates for journey segments, ensure they form a valid path 
 
 export async function processChatMessage(messages: Message[], userMessage: string) {
   try {
-    // Format messages for Claude API
-    const formattedMessages = messages.map(msg => ({
-      role: msg.role,
-      content: msg.content
-    }));
+    // Format messages for Claude API - need to filter system messages
+    const formattedMessages = messages
+      .filter(msg => msg.role === 'user' || msg.role === 'assistant')
+      .map(msg => ({
+        role: msg.role as 'user' | 'assistant',
+        content: msg.content
+      }));
 
     // Add the new user message
     formattedMessages.push({
@@ -331,6 +333,13 @@ export async function processChatMessage(messages: Message[], userMessage: strin
       }
     }
 
+    console.log("API Response Data:", {
+      answer: answer.substring(0, 50) + "...",
+      thinkingExists: !!thinking,
+      tripDataExists: !!tripData,
+      tripDataArray: tripData ? JSON.stringify(tripData).substring(0, 100) + "..." : "No trip data"
+    });
+    
     return {
       answer,
       thinking,

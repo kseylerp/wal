@@ -66,6 +66,12 @@ export function useChat() {
       
       // Parse trips from response if available
       const tripData = parseTripsFromResponse(response);
+      console.log("Client received response:", { 
+        hasAnswer: !!response.answer,
+        hasThinking: !!response.thinking,
+        hasTripData: !!response.tripData, 
+        tripData: response.tripData ? JSON.stringify(response.tripData).substring(0, 100) + "..." : "No trip data"
+      });
 
       // Add AI response to chat
       const assistantMessage: Message = {
