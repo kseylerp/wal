@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Message } from '@/types/chat';
 import TripCard from '../trip/TripCard';
+import { formatThinking } from '@/lib/anthropic';
 
 interface MessageBubbleProps {
   message: Message;
@@ -13,8 +14,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   onShowThinking,
   onModifyRequest 
 }) => {
-  const [showTripCards, setShowTripCards] = useState(false);
-  
   const isAiMessage = message.role === 'assistant';
   const hasThinking = Boolean(message.thinking);
   const hasTripData = Boolean(message.tripData && message.tripData.length > 0);
@@ -49,18 +48,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               </button>
             )}
 
-            {/* Show trip cards button if trip data is available */}
-            {hasTripData && !showTripCards && (
-              <button 
-                onClick={() => setShowTripCards(true)}
-                className="mt-3 px-4 py-2 bg-primary text-white rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
-              >
-                View Trip Options ({message.tripData?.length || 0})
-              </button>
-            )}
-
-            {/* Render trip cards if available and requested */}
-            {hasTripData && showTripCards && message.tripData && (
+            {/* Render trip cards if available */}
+            {hasTripData && message.tripData && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                 {message.tripData.map(trip => (
                   <TripCard

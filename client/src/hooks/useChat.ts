@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { ChatState, Message, TripData } from '../types/chat';
-import { sendChatMessage, parseTripsFromResponse } from '../lib/openai';
+import { sendChatMessage, parseTripsFromResponse } from '../lib/anthropic';
 
 export function useChat() {
   const [chatState, setChatState] = useState<ChatState>({
@@ -66,17 +66,13 @@ export function useChat() {
       
       // Parse trips from response if available
       const tripData = parseTripsFromResponse(response);
-      console.log("Client received response:", { 
-        hasAnswer: !!response.answer,
-        hasTripData: !!response.tripData, 
-        tripData: response.tripData ? JSON.stringify(response.tripData).substring(0, 100) + "..." : "No trip data"
-      });
 
       // Add AI response to chat
       const assistantMessage: Message = {
         id: uuidv4(),
         role: 'assistant',
         content: response.answer,
+        thinking: response.thinking,
         timestamp: new Date().toISOString(),
         tripData,
       };
