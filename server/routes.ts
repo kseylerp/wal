@@ -8,6 +8,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Config endpoint to safely expose necessary environment variables to the client
   app.get('/api/config', (req, res) => {
+    console.log('MapBox token available:', Boolean(process.env.MAPBOX_TOKEN));
     res.json({
       mapboxToken: process.env.MAPBOX_TOKEN || '',
     });

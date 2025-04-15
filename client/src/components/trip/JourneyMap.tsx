@@ -2,8 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { JourneyMapProps, SegmentOption } from '@/types/trip';
 
-// Will be set from the main component via props
+// Will be configured by the initialization
 let MAPBOX_TOKEN = '';
+
+// Default public MapBox token for development - replace with your own token in production
+const DEFAULT_PUBLIC_TOKEN = 'pk.eyJ1IjoicmVwbGl0LWFpIiwiYSI6ImNscjQxMzVlaTBtdm0ya3JxeHZ2YjF3dzkifQ._3jm6g6kAHZ0qQRTmnoUAA';
 
 const JourneyMap: React.FC<JourneyMapProps> = ({
   mapId,
@@ -35,16 +38,16 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
         try {
           const response = await fetch('/api/config');
           const data = await response.json();
-          MAPBOX_TOKEN = data.mapboxToken;
+          MAPBOX_TOKEN = data.mapboxToken || DEFAULT_PUBLIC_TOKEN;
         } catch (error) {
-          console.error('Failed to fetch MapBox token:', error);
-          return;
+          console.error('Failed to fetch MapBox token, using default:', error);
+          MAPBOX_TOKEN = DEFAULT_PUBLIC_TOKEN;
         }
       }
       
       if (!MAPBOX_TOKEN) {
-        console.error('MapBox token is not available');
-        return;
+        console.error('MapBox token is not available, using default');
+        MAPBOX_TOKEN = DEFAULT_PUBLIC_TOKEN;
       }
       
       mapboxgl.accessToken = MAPBOX_TOKEN;
