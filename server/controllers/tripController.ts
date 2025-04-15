@@ -1,13 +1,5 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
-
-// The newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
-const MODEL = "claude-3-7-sonnet-20250219";
-
-// Initialize Anthropic client
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+import { generateTripSuggestion as openAIGenerateTripSuggestion } from "../services/openaiService";
 
 // Schema for a trip suggestion
 const tripFormatSchema = z.object({
@@ -100,292 +92,29 @@ You're friendly, succinct, and conversational. Make your responses both informat
 
 export async function createTripSuggestion(userMessage: string) {
   try {
-    const response = await anthropic.messages.create({
-      model: MODEL,
-      max_tokens: 4000,
-      temperature: 0.7,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userMessage }],
-      tools: [
-        {
-          type: "custom",
-          name: "trip_format",
-          input_schema: {
-            type: "object",
-            properties: {
-              trip: {
-                type: "array",
-                items: {
-                  type: "object",
-                  required: [
-                    "id",
-                    "title",
-                    "description",
-                    "whyWeChoseThis",
-                    "difficultyLevel",
-                    "priceEstimate",
-                    "duration",
-                    "location",
-                    "suggestedGuides",
-                    "mapCenter",
-                    "markers",
-                    "journey",
-                    "itinerary",
-                  ],
-                  properties: {
-                    id: {
-                      type: "string",
-                      description: "Unique identifier for the trip",
-                    },
-                    title: {
-                      type: "string",
-                      description: "Title of the trip",
-                    },
-                    description: {
-                      type: "string",
-                      description: "Description of the trip",
-                    },
-                    whyWeChoseThis: {
-                      type: "string",
-                      description: "Reason for recommending this trip",
-                    },
-                    difficultyLevel: {
-                      type: "string",
-                      description: "Difficulty level of the trip",
-                    },
-                    priceEstimate: {
-                      type: "string",
-                      description: "Estimated price range for the trip",
-                    },
-                    duration: {
-                      type: "string",
-                      description: "Duration of the trip",
-                    },
-                    location: {
-                      type: "string",
-                      description: "Location of the trip",
-                    },
-                    suggestedGuides: {
-                      type: "array",
-                      items: {
-                        type: "string",
-                      },
-                      description: "List of suggested guides for the trip",
-                    },
-                    mapCenter: {
-                      type: "array",
-                      items: {
-                        type: "number",
-                      },
-                      description: "Center coordinates for the map [longitude, latitude]",
-                    },
-                    markers: {
-                      type: "array",
-                      items: {
-                        type: "object",
-                        required: ["coordinates", "name"],
-                        properties: {
-                          coordinates: {
-                            type: "array",
-                            items: {
-                              type: "number",
-                            },
-                            description: "Coordinates for the marker [longitude, latitude]",
-                          },
-                          name: {
-                            type: "string",
-                            description: "Name of the location",
-                          },
-                        },
-                      },
-                      description: "Markers for key locations on the map",
-                    },
-                    journey: {
-                      type: "object",
-                      required: ["segments", "totalDistance", "totalDuration", "bounds"],
-                      properties: {
-                        segments: {
-                          type: "array",
-                          items: {
-                            type: "object",
-                            required: ["mode", "from", "to", "distance", "duration"],
-                            properties: {
-                              mode: {
-                                type: "string",
-                                enum: ["walking", "driving", "cycling", "transit"],
-                                description: "Mode of transportation",
-                              },
-                              from: {
-                                type: "string",
-                                description: "Starting point",
-                              },
-                              to: {
-                                type: "string",
-                                description: "Ending point",
-                              },
-                              distance: {
-                                type: "number",
-                                description: "Distance in meters",
-                              },
-                              duration: {
-                                type: "number",
-                                description: "Duration in seconds",
-                              },
-                              terrain: {
-                                type: "string",
-                                enum: ["trail", "paved", "rocky", "mixed"],
-                                description: "Type of terrain",
-                              },
-                              geometry: {
-                                type: "object",
-                                properties: {
-                                  type: {
-                                    type: "string",
-                                    enum: ["LineString"],
-                                  },
-                                  coordinates: {
-                                    type: "array",
-                                    items: {
-                                      type: "array",
-                                      items: {
-                                        type: "number",
-                                      },
-                                    },
-                                  },
-                                },
-                                description: "Geometry for the route",
-                              },
-                              steps: {
-                                type: "array",
-                                items: {
-                                  type: "object",
-                                  required: ["maneuver", "distance", "duration"],
-                                  properties: {
-                                    maneuver: {
-                                      type: "object",
-                                      required: ["instruction", "location"],
-                                      properties: {
-                                        instruction: {
-                                          type: "string",
-                                          description: "Instruction for this step",
-                                        },
-                                        location: {
-                                          type: "array",
-                                          items: {
-                                            type: "number",
-                                          },
-                                          description: "Location coordinates [longitude, latitude]",
-                                        },
-                                      },
-                                    },
-                                    distance: {
-                                      type: "number",
-                                      description: "Distance in meters",
-                                    },
-                                    duration: {
-                                      type: "number",
-                                      description: "Duration in seconds",
-                                    },
-                                  },
-                                },
-                                description: "Steps within this segment",
-                              },
-                            },
-                          },
-                          description: "Segments of the journey",
-                        },
-                        totalDistance: {
-                          type: "number",
-                          description: "Total distance in meters",
-                        },
-                        totalDuration: {
-                          type: "number",
-                          description: "Total duration in seconds",
-                        },
-                        bounds: {
-                          type: "array",
-                          items: {
-                            type: "array",
-                            items: {
-                              type: "number",
-                            },
-                          },
-                          description: "Bounding box for the journey [southwest, northeast]",
-                        },
-                      },
-                      description: "Journey details",
-                    },
-                    itinerary: {
-                      type: "array",
-                      items: {
-                        type: "object",
-                        required: ["day", "title", "description", "activities"],
-                        properties: {
-                          day: {
-                            type: "number",
-                            description: "Day number",
-                          },
-                          title: {
-                            type: "string",
-                            description: "Title for this day",
-                          },
-                          description: {
-                            type: "string",
-                            description: "Description for this day",
-                          },
-                          activities: {
-                            type: "array",
-                            items: {
-                              type: "string",
-                            },
-                            description: "Activities for this day",
-                          },
-                          accommodation: {
-                            type: "string",
-                            description: "Accommodation for this night",
-                          },
-                        },
-                      },
-                      description: "Day-by-day itinerary",
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      ],
-    });
+    // Use the "Offbeat Agent" assistant from OpenAI
+    const response = await openAIGenerateTripSuggestion(userMessage);
 
-    if (!response || !response.content || response.content.length === 0) {
-      throw new Error("Failed to get a valid response from Anthropic");
-    }
-
-    let content = "";
-    let jsonData = null;
-
-    // Process the response content
-    for (const item of response.content) {
-      if (item.type === "text") {
-        content += item.text;
-      } else if (item.type === "tool_use") {
-        try {
-          const parsedData = JSON.parse(item.input);
-          // Validate the data against our schema
-          const validatedData = tripFormatSchema.parse(parsedData);
-          jsonData = validatedData;
-          // Include the JSON string in the content for the client to parse
-          content += `\n${JSON.stringify(parsedData, null, 2)}\n`;
-        } catch (error) {
-          console.error("Error parsing tool_use JSON:", error);
-        }
+    // If the response contains JSON data, validate it
+    if (response.tripData) {
+      try {
+        // Validate the data against our schema
+        const validatedData = tripFormatSchema.parse(response.tripData);
+        return {
+          content: response.content,
+          tripData: validatedData
+        };
+      } catch (error) {
+        console.error("Error validating trip data:", error);
+        // Return just the text content if validation fails
+        return {
+          content: response.content,
+          tripData: null
+        };
       }
     }
 
-    return {
-      content: content.trim(),
-      tripData: jsonData,
-    };
+    return response;
   } catch (error) {
     console.error("Error creating trip suggestion:", error);
     throw new Error(`Failed to generate trip suggestion: ${error instanceof Error ? error.message : "Unknown error"}`);
