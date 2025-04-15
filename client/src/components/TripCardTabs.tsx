@@ -29,7 +29,9 @@ export default function TripCardTabs({ trips }: TripCardTabsProps) {
               )}
               onClick={() => setActiveTab(index)}
             >
-              {trip.title.split(' ').slice(0, 3).join(' ')}
+              {typeof trip.title === 'string' 
+                ? trip.title.split(' ').slice(0, 3).join(' ') 
+                : 'Trip Option'}
             </button>
           ))}
         </div>

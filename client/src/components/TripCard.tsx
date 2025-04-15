@@ -17,14 +17,16 @@ export default function TripCard({ trip }: TripCardProps) {
   if (!trip) return null;
 
   return (
-    <div id={`trip-card-${trip.id}`}>
+    <div id={`trip-card-${trip.id || 'unknown'}`}>
       <div className="mb-3">
-        <h3 className="text-lg font-semibold text-neutral-800">{trip.title}</h3>
+        <h3 className="text-lg font-semibold text-neutral-800">
+          {typeof trip.title === 'string' ? trip.title : 'Trip Option'}
+        </h3>
         <div className="flex items-center text-sm text-neutral-600 mt-1">
           <MapPin className="text-orange-500 h-4 w-4 mr-1" />
-          <span>{trip.location}</span>
+          <span>{typeof trip.location === 'string' ? trip.location : 'Location unknown'}</span>
           <span className="mx-2">•</span>
-          <span>{trip.duration}</span>
+          <span>{typeof trip.duration === 'string' ? trip.duration : 'Duration unknown'}</span>
         </div>
       </div>
       
@@ -69,13 +71,13 @@ export default function TripCard({ trip }: TripCardProps) {
       {activeTab === "overview" && (
         <>
           <p className="text-neutral-700 text-sm mb-3">
-            {trip.description}
+            {typeof trip.description === 'string' ? trip.description : 'No description available yet.'}
           </p>
           
           <div className="bg-neutral-50 rounded-lg p-3 mb-4">
             <h4 className="font-medium text-neutral-800 mb-1">Why We Chose This</h4>
             <p className="text-sm text-neutral-700">
-              {trip.whyWeChoseThis}
+              {typeof trip.whyWeChoseThis === 'string' ? trip.whyWeChoseThis : 'Information coming soon.'}
             </p>
           </div>
           
@@ -90,11 +92,15 @@ export default function TripCard({ trip }: TripCardProps) {
           <div className="grid grid-cols-2 gap-3 mb-4">
             <div className="bg-neutral-50 p-3 rounded-lg">
               <h4 className="text-sm font-medium text-neutral-700">Difficulty Level</h4>
-              <p className="text-neutral-800 font-medium">{trip.difficultyLevel}</p>
+              <p className="text-neutral-800 font-medium">
+                {typeof trip.difficultyLevel === 'string' ? trip.difficultyLevel : 'Moderate'}
+              </p>
             </div>
             <div className="bg-neutral-50 p-3 rounded-lg">
               <h4 className="text-sm font-medium text-neutral-700">Price Estimate</h4>
-              <p className="text-neutral-800 font-medium">{trip.priceEstimate}</p>
+              <p className="text-neutral-800 font-medium">
+                {typeof trip.priceEstimate === 'string' ? trip.priceEstimate : 'Varies'}
+              </p>
             </div>
           </div>
         </>
@@ -102,28 +108,36 @@ export default function TripCard({ trip }: TripCardProps) {
       
       {activeTab === "itinerary" && (
         <div className="space-y-4">
-          {trip.itinerary.map((day) => (
-            <div key={day.day} className="border-l-2 border-primary pl-4 pb-2">
-              <h4 className="font-medium">Day {day.day}: {day.title}</h4>
-              <p className="text-sm text-neutral-700 mt-1">{day.description}</p>
-              {day.activities.length > 0 && (
-                <div className="mt-2">
-                  <h5 className="text-sm font-medium">Activities:</h5>
-                  <ul className="list-disc list-inside text-sm text-neutral-700">
-                    {day.activities.map((activity, index) => (
-                      <li key={index}>{activity}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {day.accommodation && (
-                <div className="mt-2 text-sm">
-                  <span className="font-medium">Stay: </span>
-                  <span>{day.accommodation}</span>
-                </div>
-              )}
-            </div>
-          ))}
+          {Array.isArray(trip.itinerary) ? (
+            trip.itinerary.map((day) => (
+              <div key={day.day || Math.random()} className="border-l-2 border-primary pl-4 pb-2">
+                <h4 className="font-medium">
+                  Day {day.day || '?'}: {typeof day.title === 'string' ? day.title : 'Activities'}
+                </h4>
+                <p className="text-sm text-neutral-700 mt-1">
+                  {typeof day.description === 'string' ? day.description : 'Details coming soon.'}
+                </p>
+                {Array.isArray(day.activities) && day.activities.length > 0 && (
+                  <div className="mt-2">
+                    <h5 className="text-sm font-medium">Activities:</h5>
+                    <ul className="list-disc list-inside text-sm text-neutral-700">
+                      {day.activities.map((activity, index) => (
+                        <li key={index}>{typeof activity === 'string' ? activity : 'Activity details'}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {day.accommodation && (
+                  <div className="mt-2 text-sm">
+                    <span className="font-medium">Stay: </span>
+                    <span>{day.accommodation}</span>
+                  </div>
+                )}
+              </div>
+            ))
+          ) : (
+            <p className="text-neutral-600 text-sm">Itinerary is being prepared. Check back soon!</p>
+          )}
         </div>
       )}
       
@@ -133,11 +147,15 @@ export default function TripCard({ trip }: TripCardProps) {
             <h4 className="font-medium flex items-center gap-1">
               <Info className="h-4 w-4" /> Guides & Outfitters
             </h4>
-            <ul className="mt-2 space-y-2">
-              {trip.suggestedGuides.map((guide, index) => (
-                <li key={index} className="text-sm">{guide}</li>
-              ))}
-            </ul>
+            {Array.isArray(trip.suggestedGuides) && trip.suggestedGuides.length > 0 ? (
+              <ul className="mt-2 space-y-2">
+                {trip.suggestedGuides.map((guide, index) => (
+                  <li key={index} className="text-sm">{typeof guide === 'string' ? guide : 'Local guide'}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-2 text-sm text-neutral-600">Recommended guides will be provided soon.</p>
+            )}
           </div>
           
           <div className="bg-neutral-50 p-3 rounded-lg">
