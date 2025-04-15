@@ -79,7 +79,8 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
         }
       });
       
-      mapRef.current.addControl(directions, 'top-left');
+      // Cast to any to avoid TypeScript error with IControl interface
+      mapRef.current.addControl(directions as any, 'top-left');
     };
     
     initMap();

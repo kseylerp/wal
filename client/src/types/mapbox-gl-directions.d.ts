@@ -1,4 +1,6 @@
 declare module '@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions' {
+  import { IControl } from 'mapbox-gl';
+  
   interface MapboxDirectionsOptions {
     accessToken: string;
     unit?: 'imperial' | 'metric';
@@ -19,8 +21,10 @@ declare module '@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions' {
     zoom?: number;
   }
 
-  class MapboxDirections {
+  class MapboxDirections implements IControl {
     constructor(options: MapboxDirectionsOptions);
+    onAdd(map: mapboxgl.Map): HTMLElement;
+    onRemove(map: mapboxgl.Map): void;
     setOrigin(query: string | [number, number]): this;
     setDestination(query: string | [number, number]): this;
     on(type: string, fn: Function): this;

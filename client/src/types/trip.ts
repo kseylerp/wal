@@ -4,6 +4,7 @@ export interface TripCardProps {
   id: string;
   title: string;
   description: string;
+  whyWeChoseThis: string;
   difficultyLevel: string;
   priceEstimate: string;
   duration: string;
