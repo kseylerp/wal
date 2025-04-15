@@ -19,6 +19,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   const hasTripData = Boolean(message.tripData && message.tripData.length > 0);
 
   const formatMessageContent = (content: string) => {
+    // Handle undefined or null content
+    if (!content) return null;
+    
     return content.split('\n').map((line, index) => (
       <div key={index} className="inline">
         {line}
@@ -57,6 +60,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                     id={trip.id}
                     title={trip.title}
                     description={trip.description}
+                    whyWeChoseThis={trip.whyWeChoseThis}
                     difficultyLevel={trip.difficultyLevel}
                     priceEstimate={trip.priceEstimate}
                     duration={trip.duration}

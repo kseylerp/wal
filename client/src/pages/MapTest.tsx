@@ -333,8 +333,47 @@ const MapTest: React.FC = () => {
     }
   };
 
+  // Fetch directions data from API for an activity
+  const fetchDirections = async (
+    activity: Activity,
+    profile: 'driving' | 'walking' | 'cycling'
+  ) => {
+    try {
+      // Get start and end coordinates from the activity's route geometry
+      const startCoords = activity.route_geometry.coordinates[0] as [number, number];
+      const endCoords = activity.route_geometry.coordinates[activity.route_geometry.coordinates.length - 1] as [number, number];
+      
+      // Use our backend proxy to fetch directions
+      const coordinates = `${startCoords[0]},${startCoords[1]};${endCoords[0]},${endCoords[1]}`;
+      const url = `/api/directions?profile=${profile}&coordinates=${coordinates}`;
+      
+      console.log(`Fetching directions from: ${url}`);
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`API responded with status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.routes && data.routes.length > 0) {
+        return {
+          geometry: data.routes[0].geometry,
+          distance: data.routes[0].distance, // in meters
+          duration: data.routes[0].duration, // in seconds
+          legs: data.routes[0].legs
+        };
+      } else {
+        return null;
+      }
+    } catch (err) {
+      console.error('Error fetching directions:', err);
+      return null;
+    }
+  };
+
   // Add a route to the map
-  const addRouteToMap = (
+  const addRouteToMap = async (
     map: mapboxgl.Map,
     activityId: string,
     activity: Activity
@@ -365,15 +404,51 @@ const MapTest: React.FC = () => {
       return;
     }
     
-    // Add the route source
-    map.addSource(activityId, {
-      type: 'geojson',
-      data: {
-        type: 'Feature',
-        properties: {},
-        geometry: activity.route_geometry
+    // Try to get directions from the MapBox API
+    try {
+      const profile = getMapboxProfile(activity.type);
+      const routeData = await fetchDirections(activity, profile);
+      
+      if (routeData) {
+        // Add the route source using the directions API data
+        map.addSource(activityId, {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: {},
+            geometry: routeData.geometry
+          }
+        });
+        
+        // Log directions info
+        console.log(`Route from ${activity.start_location} to ${activity.end_location}:`, {
+          distance: `${(routeData.distance / 1609.34).toFixed(2)} miles`,
+          duration: `${Math.floor(routeData.duration / 60)} minutes`
+        });
+      } else {
+        // Fallback to using the provided route geometry
+        console.log('Using provided route geometry (directions API failed)');
+        map.addSource(activityId, {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: {},
+            geometry: activity.route_geometry
+          }
+        });
       }
-    });
+    } catch (error) {
+      console.error('Error getting directions:', error);
+      // Fallback to using the provided route geometry
+      map.addSource(activityId, {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          properties: {},
+          geometry: activity.route_geometry
+        }
+      });
+    }
     
     // Add the route layer
     map.addLayer({
