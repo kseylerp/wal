@@ -28,7 +28,7 @@ const TripResults: React.FC = () => {
           description: "There was a problem loading your trip plans.",
           variant: "destructive"
         });
-        navigate('/trip-planner');
+        setLocation('/trip-planner');
       }
     } else {
       // No trips found, redirect back to planner
@@ -37,9 +37,9 @@ const TripResults: React.FC = () => {
         description: "Please create a trip plan first.",
         variant: "destructive"
       });
-      navigate('/trip-planner');
+      setLocation('/trip-planner');
     }
-  }, [navigate, toast]);
+  }, [setLocation, toast]);
 
   // Helper function to format season names
   const formatSeasons = (seasons: string[]) => {
@@ -67,7 +67,7 @@ const TripResults: React.FC = () => {
             Here are your personalized trip plans. Select a plan to view details.
           </p>
         </div>
-        <Button onClick={() => navigate('/trip-planner')} variant="outline">
+        <Button onClick={() => setLocation('/trip-planner')} variant="outline">
           Create New Plan
         </Button>
       </div>

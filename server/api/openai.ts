@@ -1,137 +1,129 @@
-// OpenAI integration for trip planning API
-import { OpenAI } from 'openai';
-import { TripResponse } from '@/types/trip-schema';
-
-// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-const OPENAI_MODEL = "gpt-4o";
-const ASSISTANT_ID = "asst_LxWLQAQzSQgk3rNTAPNhj5Uv";
+import OpenAI from "openai";
+import { Message } from "../../client/src/types/chat";
+import { TripResponse } from "../../client/src/types/trip-schema";
 
 // Initialize OpenAI client
-const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY 
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
+/**
+ * Makes a request to OpenAI for chat completion
+ */
 export async function getChatResponse(messages: any[]): Promise<any> {
   try {
-    // Create a thread with the user's message history
-    const thread = await openai.beta.threads.create({
-      messages: messages.map(msg => ({
-        role: msg.role === 'user' ? 'user' : 'assistant',
-        content: msg.content,
-      })),
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages,
+      temperature: 0.7,
     });
-
-    // Run the assistant on the thread
-    const run = await openai.beta.threads.runs.create(
-      thread.id,
-      { assistant_id: ASSISTANT_ID }
-    );
-
-    // Poll for completion
-    let runStatus = await openai.beta.threads.runs.retrieve(
-      thread.id,
-      run.id
-    );
-
-    // Wait for completion (with timeout)
-    const startTime = Date.now();
-    const TIMEOUT_MS = 60000; // 1 minute timeout
     
-    while (runStatus.status !== 'completed' && runStatus.status !== 'failed') {
-      // Check timeout
-      if (Date.now() - startTime > TIMEOUT_MS) {
-        throw new Error('Request timed out waiting for assistant response');
-      }
-      
-      // Wait before polling again
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Get updated status
-      runStatus = await openai.beta.threads.runs.retrieve(
-        thread.id,
-        run.id
-      );
-    }
-
-    if (runStatus.status === 'failed') {
-      throw new Error(`Assistant run failed: ${runStatus.last_error?.message || 'Unknown error'}`);
-    }
-
-    // Get messages (only those from the assistant)
-    const messages_response = await openai.beta.threads.messages.list(
-      thread.id
-    );
-
-    // Find the assistant's response (the latest one)
-    const assistantMessages = messages_response.data
-      .filter(msg => msg.role === 'assistant')
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    
-    if (assistantMessages.length === 0) {
-      throw new Error('No response from assistant');
-    }
-
-    // Return the latest response
-    const latestMessage = assistantMessages[0];
-    
-    // Handle different content types
-    let responseContent = '';
-    
-    if (latestMessage.content[0].type === 'text') {
-      responseContent = latestMessage.content[0].text.value;
-    }
-    
-    return {
-      role: 'assistant',
-      content: responseContent,
-      thread_id: thread.id, // Keep the thread ID for future messages
-    };
+    return response;
   } catch (error) {
-    console.error('Error in OpenAI API call:', error);
+    console.error('OpenAI API Error:', error);
     throw error;
   }
 }
 
+/**
+ * Requests trip plans from the OpenAI Assistant
+ * This uses a dedicated assistant built specifically for trip planning
+ */
 export async function getTripPlans(query: string): Promise<TripResponse> {
+  const ASSISTANT_ID = "asst_LxWLQAQzSQgk3rNTAPNhj5Uv";
+  
   try {
-    console.log('Generating trip plans for query:', query);
+    console.log("Creating thread for OpenAI assistant...");
+    // Create a thread
+    const thread = await openai.beta.threads.create();
     
-    // Initial message to the assistant
-    const messages = [
-      {
-        role: 'system',
-        content: 'You are a travel planning expert. Generate a detailed trip itinerary based on the user\'s query. Include coordinates, detailed activities, and routes. Respond with a valid JSON object that matches the Trip schema.'
-      },
-      {
-        role: 'user',
-        content: `Please create a detailed trip plan for the following request: ${query}. Make sure to include real geographic coordinates, realistic routes, and activity details in your response. Format your response as a JSON object following the TripResponse schema.`
+    // Add a message to the thread with the user's query
+    console.log("Adding user message to thread...");
+    await openai.beta.threads.messages.create(thread.id, {
+      role: "user",
+      content: `Generate trip plan based on the following request: ${query}. 
+      Please respond with valid JSON that follows the TripResponse schema with detailed trip information.`
+    });
+    
+    // Run the assistant on the thread
+    console.log("Running the Assistant...");
+    const run = await openai.beta.threads.runs.create(thread.id, {
+      assistant_id: ASSISTANT_ID,
+      instructions: `
+        You are a trip planning assistant specialized in adventure travel.
+        - Generate detailed trip plans based on user requests
+        - Respond with valid JSON data following the Trip schema
+        - Include real geographic data, with accurate locations, coordinates and routes
+        - Always include detailed itineraries, activities, and why this trip was chosen
+        - Include weather data, recommended outfitters, and key locations
+        - Focus on outdoor adventures like hiking, biking, camping, etc.
+        - Your responses should ONLY contain valid JSON, no explanatory text
+      `
+    });
+    
+    // Wait for completion
+    console.log("Waiting for assistant to complete...");
+    let runStatus = await openai.beta.threads.runs.retrieve(
+      thread.id,
+      run.id
+    );
+    
+    // Poll for completion
+    while (runStatus.status !== "completed") {
+      if (["failed", "cancelled", "expired"].includes(runStatus.status)) {
+        throw new Error(`Run ended with status: ${runStatus.status}`);
       }
-    ];
-
-    // Call OpenAI
-    const response = await getChatResponse(messages);
+      
+      // Wait 1 second before polling again
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
+      console.log("Current status:", runStatus.status);
+    }
     
-    // Parse JSON from response
+    // Get the messages
+    const messages = await openai.beta.threads.messages.list(thread.id);
+    
+    // Find the last assistant message
+    const lastMessage = messages.data
+      .filter(message => message.role === "assistant")
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+    
+    if (!lastMessage || !lastMessage.content || lastMessage.content.length === 0) {
+      throw new Error("No response from assistant");
+    }
+    
+    // Parse response as JSON
     let tripData: TripResponse;
-    
     try {
-      // Extract JSON from the response (it might be wrapped in markdown code blocks)
-      const jsonMatch = response.content.match(/```json\n([\s\S]*?)\n```/) || 
-                         response.content.match(/```\n([\s\S]*?)\n```/) ||
-                         [null, response.content];
+      const content = lastMessage.content[0];
       
-      const jsonString = jsonMatch[1] || response.content;
-      tripData = JSON.parse(jsonString);
+      if (content.type !== 'text') {
+        throw new Error("Expected text response from OpenAI");
+      }
       
-      console.log('Successfully parsed trip data');
+      // Try to extract JSON from the text response
+      const textContent = content.text.value;
+      const jsonMatch = textContent.match(/```json\n([\s\S]*?)\n```/) || 
+                          textContent.match(/```\n([\s\S]*?)\n```/) ||
+                          [null, textContent]; 
+      
+      const jsonStr = jsonMatch[1] || textContent;
+      
+      tripData = JSON.parse(jsonStr) as TripResponse;
+      
+      if (!tripData || !tripData.trips || tripData.trips.length === 0) {
+        throw new Error("Invalid trip data format returned from OpenAI");
+      }
+      
+      console.log("Successfully parsed trip data");
     } catch (error) {
-      console.error('Error parsing trip data:', error);
-      throw new Error('Failed to parse trip data from assistant response');
+      console.error("Error parsing JSON from assistant response:", error);
+      throw new Error("Failed to parse trip data from assistant response");
     }
     
     return tripData;
   } catch (error) {
-    console.error('Error getting trip plans:', error);
+    console.error("Error in getTripPlans:", error);
     throw error;
   }
 }

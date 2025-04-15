@@ -56,7 +56,7 @@ const TripPlanner: React.FC = () => {
     
     try {
       // Call the API to get trip suggestions
-      const response = await apiRequest<TripResponse>('/api/trip-plans', {
+      const response = await apiRequest('/api/trip-plans', {
         method: 'POST',
         body: JSON.stringify({ query }),
         headers: {
@@ -64,20 +64,23 @@ const TripPlanner: React.FC = () => {
         }
       });
       
-      if (!response || !response.trips || response.trips.length === 0) {
+      // Cast the response to TripResponse
+      const tripResponse = response as unknown as TripResponse;
+      
+      if (!tripResponse || !tripResponse.trips || tripResponse.trips.length === 0) {
         throw new Error('No trip suggestions received');
       }
       
       // Store trip data in localStorage for now
       // In a real app, we'd save this to a database
-      localStorage.setItem('tripPlans', JSON.stringify(response));
+      localStorage.setItem('tripPlans', JSON.stringify(tripResponse));
       
       // Navigate to the trip results page
       setLocation('/trip-results');
       
       toast({
         title: "Trip Plans Generated!",
-        description: `Created ${response.trips.length} trip suggestions based on your preferences.`,
+        description: `Created ${tripResponse.trips.length} trip suggestions based on your preferences.`,
       });
     } catch (error) {
       console.error('Error generating trip plans:', error);
