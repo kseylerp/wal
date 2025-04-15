@@ -3,7 +3,7 @@ import { Message } from '@/types/chat';
 import MessageBubble from './MessageBubble';
 import ThinkingIndicator from './ThinkingIndicator';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { formatThinking } from '@/lib/anthropic';
+import { formatThinking } from '@/lib/openai';
 
 interface ChatContainerProps {
   messages: Message[];

@@ -186,7 +186,7 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
       },
       paint: {
         'line-color': '#ec4899', // Highlight color
-        'line-width': I,
+        'line-width': 6,
         'line-opacity': 0.8
       }
     });

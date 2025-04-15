@@ -1,12 +1,12 @@
-import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 import { Message } from '@/types/chat';
 
-// the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
-// System prompt that instructs Claude how to respond
+// System prompt that instructs the AI how to respond
 const SYSTEM_PROMPT = `You are an outdoor activity planning assistant. Ask a few questions to try and understand the needs of the user and offer suggestions. Then provide two trip options to lesser-known destinations in valid JSON format.
 
 Analyze user prompts for destination, activities, duration, budget, intensity level, and special requirements.
@@ -17,7 +17,7 @@ Analyze user prompts for destination, activities, duration, budget, intensity le
 - Consider preparedness of the travelers
 
 When you've gathered sufficient information (max two back-and-forth exchanges), respond with trip suggestions. 
-Format your trip suggestions using this exact JSON structure inside a trip_format tool call:
+Format your trip suggestions using this exact JSON structure for the trip_format function:
 
 {
   "trip": [
@@ -70,7 +70,7 @@ When generating coordinates for journey segments, ensure they form a valid path 
 
 export async function processChatMessage(messages: Message[], userMessage: string) {
   try {
-    // Format messages for Claude API
+    // Format messages for OpenAI API
     const formattedMessages = messages.map(msg => ({
       role: msg.role,
       content: msg.content
@@ -82,17 +82,14 @@ export async function processChatMessage(messages: Message[], userMessage: strin
       content: userMessage
     });
 
-    // Call Claude API
-    const response = await anthropic.messages.create({
-      model: 'claude-3-7-sonnet-20250219',
-      max_tokens: 4000,
-      system: SYSTEM_PROMPT,
-      messages: formattedMessages,
-      temperature: 1,
-      tools: [
-        {
+    // Define the trip_format tool
+    const tools = [
+      {
+        type: "function",
+        function: {
           name: "trip_format",
-          input_schema: {
+          description: "Format trip suggestions as structured data",
+          parameters: {
             type: "object",
             properties: {
               trip: {
@@ -298,38 +295,50 @@ export async function processChatMessage(messages: Message[], userMessage: strin
                   }
                 }
               }
-            }
+            },
+            required: ["trip"]
           }
         }
-      ]
-    });
+      }
+    ];
 
-    // Extract the thinking process if available
-    let thinking = '';
-    const thinkingContent = response.content.find(item => item.type === 'thinking');
-    if (thinkingContent && 'thinking' in thinkingContent) {
-      thinking = thinkingContent.thinking;
-    }
+    // Call OpenAI API
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        ...formattedMessages
+      ],
+      temperature: 1,
+      tools: tools,
+      tool_choice: "auto"
+    });
 
     // Extract the text response
     let answer = '';
-    const textContent = response.content.find(item => item.type === 'text');
-    if (textContent && 'text' in textContent) {
-      answer = textContent.text;
+    if (response.choices && response.choices.length > 0 && response.choices[0].message.content) {
+      answer = response.choices[0].message.content;
     }
 
     // Extract the trip data if tool calls were made
     let tripData = undefined;
-    if (response.tool_calls && response.tool_calls.length > 0) {
-      const tripToolCall = response.tool_calls.find(tool => tool.name === 'trip_format');
-      if (tripToolCall && tripToolCall.input) {
+    if (response.choices[0].message.tool_calls && response.choices[0].message.tool_calls.length > 0) {
+      const tripToolCall = response.choices[0].message.tool_calls.find(
+        (tool: any) => tool.function.name === 'trip_format'
+      );
+      
+      if (tripToolCall && tripToolCall.function && tripToolCall.function.arguments) {
         try {
-          tripData = (tripToolCall.input as any).trip;
+          const toolArguments = JSON.parse(tripToolCall.function.arguments);
+          tripData = toolArguments.trip;
         } catch (err) {
           console.error('Error parsing trip data from tool call', err);
         }
       }
     }
+
+    // For now, we don't have thinking as OpenAI doesn't expose this
+    const thinking = '';
 
     return {
       answer,
@@ -337,7 +346,7 @@ export async function processChatMessage(messages: Message[], userMessage: strin
       tripData
     };
   } catch (error) {
-    console.error('Error calling Anthropic API:', error);
+    console.error('Error calling OpenAI API:', error);
     throw error;
   }
 }

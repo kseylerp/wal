@@ -1,6 +1,6 @@
 import { Message, TripData } from '../types/chat';
 
-// the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025. do not change this unless explicitly requested by the user
+// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 
 export async function sendChatMessage(messages: Message[], userMessage: string): Promise<{
   answer: string;
@@ -37,7 +37,6 @@ export async function sendChatMessage(messages: Message[], userMessage: string):
 
 export function formatThinking(thinking: string): string {
   // Format thinking content for display
-  // This handles potential markdown or special formatting from Claude
   if (!thinking) return '';
 
   // Replace line breaks with HTML breaks for proper display
