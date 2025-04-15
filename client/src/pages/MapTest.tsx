@@ -1,165 +1,240 @@
-import React, { useEffect, useState } from 'react';
-import { TripData } from '@/types/chat';
-import { Button } from '@/components/ui/button';
+import React, { useEffect, useRef, useState } from 'react';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 
-// Sample request data from actual OpenAI response
-const sampleTripData: TripData = {
-  id: "sedona-adventure-2023",
-  title: "Sedona's Hidden Trails & Vortex Experience",
-  description: "A rejuvenating 5-day hiking adventure through Sedona's lesser-known red rock formations, mystical vortex sites, and tranquil wilderness areas.",
-  whyWeChoseThis: "Based on your interest in hiking and outdoor adventures with spiritual elements, Sedona offers the perfect blend of challenging trails and energetic vortex sites away from the typical tourist spots. The shoulder season timing avoids crowds while maintaining ideal weather conditions.",
-  difficultyLevel: "Intermediate",
-  priceEstimate: "$1,500 - $2,200 per person",
-  duration: "5 Days",
-  location: "Sedona, Arizona",
-  suggestedGuides: ["Earth Wisdom Tours", "Red Rock Spiritual Journeys", "Sedona Wild"],
-  mapCenter: [-111.76381, 34.86542],
-  markers: [
-    { name: "Boynton Canyon Vortex", coordinates: [-111.85056, 34.90868] },
-    { name: "Secret Slickrock Trail", coordinates: [-111.80647, 34.87921] },
-    { name: "Cathedral Rock", coordinates: [-111.79036, 34.82072] },
-    { name: "Mystic Trail B&B", coordinates: [-111.76129, 34.86054] }
-  ],
-  journey: {
-    segments: [
-      {
-        mode: "driving",
-        from: "Sedona Airport",
-        to: "Mystic Trail B&B",
-        distance: 8200,
-        duration: 900,
-        geometry: {
-          type: "LineString",
-          coordinates: [
-            [-111.79012, 34.84857],
-            [-111.77937, 34.85232],
-            [-111.76712, 34.85648],
-            [-111.76129, 34.86054]
-          ]
-        }
-      },
-      {
-        mode: "hiking",
-        from: "Mystic Trail B&B",
-        to: "Boynton Canyon Vortex",
-        distance: 12300,
-        duration: 14400,
-        geometry: {
-          type: "LineString",
-          coordinates: [
-            [-111.76129, 34.86054],
-            [-111.78234, 34.87123],
-            [-111.81529, 34.88964],
-            [-111.83782, 34.90127],
-            [-111.85056, 34.90868]
-          ]
-        }
-      }
-    ],
-    totalDistance: 20500,
-    totalDuration: 15300,
-    bounds: [[-111.85056, 34.82072], [-111.76129, 34.90868]]
-  },
-  itinerary: [
-    {
-      day: 1,
-      title: "Arrival & First Vortex Experience",
-      description: "Arrive at Sedona Airport, transfer to your accommodation, and take an evening meditation hike to Airport Mesa vortex for sunset.",
-      activities: ["Airport pickup", "Check-in at Mystic Trail B&B", "Evening vortex meditation", "Welcome dinner"]
-    },
-    {
-      day: 2,
-      title: "Boynton Canyon Spiritual Hike",
-      description: "Full-day hike exploring Boynton Canyon, known for its powerful masculine and feminine energy centers. Experience guided meditation at specific energy points.",
-      activities: ["Morning yoga", "Boynton Canyon hike (6 miles)", "Vortex meditation sessions", "Picnic lunch on trail"]
-    },
-    {
-      day: 3,
-      title: "Secret Slickrock Trail Adventure",
-      description: "Explore off-the-beaten-path trails across Sedona's stunning red rock formations with a local guide who knows hidden viewpoints away from crowds.",
-      activities: ["Secret Slickrock Trail hike", "Hidden pools swimming", "Native American site visit", "Stargazing session"]
-    },
-    {
-      day: 4,
-      title: "Cathedral Rock & Energy Work",
-      description: "Morning hike to Cathedral Rock with a spiritual guide for energy alignment work, followed by an afternoon of reflection and optional spa treatments.",
-      activities: ["Cathedral Rock hike", "Guided energy alignment session", "Free time for reflection", "Optional spa treatments"]
-    },
-    {
-      day: 5,
-      title: "Final Integration & Departure",
-      description: "Morning integration session, followed by a final short hike before departure. Take home practices to maintain your energetic connection.",
-      activities: ["Morning integration circle", "Final hike to Vista Point", "Practice session for home rituals", "Airport transfer"]
-    }
-  ]
+type RouteSegment = {
+  start: [number, number]; // [longitude, latitude]
+  end: [number, number];    // [longitude, latitude]
+  color: string;
+  name: string;
+  profile: 'driving' | 'walking' | 'cycling';
 };
 
+// Define waypoints for our journey
+const WAYPOINTS: { name: string; coordinates: [number, number] }[] = [
+  { name: "Sedona Airport", coordinates: [-111.79012, 34.84857] },
+  { name: "Mystic Trail B&B", coordinates: [-111.76129, 34.86054] },
+  { name: "Boynton Canyon Vortex", coordinates: [-111.85056, 34.90868] }
+];
+
+// Define route segments
+const ROUTE_SEGMENTS: RouteSegment[] = [
+  {
+    start: WAYPOINTS[0].coordinates,
+    end: WAYPOINTS[1].coordinates,
+    color: '#3b82f6', // blue
+    name: 'Airport to B&B',
+    profile: 'driving'
+  },
+  {
+    start: WAYPOINTS[1].coordinates,
+    end: WAYPOINTS[2].coordinates,
+    color: '#22c55e', // green
+    name: 'Hiking Trail',
+    profile: 'walking'
+  }
+];
+
 const MapTest: React.FC = () => {
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
   const [mapboxToken, setMapboxToken] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedTrip, setSelectedTrip] = useState<TripData | null>(null);
-  const [showActualData, setShowActualData] = useState(false);
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [routesLoaded, setRoutesLoaded] = useState(0);
 
-  // Fetch the MapBox token
+  // Fetch directions from Mapbox API
+  const fetchDirections = async (
+    start: [number, number],
+    end: [number, number],
+    profile: 'driving' | 'walking' | 'cycling',
+    token: string
+  ) => {
+    try {
+      const url = `https://api.mapbox.com/directions/v5/mapbox/${profile}/${start[0]},${start[1]};${end[0]},${end[1]}?steps=true&geometries=geojson&access_token=${token}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data.routes && data.routes.length > 0) {
+        return data.routes[0].geometry;
+      } else {
+        console.error('No routes found:', data);
+        return null;
+      }
+    } catch (err) {
+      console.error('Error fetching directions:', err);
+      return null;
+    }
+  };
+
+  // Add a route to the map
+  const addRouteToMap = (
+    map: mapboxgl.Map,
+    geometry: any,
+    id: string,
+    color: string
+  ) => {
+    // Add the route source
+    map.addSource(id, {
+      type: 'geojson',
+      data: {
+        type: 'Feature',
+        properties: {},
+        geometry
+      }
+    });
+    
+    // Add the route layer
+    map.addLayer({
+      id,
+      type: 'line',
+      source: id,
+      layout: {
+        'line-join': 'round',
+        'line-cap': 'round'
+      },
+      paint: {
+        'line-color': color,
+        'line-width': 5,
+        'line-opacity': 0.8
+      }
+    });
+  };
+
+  // Fetch the MapBox token and initialize map
   useEffect(() => {
-    async function fetchToken() {
+    async function initializeMap() {
       try {
+        // Fetch MapBox token
         const response = await fetch('/api/config');
         const data = await response.json();
         
-        if (data.mapboxToken) {
-          setMapboxToken(data.mapboxToken);
-          console.log('MapBox token fetched successfully');
-          
-          // Use the sample trip data since we have a valid token
-          setSelectedTrip(sampleTripData);
-        } else {
+        if (!data.mapboxToken) {
           setError('No MapBox token available');
+          setLoading(false);
+          return;
         }
         
-        setLoading(false);
+        // Save token and set Mapbox access token
+        const token = data.mapboxToken;
+        setMapboxToken(token);
+        mapboxgl.accessToken = token;
+        
+        // Ensure map container exists
+        if (!mapContainerRef.current) {
+          setError('Map container not found');
+          setLoading(false);
+          return;
+        }
+        
+        // Calculate center of the map (average of all waypoints)
+        const center: [number, number] = [
+          WAYPOINTS.reduce((sum, wp) => sum + wp.coordinates[0], 0) / WAYPOINTS.length,
+          WAYPOINTS.reduce((sum, wp) => sum + wp.coordinates[1], 0) / WAYPOINTS.length
+        ];
+        
+        // Create the map
+        console.log('Initializing map with container');
+        const map = new mapboxgl.Map({
+          container: mapContainerRef.current,
+          style: 'mapbox://styles/mapbox/outdoors-v12', // Outdoors style for hiking trips
+          center,
+          zoom: 10
+        });
+        
+        mapRef.current = map;
+        
+        // When map is loaded, add the routes and markers
+        map.on('load', async () => {
+          console.log('Map loaded successfully!');
+          setMapLoaded(true);
+          
+          // Add all route segments
+          for (let i = 0; i < ROUTE_SEGMENTS.length; i++) {
+            const segment = ROUTE_SEGMENTS[i];
+            
+            // Fetch directions from MapBox API
+            const geometry = await fetchDirections(
+              segment.start,
+              segment.end,
+              segment.profile,
+              token
+            );
+            
+            if (geometry) {
+              // Add route to map
+              addRouteToMap(map, geometry, `route-${i}`, segment.color);
+              setRoutesLoaded(prev => prev + 1);
+            } else {
+              console.error(`Failed to fetch directions for segment ${i}`);
+            }
+          }
+          
+          // Add markers for key locations
+          WAYPOINTS.forEach((waypoint, index) => {
+            // Determine marker color based on position
+            let color = '#3b82f6'; // Default blue
+            if (index === 0) color = '#22c55e'; // Start: green
+            if (index === WAYPOINTS.length - 1) color = '#ef4444'; // End: red
+            
+            // Create a popup
+            const popup = new mapboxgl.Popup({ offset: 25 })
+              .setHTML(`<h3 class="font-bold">${waypoint.name}</h3>`);
+            
+            // Create and add the marker
+            new mapboxgl.Marker({ color })
+              .setLngLat(waypoint.coordinates)
+              .setPopup(popup)
+              .addTo(map);
+          });
+          
+          // Calculate bounds to fit all waypoints
+          const bounds = new mapboxgl.LngLatBounds();
+          WAYPOINTS.forEach(waypoint => {
+            // Explicitly cast to LngLatLike to fix type issue
+            bounds.extend(waypoint.coordinates as mapboxgl.LngLatLike);
+          });
+          
+          // Fit map to show all waypoints with padding
+          map.fitBounds(bounds, {
+            padding: 80,
+            duration: 1000
+          });
+          
+          setLoading(false);
+        });
+        
+        // Handle map errors
+        map.on('error', (e) => {
+          console.error('MapBox error:', e);
+          setError(`Error loading map: ${e.error?.message || 'Unknown error'}`);
+          setLoading(false);
+        });
       } catch (err) {
-        console.error('Error fetching token:', err);
-        setError('Failed to fetch MapBox token');
+        console.error('Error in map initialization:', err);
+        setError(`Failed to initialize map: ${err instanceof Error ? err.message : String(err)}`);
         setLoading(false);
       }
     }
     
-    fetchToken();
+    initializeMap();
+    
+    // Cleanup on unmount
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+      }
+    };
   }, []);
-  
-  // Function to generate a static Mapbox image URL for a trip
-  const generateStaticMapUrl = (trip: TripData): string => {
-    // Base URL
-    const baseUrl = `https://api.mapbox.com/styles/v1/mapbox/outdoors-v11/static`;
-    
-    // Generate marker parameters for all points
-    const markers = trip.markers.map((marker, index) => {
-      // Use different pin colors for visual distinction
-      const colors = ['f74e4e', '4e4ef7', '4ef74e', 'f7f74e', 'f74ef7'];
-      const color = colors[index % colors.length];
-      return `pin-s+${color}(${marker.coordinates[0]},${marker.coordinates[1]})`;
-    }).join(',');
-    
-    // Get center coordinates and zoom level
-    // We'll use the center from the trip data and zoom level 9
-    const center = `${trip.mapCenter[0]},${trip.mapCenter[1]},9`;
-    
-    // Image size
-    const size = '800x600';
-    
-    // Assemble the complete URL
-    return `${baseUrl}/${markers}/${center}/${size}?access_token=${mapboxToken}`;
-  };
   
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">MapBox Test Page with Real Trip Data</h1>
+      <h1 className="text-2xl font-bold mb-4">Interactive MapBox Journey with Real Directions</h1>
       
       {loading && (
         <div className="mb-4 p-4 bg-blue-100 rounded">
-          <p>Loading map data...</p>
+          <p>Loading interactive map and calculating routes...</p>
         </div>
       )}
       
@@ -170,98 +245,47 @@ const MapTest: React.FC = () => {
         </div>
       )}
       
-      {selectedTrip && mapboxToken && (
-        <div className="mb-8 p-4 border border-gray-200 rounded-lg shadow-sm">
-          <h2 className="text-xl font-bold mb-4">{selectedTrip.title}</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <p className="text-gray-700 mb-4">{selectedTrip.description}</p>
-              
-              <div className="mb-4">
-                <h3 className="font-semibold mb-2">Why We Chose This</h3>
-                <p className="text-gray-600">{selectedTrip.whyWeChoseThis}</p>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <h4 className="font-medium text-gray-900">Difficulty</h4>
-                  <p>{selectedTrip.difficultyLevel}</p>
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-900">Price</h4>
-                  <p>{selectedTrip.priceEstimate}</p>
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-900">Duration</h4>
-                  <p>{selectedTrip.duration}</p>
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-900">Location</h4>
-                  <p>{selectedTrip.location}</p>
-                </div>
-              </div>
-              
-              <div className="mb-4">
-                <h3 className="font-semibold mb-2">Suggested Guides</h3>
-                <ul className="list-disc list-inside text-gray-600">
-                  {selectedTrip.suggestedGuides.map((guide, index) => (
-                    <li key={index}>{guide}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="font-semibold mb-2">Trip Map</h3>
-              <div className="border border-gray-300 rounded-lg overflow-hidden">
-                <img 
-                  src={generateStaticMapUrl(selectedTrip)} 
-                  alt={`Map of ${selectedTrip.title}`} 
-                  className="w-full h-auto"
-                />
-              </div>
-              
-              <div className="mt-4 bg-gray-50 p-3 rounded-md">
-                <h4 className="font-medium mb-2">Key Locations</h4>
-                <ul className="text-sm">
-                  {selectedTrip.markers.map((marker, index) => (
-                    <li key={index} className="mb-1">
-                      <span className="font-medium">{marker.name}:</span> {marker.coordinates[1].toFixed(4)}, {marker.coordinates[0].toFixed(4)}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+      <div 
+        ref={mapContainerRef} 
+        className="w-full h-[70vh] border rounded shadow-md mb-4"
+        style={{ minHeight: '600px' }}
+      />
+      
+      <div className="p-4 bg-gray-100 rounded">
+        <h2 className="font-bold mb-2">Map Status:</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div>
+            <span className="font-medium">Map Token:</span> 
+            <span className="ml-2">{mapboxToken ? '✅' : '❌'}</span>
           </div>
-          
-          <div className="mt-6">
-            <h3 className="font-semibold mb-3">Itinerary</h3>
-            <div className="space-y-4">
-              {selectedTrip.itinerary.map((day) => (
-                <div key={day.day} className="border-l-4 border-primary/30 pl-4">
-                  <h4 className="font-medium">Day {day.day}: {day.title}</h4>
-                  <p className="text-gray-600 text-sm mb-2">{day.description}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {day.activities.map((activity, i) => (
-                      <span key={i} className="bg-primary/10 text-primary text-xs px-2 py-1 rounded">
-                        {activity}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div>
+            <span className="font-medium">Map Created:</span> 
+            <span className="ml-2">{mapRef.current ? '✅' : '❌'}</span>
+          </div>
+          <div>
+            <span className="font-medium">Map Loaded:</span> 
+            <span className="ml-2">{mapLoaded ? '✅' : '❌'}</span>
+          </div>
+          <div>
+            <span className="font-medium">Routes Loaded:</span> 
+            <span className="ml-2">{routesLoaded}/{ROUTE_SEGMENTS.length}</span>
           </div>
         </div>
-      )}
-      
-      <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
-        <h2 className="font-bold mb-2">Technical Information:</h2>
-        <p className="mb-2">This page demonstrates how we can use the static MapBox images API to display trip data with markers. This approach is more reliable than dynamic maps in some environments.</p>
-        <p className="mb-2">• MapBox Token Status: {mapboxToken ? '✅ Valid' : '❌ Missing'}</p>
-        <p className="mb-2">• Trip Data: Using real trip data structure from OpenAI API response</p>
-        <p className="mb-2">• Map Style: MapBox Outdoors (ideal for showing hiking trips)</p>
+        
+        <div className="mt-4">
+          <h3 className="font-medium mb-2">Route Legend:</h3>
+          <div className="flex flex-col space-y-2">
+            {ROUTE_SEGMENTS.map((segment, i) => (
+              <div key={i} className="flex items-center">
+                <div 
+                  className="w-4 h-4 mr-2 rounded-full" 
+                  style={{ backgroundColor: segment.color }} 
+                />
+                <span>{segment.name} ({segment.profile})</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
