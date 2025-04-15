@@ -10,11 +10,44 @@ type RouteSegment = {
   profile: 'driving' | 'walking' | 'cycling';
 };
 
-// Define waypoints for our journey
+// Define main waypoints for our journey
 const WAYPOINTS: { name: string; coordinates: [number, number] }[] = [
   { name: "Sedona Airport", coordinates: [-111.79012, 34.84857] },
   { name: "Mystic Trail B&B", coordinates: [-111.76129, 34.86054] },
   { name: "Boynton Canyon Vortex", coordinates: [-111.85056, 34.90868] }
+];
+
+// Define hiking activity points along the trail
+const ACTIVITY_POINTS: { 
+  name: string; 
+  coordinates: [number, number]; 
+  type: 'viewpoint' | 'rest' | 'meditation' | 'water' | 'photo';
+  description: string;
+}[] = [
+  { 
+    name: "Forest Meditation Spot", 
+    coordinates: [-111.78234, 34.87123],
+    type: 'meditation',
+    description: "Peaceful spot for morning meditation practice"
+  },
+  { 
+    name: "Red Rock Viewpoint", 
+    coordinates: [-111.81529, 34.88964],
+    type: 'viewpoint',
+    description: "Breathtaking views of surrounding red rock formations"
+  },
+  { 
+    name: "Natural Spring", 
+    coordinates: [-111.83782, 34.90127],
+    type: 'water',
+    description: "Fresh natural spring water - safe to drink after filtering"
+  },
+  { 
+    name: "Energy Vortex Spot", 
+    coordinates: [-111.84500, 34.90500],
+    type: 'meditation',
+    description: "Known energy vortex location - perfect for spiritual practice"
+  }
 ];
 
 // Define route segments
@@ -171,29 +204,75 @@ const MapTest: React.FC = () => {
             }
           }
           
-          // Add markers for key locations
+          // Add markers for main waypoints
           WAYPOINTS.forEach((waypoint, index) => {
             // Determine marker color based on position
             let color = '#3b82f6'; // Default blue
             if (index === 0) color = '#22c55e'; // Start: green
             if (index === WAYPOINTS.length - 1) color = '#ef4444'; // End: red
             
-            // Create a popup
+            // Create a popup with more info
             const popup = new mapboxgl.Popup({ offset: 25 })
-              .setHTML(`<h3 class="font-bold">${waypoint.name}</h3>`);
+              .setHTML(`
+                <div class="p-2">
+                  <h3 class="font-bold text-lg">${waypoint.name}</h3>
+                  <p class="text-gray-600">${index === 0 ? 'Starting Point' : index === WAYPOINTS.length - 1 ? 'Destination' : 'Waypoint'}</p>
+                </div>
+              `);
             
             // Create and add the marker
-            new mapboxgl.Marker({ color })
+            new mapboxgl.Marker({ color, scale: 1.0 })
               .setLngLat(waypoint.coordinates)
               .setPopup(popup)
               .addTo(map);
           });
           
-          // Calculate bounds to fit all waypoints
+          // Add activity markers along the hiking trail
+          ACTIVITY_POINTS.forEach((point) => {
+            // Choose icon color based on activity type
+            let color = '#9333ea'; // Default purple
+            
+            // Set different colors based on activity type
+            if (point.type === 'viewpoint') color = '#f97316'; // Orange
+            if (point.type === 'meditation') color = '#8b5cf6'; // Purple
+            if (point.type === 'water') color = '#0ea5e9'; // Blue
+            if (point.type === 'rest') color = '#84cc16'; // Green
+            if (point.type === 'photo') color = '#ec4899'; // Pink
+            
+            // Create a detailed popup
+            const popup = new mapboxgl.Popup({ offset: 25, maxWidth: '300px' })
+              .setHTML(`
+                <div class="p-2">
+                  <h3 class="font-bold text-lg">${point.name}</h3>
+                  <div class="text-xs uppercase tracking-wide text-gray-500 mt-1 mb-2">
+                    ${point.type} location
+                  </div>
+                  <p class="text-sm text-gray-700">${point.description}</p>
+                </div>
+              `);
+            
+            // Create and add specialized marker
+            new mapboxgl.Marker({ 
+              color, 
+              scale: 0.8, // Slightly smaller than main waypoints
+              // Use different shapes for different types if we had SVG icons
+            })
+              .setLngLat(point.coordinates)
+              .setPopup(popup)
+              .addTo(map);
+          });
+          
+          // Calculate bounds to fit all points
           const bounds = new mapboxgl.LngLatBounds();
+          
+          // Add all waypoints to bounds
           WAYPOINTS.forEach(waypoint => {
-            // Explicitly cast to LngLatLike to fix type issue
             bounds.extend(waypoint.coordinates as mapboxgl.LngLatLike);
+          });
+          
+          // Add all activity points to bounds
+          ACTIVITY_POINTS.forEach(point => {
+            bounds.extend(point.coordinates as mapboxgl.LngLatLike);
           });
           
           // Fit map to show all waypoints with padding
@@ -230,7 +309,10 @@ const MapTest: React.FC = () => {
   
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Interactive MapBox Journey with Real Directions</h1>
+      <h1 className="text-2xl font-bold mb-2">Interactive Trip Map with Activities</h1>
+      <p className="text-gray-600 mb-4">
+        Sample implementation showing how trip data from OpenAI API responses will be displayed as interactive maps with routes and activities
+      </p>
       
       {loading && (
         <div className="mb-4 p-4 bg-blue-100 rounded">
@@ -273,17 +355,53 @@ const MapTest: React.FC = () => {
         </div>
         
         <div className="mt-4">
-          <h3 className="font-medium mb-2">Route Legend:</h3>
-          <div className="flex flex-col space-y-2">
-            {ROUTE_SEGMENTS.map((segment, i) => (
-              <div key={i} className="flex items-center">
-                <div 
-                  className="w-4 h-4 mr-2 rounded-full" 
-                  style={{ backgroundColor: segment.color }} 
-                />
-                <span>{segment.name} ({segment.profile})</span>
+          <h3 className="font-medium mb-2">Map Legend:</h3>
+          
+          {/* Routes legend */}
+          <div className="mb-3">
+            <h4 className="text-sm text-gray-600 mb-1">Route Types:</h4>
+            <div className="flex flex-col space-y-1">
+              {ROUTE_SEGMENTS.map((segment, i) => (
+                <div key={i} className="flex items-center">
+                  <div 
+                    className="w-4 h-4 mr-2 rounded-full" 
+                    style={{ backgroundColor: segment.color }} 
+                  />
+                  <span className="text-sm">{segment.name} ({segment.profile})</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Activity points legend */}
+          <div>
+            <h4 className="text-sm text-gray-600 mb-1">Activity Points:</h4>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+              <div className="flex items-center">
+                <div className="w-3 h-3 mr-2 rounded-full bg-f97316" style={{ backgroundColor: '#f97316' }} />
+                <span className="text-sm">Viewpoint</span>
               </div>
-            ))}
+              <div className="flex items-center">
+                <div className="w-3 h-3 mr-2 rounded-full" style={{ backgroundColor: '#8b5cf6' }} />
+                <span className="text-sm">Meditation</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 mr-2 rounded-full" style={{ backgroundColor: '#0ea5e9' }} />
+                <span className="text-sm">Water Source</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 mr-2 rounded-full" style={{ backgroundColor: '#84cc16' }} />
+                <span className="text-sm">Rest Stop</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 mr-2 rounded-full" style={{ backgroundColor: '#ec4899' }} />
+                <span className="text-sm">Photo Spot</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-3 text-xs text-gray-500">
+            Click on any marker to view details. Routes are calculated using real MapBox Directions API.
           </div>
         </div>
       </div>
