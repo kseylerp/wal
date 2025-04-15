@@ -90,10 +90,10 @@ When providing trip options, include:
 
 You're friendly, succinct, and conversational. Make your responses both informative and engaging.`;
 
-export async function createTripSuggestion(userMessage: string) {
+export async function createTripSuggestion(userMessage: string, sessionId: string = 'default') {
   try {
-    // Use the "Offbeat Agent" assistant from OpenAI
-    const response = await openAIGenerateTripSuggestion(userMessage);
+    // Use the "Offbeat Agent" assistant from OpenAI with the session ID
+    const response = await openAIGenerateTripSuggestion(userMessage, sessionId);
 
     // If the response contains JSON data, validate it
     if (response.tripData) {

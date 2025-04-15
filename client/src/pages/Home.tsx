@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AppHeader from "@/components/AppHeader";
 import ChatContainer from "@/components/ChatContainer";
 import ChatInput from "@/components/ChatInput";
@@ -18,11 +18,26 @@ export default function Home() {
     },
   ]);
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionId, setSessionId] = useState<string>('');
   const { toast } = useToast();
+  
+  // Create or retrieve a session ID for this user
+  useEffect(() => {
+    // Check if a session ID exists in localStorage
+    let existingSessionId = localStorage.getItem('tripChatSessionId');
+    
+    // If no session ID exists, create one
+    if (!existingSessionId) {
+      existingSessionId = nanoid();
+      localStorage.setItem('tripChatSessionId', existingSessionId);
+    }
+    
+    setSessionId(existingSessionId);
+  }, []);
 
   const sendMessageMutation = useMutation({
     mutationFn: async (message: string) => {
-      return apiRequest("POST", "/api/chat", { message });
+      return apiRequest("POST", "/api/chat", { message, sessionId });
     },
     onSuccess: async (response) => {
       const data = await response.json();
