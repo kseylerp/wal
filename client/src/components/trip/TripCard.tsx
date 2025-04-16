@@ -144,6 +144,15 @@ const TripCard: React.FC<TripCardProps> = ({
           
           <p className="text-gray-700 mb-5 text-base">{description}</p>
           
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-6 text-sm">
+            <div>
+              <span className="font-medium">Distance:</span> {totalDistanceMiles} miles
+            </div>
+            <div>
+              <span className="font-medium">Duration:</span> ~{totalDurationHours} hrs
+            </div>
+          </div>
+          
           {/* Tab navigation */}
           <div className="flex border-b mb-5">
             <button
@@ -169,7 +178,7 @@ const TripCard: React.FC<TripCardProps> = ({
           </div>
           
           {/* Tab content */}
-          <div className="text-sm max-h-[500px] overflow-y-auto pr-2">
+          <div className="text-sm max-h-96 overflow-y-auto">
             {activeTab === 'info' ? (
               <div>
                 <h3 className="font-medium text-base mb-2">Why We Chose This For You</h3>

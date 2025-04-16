@@ -82,19 +82,11 @@ export function parseTripsFromResponse(response: any): TripData[] | undefined {
         
         // Convert new itinerary format to our app format
         itinerary: trip.itinerary ? trip.itinerary.map((day: any) => {
-          const activities = Array.isArray(day.activities) 
-            ? day.activities.map((a: any) => {
-                if (typeof a === 'string') return a;
-                return a.title || (a.type && a.start_location ? `${a.type}: ${a.start_location} to ${a.end_location || 'destination'}` : undefined);
-              }).filter(Boolean) // Remove any undefined items
-            : [];
-            
           return {
             day: day.day,
             title: day.title,
             description: day.description,
-            activities: activities,
-            accommodations: day.lodging ? `${day.lodging.type || 'Lodging'}: ${day.lodging.name || 'Local accommodation'}` : undefined
+            activities: day.activities.map((a: any) => a.title || a)
           };
         }) : []
       };
