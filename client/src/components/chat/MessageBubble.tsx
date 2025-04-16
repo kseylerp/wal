@@ -51,8 +51,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             {/* Render trip cards if available */}
             {hasTripData && message.tripData && (
               <>
-                <div className="mt-4 text-sm text-primary bg-primary/5 p-3 rounded-lg">
-                  <p>Here are some trip suggestions! You can reply in the chat to modify or refine these trips.</p>
+                <div className="mt-4 mb-1 text-xs text-gray-500 text-right italic">
+                  Reply in chat to modify these suggestions
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
                   {message.tripData.map(trip => (

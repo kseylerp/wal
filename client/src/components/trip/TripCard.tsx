@@ -174,9 +174,7 @@ const TripCard: React.FC<TripCardProps> = ({
               Saved Trips
             </a>
           </div>
-          <div className="mt-3 text-sm text-gray-600 italic">
-            You can chat to modify this trip suggestion
-          </div>
+
         </div>
         
         {/* Right side: Map */}
