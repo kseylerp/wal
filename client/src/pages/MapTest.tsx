@@ -364,18 +364,18 @@ const MapTest: React.FC = () => {
   
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-2">{TRIP_DATA.title}</h1>
+      <h1 className="text-2xl font-bold mb-2 text-primary">{TRIP_DATA.title}</h1>
       <div className="flex flex-col md:flex-row gap-2 mb-4">
         <span className="bg-primary/10 text-primary text-xs px-2 py-1 rounded">
           {TRIP_DATA.location}
         </span>
-        <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
+        <span className="bg-primary/5 text-primary/80 text-xs px-2 py-1 rounded">
           {TRIP_DATA.duration}
         </span>
-        <span className="bg-amber-100 text-amber-700 text-xs px-2 py-1 rounded">
+        <span className="bg-primary/10 text-primary/90 text-xs px-2 py-1 rounded">
           {TRIP_DATA.difficultyLevel}
         </span>
-        <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">
+        <span className="bg-primary/5 text-primary/80 text-xs px-2 py-1 rounded">
           {TRIP_DATA.priceEstimate}
         </span>
       </div>

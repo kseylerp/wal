@@ -5,15 +5,32 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import ChatInterface from "@/pages/ChatInterface";
 import MapTest from "@/pages/MapTest";
+import logo from "./assets/logo.png";
 
 function Router() {
   return (
     <div className="h-screen flex flex-col">
-      <Switch>
-        <Route path="/" component={ChatInterface} />
-        <Route path="/map-test" component={MapTest} />
-        <Route component={NotFound} />
-      </Switch>
+      <header className="border-b py-2 px-4 flex items-center">
+        <div className="flex items-center">
+          <img src={logo} alt="TrailTrek Logo" className="h-10 mr-3" />
+          <span className="font-bold text-xl text-primary">TrailTrek</span>
+        </div>
+        <nav className="ml-auto">
+          <Link href="/">
+            <span className="mx-2 px-2 py-1 rounded hover:bg-gray-100 cursor-pointer">Chat</span>
+          </Link>
+          <Link href="/map-test">
+            <span className="mx-2 px-2 py-1 rounded hover:bg-gray-100 cursor-pointer">Map</span>
+          </Link>
+        </nav>
+      </header>
+      <div className="flex-1 overflow-y-auto">
+        <Switch>
+          <Route path="/" component={ChatInterface} />
+          <Route path="/map-test" component={MapTest} />
+          <Route component={NotFound} />
+        </Switch>
+      </div>
     </div>
   );
 }
