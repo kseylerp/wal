@@ -86,7 +86,10 @@ export function parseTripsFromResponse(response: any): TripData[] | undefined {
             day: day.day,
             title: day.title,
             description: day.description,
-            activities: day.activities.map((a: any) => a.title || a)
+            activities: Array.isArray(day.activities) 
+              ? day.activities.map((a: any) => typeof a === 'string' ? a : a.title || `${a.type || 'Activity'}: ${a.start_location || ''} to ${a.end_location || ''}`)
+              : [`Explore ${day.title}`],
+            accommodations: day.lodging ? `${day.lodging.type || 'Lodging'}: ${day.lodging.name || 'Local accommodation'}` : undefined
           };
         }) : []
       };
