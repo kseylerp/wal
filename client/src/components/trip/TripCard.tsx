@@ -14,11 +14,11 @@ import {
   AlertDialogTrigger 
 } from '@/components/ui/alert-dialog';
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import { 
   Tooltip,
   TooltipContent,
@@ -506,33 +506,52 @@ export default function TripCard({
             </div>
           )}
           
-          {/* Additional Information Accordions - Each in separate collapsible sections */}
-          
-          {/* Why We Chose This */}
-          {whyWeChoseThis && (
-            <div className="mb-4 border border-gray-200 rounded-md">
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="why-we-chose" className="border-none">
-                  <AccordionTrigger className="text-sm font-medium text-[#655590] px-4 py-3 hover:bg-gray-50">
-                    Why We Chose This Trip
-                  </AccordionTrigger>
-                  <AccordionContent className="px-4 pb-3">
-                    <p className="text-sm text-gray-600">{whyWeChoseThis}</p>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </div>
-          )}
-          
-          {/* Recommended Outfitters */}
-          {recommendedOutfitters && recommendedOutfitters.length > 0 && (
-            <div className="mb-4 border border-gray-200 rounded-md">
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="outfitters" className="border-none">
-                  <AccordionTrigger className="text-sm font-medium text-[#655590] px-4 py-3 hover:bg-gray-50">
-                    Recommended Outfitters
-                  </AccordionTrigger>
-                  <AccordionContent className="px-4 pb-3">
+          {/* Trip Details Tabs - combined tabs for trip details sections */}
+          {(whyWeChoseThis || (recommendedOutfitters && recommendedOutfitters.length > 0) || 
+           (notes && notes.length > 0) || (warnings && warnings.length > 0)) && (
+            <div className="mb-4 border border-gray-200 rounded-md overflow-hidden">
+              <Tabs defaultValue="why" className="w-full">
+                <div className="border-b border-gray-200">
+                  <TabsList className="h-10 w-full bg-gray-50 rounded-none grid grid-cols-3">
+                    {whyWeChoseThis && (
+                      <TabsTrigger 
+                        value="why" 
+                        className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-[#655590] rounded-none text-xs"
+                      >
+                        Why We Chose This
+                      </TabsTrigger>
+                    )}
+                    {recommendedOutfitters && recommendedOutfitters.length > 0 && (
+                      <TabsTrigger 
+                        value="outfitters" 
+                        className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-[#655590] rounded-none text-xs"
+                      >
+                        Outfitters
+                      </TabsTrigger>
+                    )}
+                    {((notes && notes.length > 0) || (warnings && warnings.length > 0)) && (
+                      <TabsTrigger 
+                        value="notes" 
+                        className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-[#655590] rounded-none text-xs"
+                      >
+                        Notes & Warnings
+                      </TabsTrigger>
+                    )}
+                  </TabsList>
+                </div>
+                
+                {whyWeChoseThis && (
+                  <TabsContent value="why" className="p-4">
+                    <div className="text-sm text-gray-600">
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Why We Chose This Trip</h4>
+                      <p>{whyWeChoseThis}</p>
+                    </div>
+                  </TabsContent>
+                )}
+                
+                {recommendedOutfitters && recommendedOutfitters.length > 0 && (
+                  <TabsContent value="outfitters" className="p-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">Recommended Outfitters</h4>
                     <div className="space-y-3">
                       {recommendedOutfitters.map((outfitter, index) => (
                         <div key={index} className="bg-gray-50 p-3 rounded-md">
@@ -555,23 +574,15 @@ export default function TripCard({
                         </div>
                       ))}
                     </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </div>
-          )}
-          
-          {/* Notes & Warnings */}
-          {((notes && notes.length > 0) || (warnings && warnings.length > 0)) && (
-            <div className="mb-4 border border-gray-200 rounded-md">
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="notes-warnings" className="border-none">
-                  <AccordionTrigger className="text-sm font-medium text-[#655590] px-4 py-3 hover:bg-gray-50">
-                    Notes & Warnings
-                  </AccordionTrigger>
-                  <AccordionContent className="px-4 pb-3">
+                  </TabsContent>
+                )}
+                
+                {((notes && notes.length > 0) || (warnings && warnings.length > 0)) && (
+                  <TabsContent value="notes" className="p-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">Important Information</h4>
+                    
                     {notes && notes.length > 0 && (
-                      <div className="mb-3">
+                      <div className="mb-4">
                         <h5 className="font-medium text-sm mb-2">Notes:</h5>
                         <ul className="list-disc pl-5 space-y-1">
                           {notes.map((note, index) => (
@@ -591,9 +602,9 @@ export default function TripCard({
                         </ul>
                       </div>
                     )}
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
+                  </TabsContent>
+                )}
+              </Tabs>
             </div>
           )}
           
