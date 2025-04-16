@@ -560,17 +560,83 @@ export async function processChatMessage(messages: Message[], userMessage: strin
       }
     ];
 
-    // Call OpenAI API
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        ...formattedMessages
-      ],
-      temperature: 1,
-      tools: tools as any,
-      tool_choice: "auto"
-    });
+    // First attempt to use the specific Assistant ID
+    let response;
+    try {
+      console.log(`Using OpenAI Assistant with ID: ${ASSISTANT_ID}`);
+      
+      // Create a thread with the messages
+      const thread = await openai.beta.threads.create({
+        messages: [
+          ...formattedMessages.map(msg => ({
+            role: msg.role as any,
+            content: msg.content
+          }))
+        ]
+      });
+      
+      // Run the assistant on the thread
+      const run = await openai.beta.threads.runs.create(
+        thread.id,
+        { 
+          assistant_id: ASSISTANT_ID,
+          tools: tools as any,
+        }
+      );
+      
+      // Poll for run completion
+      let runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
+      
+      // Wait for completion with timeout (max 60 seconds)
+      const startTime = Date.now();
+      while (runStatus.status !== 'completed' && runStatus.status !== 'failed' && Date.now() - startTime < 60000) {
+        // Wait for 1 second before checking again
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
+        console.log(`Run status: ${runStatus.status}`);
+      }
+      
+      if (runStatus.status === 'completed') {
+        // Get the messages from the thread
+        const messages = await openai.beta.threads.messages.list(thread.id);
+        
+        // Get the last assistant message
+        const assistantMessages = messages.data.filter(msg => msg.role === 'assistant');
+        if (assistantMessages.length > 0) {
+          const lastMessage = assistantMessages[0];
+          
+          // Create response object in the same format as the chat.completions API
+          response = {
+            choices: [{
+              message: {
+                content: lastMessage.content[0].type === 'text' 
+                  ? (lastMessage.content[0] as any).text.value 
+                  : '',
+                tool_calls: lastMessage.tool_calls || []
+              }
+            }]
+          };
+        } else {
+          throw new Error('No assistant messages found in thread');
+        }
+      } else {
+        throw new Error(`Assistant run did not complete. Status: ${runStatus.status}`);
+      }
+    } catch (err) {
+      console.error('Error using Assistant API, falling back to chat completions:', err);
+      
+      // Fallback to chat.completions
+      response = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          ...formattedMessages
+        ],
+        temperature: 1,
+        tools: tools as any,
+        tool_choice: "auto"
+      });
+    }
 
     // Extract the text response
     let answer = '';
