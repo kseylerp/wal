@@ -100,7 +100,7 @@ interface SpeechSynthesisEvent extends Event {
   readonly name?: string;
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isDisabled }) => {
+const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isDisabled, isVoiceEnabled = true }) => {
   const [message, setMessage] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
@@ -110,7 +110,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isDisabled }) => {
   
   // Helper function to speak text using Speech Synthesis
   const speak = (text: string, rate = 1) => {
-    if (!synthSupported || !window.speechSynthesis) return;
+    if (!synthSupported || !window.speechSynthesis || !isVoiceEnabled) return;
     
     // Cancel any ongoing speech
     window.speechSynthesis.cancel();
