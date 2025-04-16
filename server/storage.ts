@@ -94,15 +94,21 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getTripByShareableId(shareableId: string): Promise<Trip | undefined> {
-    const result = await db
-      .select()
-      .from(trips)
-      .where(eq(trips.shareableId, shareableId));
-    
-    const trip = result.length > 0 ? result[0] : undefined;
-    
-    // Only return the trip if it's public
-    return trip && trip.isPublic ? trip : undefined;
+    try {
+      const result = await db
+        .select()
+        .from(trips)
+        .where(eq(trips.shareableId, shareableId))
+        .execute();
+        
+      const trip = result.length > 0 ? result[0] : undefined;
+      
+      // Only return the trip if it's public
+      return trip && trip.isPublic ? trip : undefined;
+    } catch (error) {
+      console.error('Error fetching trip by shareableId:', error);
+      return undefined;
+    }
   }
   
   async shareTrip(id: number): Promise<Trip | undefined> {
