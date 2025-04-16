@@ -46,7 +46,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isDisabled }) => {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask about your next offbeat adventure..."
+            placeholder="Ask about adventures or modify trip suggestions..."
             disabled={isDisabled}
             rows={1}
             className="w-full border border-gray-300 rounded-xl py-3 px-4 focus:ring-2 focus:ring-[#655590] focus:border-[#655590] resize-none overflow-hidden text-gray-900"

@@ -50,27 +50,32 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 
             {/* Render trip cards if available */}
             {hasTripData && message.tripData && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-                {message.tripData.map(trip => (
-                  <TripCard
-                    key={trip.id}
-                    id={trip.id}
-                    title={trip.title}
-                    description={trip.description}
-                    whyWeChoseThis={trip.whyWeChoseThis}
-                    difficultyLevel={trip.difficultyLevel}
-                    priceEstimate={trip.priceEstimate}
-                    duration={trip.duration}
-                    location={trip.location}
-                    suggestedGuides={trip.suggestedGuides}
-                    mapCenter={trip.mapCenter}
-                    markers={trip.markers}
-                    journey={trip.journey}
-                    itinerary={trip.itinerary}
-                    onModifyRequest={onModifyRequest}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="mt-4 text-sm text-primary bg-primary/5 p-3 rounded-lg">
+                  <p>Here are some trip suggestions! You can reply in the chat to modify or refine these trips.</p>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
+                  {message.tripData.map(trip => (
+                    <TripCard
+                      key={trip.id}
+                      id={trip.id}
+                      title={trip.title}
+                      description={trip.description}
+                      whyWeChoseThis={trip.whyWeChoseThis}
+                      difficultyLevel={trip.difficultyLevel}
+                      priceEstimate={trip.priceEstimate}
+                      duration={trip.duration}
+                      location={trip.location}
+                      suggestedGuides={trip.suggestedGuides}
+                      mapCenter={trip.mapCenter}
+                      markers={trip.markers}
+                      journey={trip.journey}
+                      itinerary={trip.itinerary}
+                      onModifyRequest={onModifyRequest}
+                    />
+                  ))}
+                </div>
+              </>
             )}
           </div>
         </div>

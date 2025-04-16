@@ -162,12 +162,6 @@ const TripCard: React.FC<TripCardProps> = ({
               View Full Map
             </a>
             <button
-              onClick={() => onModifyRequest(id)}
-              className="bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded transition-colors text-sm"
-            >
-              Modify This Trip
-            </button>
-            <button
               onClick={saveTrip}
               className="bg-green-100 hover:bg-green-200 text-green-700 px-4 py-2 rounded transition-colors text-sm"
             >
@@ -179,6 +173,9 @@ const TripCard: React.FC<TripCardProps> = ({
             >
               Saved Trips
             </a>
+          </div>
+          <div className="mt-3 text-sm text-gray-600 italic">
+            You can chat to modify this trip suggestion
           </div>
         </div>
         
