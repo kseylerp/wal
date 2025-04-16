@@ -102,8 +102,8 @@ export default function SavedTrips() {
               difficultyLevel={trip.difficultyLevel}
               priceEstimate={trip.priceEstimate}
               mapCenter={trip.mapCenter as [number, number]}
-              journey={trip.journeyData}
-              itinerary={trip.itinerary}
+              journey={trip.journeyData as any}
+              itinerary={trip.itinerary as any[]}
               createdAt={trip.createdAt}
               onEdit={handleEditTrip}
             />

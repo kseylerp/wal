@@ -114,8 +114,8 @@ export default function TripCard({
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isMapExpanded, setIsMapExpanded] = useState(false);
-  const [selectedActivity, setSelectedActivity] = useState<string | null>(null);
-  const [hoveredActivity, setHoveredActivity] = useState<string | null>(null);
+  const [selectedActivity, setSelectedActivity] = useState<string | undefined>(undefined);
+  const [hoveredActivity, setHoveredActivity] = useState<string | undefined>(undefined);
   const { toast } = useToast();
   const isMobile = useIsMobile();
   
@@ -130,7 +130,7 @@ export default function TripCard({
   };
   
   const handleActivityClick = (activity: string) => {
-    setSelectedActivity(activity === selectedActivity ? null : activity);
+    setSelectedActivity(activity === selectedActivity ? undefined : activity);
   };
   
   const handleDelete = async () => {
@@ -458,7 +458,7 @@ export default function TripCard({
                             )}
                             onClick={() => handleActivityClick(activityName)}
                             onMouseEnter={() => setHoveredActivity(activityName)}
-                            onMouseLeave={() => setHoveredActivity(null)}
+                            onMouseLeave={() => setHoveredActivity(undefined)}
                           >
                             <div className="flex justify-between items-start">
                               <div>
