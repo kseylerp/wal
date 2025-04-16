@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { MapPin, Calendar, DollarSign, TrendingUp, Edit, Trash, ChevronDown, ChevronUp, Info, Map, Navigation, Mountain, Clock, AlertTriangle, Droplet } from 'lucide-react';
+import { MapPin, Calendar, DollarSign, TrendingUp, Edit, Trash, ChevronDown, ChevronUp, Info, Map, Navigation, Mountain, Clock, AlertTriangle, Droplet, Cloud } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -338,6 +338,7 @@ export default function TripCard({
                 focusedActivity={selectedActivity}
                 highlightedActivity={undefined}
                 isThumbnail={false}
+                showWeather={showWeather}
               />
             )}
           </div>
@@ -769,23 +770,47 @@ export default function TripCard({
           
           {/* Action Buttons */}
           <div className="flex justify-between">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="text-xs"
-                    onClick={toggleMapExpand}
-                  >
-                    {isMapExpanded ? 'Hide Map' : 'Expand Map'}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Toggle map view</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <div className="flex space-x-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="text-xs"
+                      onClick={toggleMapExpand}
+                    >
+                      {isMapExpanded ? 'Hide Map' : 'Expand Map'}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Toggle map view</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant={showWeather ? "default" : "outline"}
+                      size="sm"
+                      className={cn(
+                        "text-xs",
+                        showWeather && "bg-blue-500 hover:bg-blue-600"
+                      )}
+                      onClick={() => setShowWeather(!showWeather)}
+                    >
+                      <Cloud className="h-4 w-4 mr-1" />
+                      Weather
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Toggle weather overlay</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             
             <Button 
               size="sm" 
