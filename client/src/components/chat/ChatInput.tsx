@@ -1,7 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowUp, MicOff } from 'lucide-react';
-import soundWaveIcon from '../../assets/sound-wave-icon-teal.png';
-import { ColorFilteredImage } from '../ui/ColorFilteredImage';
+import { ArrowUp, Mic, MicOff } from 'lucide-react';
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -194,7 +192,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isDisabled }) => {
 
   return (
     <div className="sticky bottom-0 z-10 bg-white border-t border-gray-200 p-3 sm:p-4 shadow-[0_0_10px_0_rgba(0,0,0,0.05)]">
-      <form onSubmit={handleSubmit} className="flex items-center space-x-3 max-w-4xl mx-auto">
+      <form onSubmit={handleSubmit} className="flex items-end space-x-2 max-w-4xl mx-auto">
         <div className="relative flex-1">
           <textarea
             ref={textareaRef}
@@ -204,16 +202,16 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isDisabled }) => {
             placeholder="Ask about adventures or modify trip suggestions..."
             disabled={isDisabled || isListening}
             rows={1}
-            className={`w-full border border-gray-300 rounded-xl py-3 pl-4 pr-12 focus:ring-2 focus:ring-[#655590] focus:border-[#655590] resize-none overflow-hidden text-gray-900 
+            className={`w-full border border-gray-300 rounded-xl py-3 px-4 focus:ring-2 focus:ring-[#655590] focus:border-[#655590] resize-none overflow-hidden text-gray-900 
               ${isListening ? 'bg-pink-50 border-pink-300' : ''}`}
           />
           {isListening && (
-            <div className="absolute right-3 top-3 flex items-center bg-white/80 px-2 py-1 rounded-full shadow-sm">
+            <div className="absolute right-3 top-3 flex items-center">
               <span className="animate-pulse flex h-2 w-2 mr-2">
                 <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-[#FB8C9A] opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FB8C9A]"></span>
               </span>
-              <span className="text-xs text-[#FB8C9A] font-semibold">Listening...</span>
+              <span className="text-xs text-[#FB8C9A] font-medium">Listening...</span>
             </div>
           )}
         </div>
@@ -224,24 +222,13 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isDisabled }) => {
             type="button"
             onClick={toggleListening}
             disabled={isDisabled}
-            className={`flex-shrink-0 rounded-full w-10 h-10 flex items-center justify-center
-              ${isListening 
-                ? 'bg-[#FB8C9A] hover:bg-[#FB8C9A]/90' 
-                : 'bg-white hover:bg-gray-50 border border-[#FB8C9A]/40'} 
+            className={`flex-shrink-0 p-2.5 rounded-xl text-white 
+              ${isListening ? 'bg-[#FB8C9A] hover:bg-[#FB8C9A]/90' : 'bg-gray-400 hover:bg-gray-500'} 
               ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
-              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FB8C9A] shadow-sm transition-colors duration-150 ease-in-out`}
+              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#655590] transition-colors duration-150 ease-in-out`}
             aria-label={isListening ? "Stop voice input" : "Start voice input"}
           >
-            {isListening ? (
-              <MicOff className="h-5 w-5 text-white" />
-            ) : (
-              <ColorFilteredImage 
-                src={soundWaveIcon} 
-                alt="Sound wave" 
-                filterColor="#FB8C9A" 
-                className="h-6 w-6 object-contain" 
-              />
-            )}
+            {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
           </button>
         )}
         
@@ -249,11 +236,9 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isDisabled }) => {
         <button
           type="submit"
           disabled={isDisabled || !message.trim()}
-          className={`flex-shrink-0 rounded-full w-10 h-10 flex items-center justify-center shadow-sm
-            ${isDisabled || !message.trim() 
-              ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
-              : 'bg-[#FB8C9A] text-white hover:bg-[#FB8C9A]/90'}
-            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FB8C9A] transition-colors duration-150 ease-in-out`}
+          className={`flex-shrink-0 bg-[#655590] p-2.5 rounded-xl text-white ${
+            isDisabled || !message.trim() ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#655590]/90'
+          } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#655590] transition-colors duration-150 ease-in-out`}
         >
           <ArrowUp className="h-5 w-5" />
         </button>
