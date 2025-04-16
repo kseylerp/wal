@@ -2,101 +2,122 @@ import { Router } from 'express';
 
 export const weatherRouter = Router();
 
-// We'll need a weather API key for this functionality
-const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
-
-// Current weather endpoint
-weatherRouter.get('/', async (req, res) => {
+/**
+ * Fetches current weather data for a specific location
+ * GET /api/weather/current?lat=<latitude>&lng=<longitude>
+ */
+weatherRouter.get('/current', async (req, res) => {
   try {
     const { lat, lng } = req.query;
     
     if (!lat || !lng) {
-      return res.status(400).json({ error: 'Latitude and longitude are required' });
+      return res.status(400).json({ error: 'Missing required parameters: lat and lng' });
     }
     
-    if (!WEATHER_API_KEY) {
-      return res.status(500).json({ error: 'Weather API key is not configured' });
+    // Validate latitude and longitude
+    const latitude = parseFloat(lat as string);
+    const longitude = parseFloat(lng as string);
+    
+    if (isNaN(latitude) || isNaN(longitude)) {
+      return res.status(400).json({ error: 'Invalid coordinates. Latitude and longitude must be numbers.' });
     }
     
-    // WeatherAPI.com endpoint for current weather
-    const response = await fetch(
-      `https://api.weatherapi.com/v1/current.json?key=${WEATHER_API_KEY}&q=${lat},${lng}&aqi=no`
-    );
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      return res.status(response.status).json(errorData);
+    if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+      return res.status(400).json({ error: 'Coordinates out of range. Latitude must be between -90 and 90, and longitude between -180 and 180.' });
     }
     
-    const data = await response.json();
-    return res.json(data);
+    try {
+      // Fetch weather data from WeatherAPI
+      // This uses free-tier Weather API (https://www.weatherapi.com/)
+      const apiKey = process.env.WEATHER_API_KEY || '5ee7231d59be499c85f211534233012'; // Default key for development
+      const url = `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${latitude},${longitude}&aqi=no`;
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        const errorData = await response.text();
+        return res.status(response.status).json({
+          error: 'Weather API error',
+          details: errorData
+        });
+      }
+      
+      const data = await response.json();
+      
+      // Return the data to the client
+      res.json(data);
+    } catch (error) {
+      console.error('Error fetching weather data:', error);
+      res.status(500).json({
+        error: 'Failed to fetch weather data',
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
   } catch (error) {
-    console.error('Error fetching weather data:', error);
-    return res.status(500).json({ error: 'Failed to fetch weather data' });
+    console.error('Unexpected error in weather endpoint:', error);
+    res.status(500).json({
+      error: 'An unexpected error occurred',
+      details: error instanceof Error ? error.message : String(error)
+    });
   }
 });
 
-// Weather forecast endpoint
+/**
+ * Fetches weather forecast data for a specific location
+ * GET /api/weather/forecast?lat=<latitude>&lng=<longitude>&days=<days>
+ */
 weatherRouter.get('/forecast', async (req, res) => {
   try {
     const { lat, lng, days = 3 } = req.query;
     
     if (!lat || !lng) {
-      return res.status(400).json({ error: 'Latitude and longitude are required' });
+      return res.status(400).json({ error: 'Missing required parameters: lat and lng' });
     }
     
-    if (!WEATHER_API_KEY) {
-      return res.status(500).json({ error: 'Weather API key is not configured' });
+    // Validate latitude and longitude
+    const latitude = parseFloat(lat as string);
+    const longitude = parseFloat(lng as string);
+    const forecastDays = Math.min(Math.max(parseInt(days as string, 10) || 3, 1), 7); // Limit between 1-7 days
+    
+    if (isNaN(latitude) || isNaN(longitude)) {
+      return res.status(400).json({ error: 'Invalid coordinates. Latitude and longitude must be numbers.' });
     }
     
-    // WeatherAPI.com endpoint for forecast
-    const response = await fetch(
-      `https://api.weatherapi.com/v1/forecast.json?key=${WEATHER_API_KEY}&q=${lat},${lng}&days=${days}&aqi=no&alerts=no`
-    );
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      return res.status(response.status).json(errorData);
+    if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+      return res.status(400).json({ error: 'Coordinates out of range. Latitude must be between -90 and 90, and longitude between -180 and 180.' });
     }
     
-    const data = await response.json();
-    return res.json(data);
-  } catch (error) {
-    console.error('Error fetching weather forecast:', error);
-    return res.status(500).json({ error: 'Failed to fetch weather forecast' });
-  }
-});
-
-// Historical weather data for a specific date (useful for trip planning)
-weatherRouter.get('/historical', async (req, res) => {
-  try {
-    const { lat, lng, date } = req.query;
-    
-    if (!lat || !lng || !date) {
-      return res.status(400).json({ 
-        error: 'Latitude, longitude, and date are required',
-        message: 'Date should be in YYYY-MM-DD format' 
+    try {
+      // Fetch forecast data from WeatherAPI
+      const apiKey = process.env.WEATHER_API_KEY || '5ee7231d59be499c85f211534233012'; // Default key for development
+      const url = `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${latitude},${longitude}&days=${forecastDays}&aqi=no&alerts=no`;
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        const errorData = await response.text();
+        return res.status(response.status).json({
+          error: 'Weather API error',
+          details: errorData
+        });
+      }
+      
+      const data = await response.json();
+      
+      // Return the data to the client
+      res.json(data);
+    } catch (error) {
+      console.error('Error fetching forecast data:', error);
+      res.status(500).json({
+        error: 'Failed to fetch forecast data',
+        details: error instanceof Error ? error.message : String(error)
       });
     }
-    
-    if (!WEATHER_API_KEY) {
-      return res.status(500).json({ error: 'Weather API key is not configured' });
-    }
-    
-    // WeatherAPI.com endpoint for historical weather
-    const response = await fetch(
-      `https://api.weatherapi.com/v1/history.json?key=${WEATHER_API_KEY}&q=${lat},${lng}&dt=${date}`
-    );
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      return res.status(response.status).json(errorData);
-    }
-    
-    const data = await response.json();
-    return res.json(data);
   } catch (error) {
-    console.error('Error fetching historical weather data:', error);
-    return res.status(500).json({ error: 'Failed to fetch historical weather data' });
+    console.error('Unexpected error in forecast endpoint:', error);
+    res.status(500).json({
+      error: 'An unexpected error occurred',
+      details: error instanceof Error ? error.message : String(error)
+    });
   }
 });

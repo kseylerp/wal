@@ -236,6 +236,7 @@ export default function TripCard({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isMapExpanded, setIsMapExpanded] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<string | undefined>(undefined);
+  const [showWeather, setShowWeather] = useState(false);
   const { toast } = useToast();
   const isMobile = useIsMobile();
   

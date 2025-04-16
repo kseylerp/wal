@@ -1,7 +1,16 @@
-import { apiRequest } from './queryClient';
+/**
+ * Weather data service for fetching weather information for trip locations
+ */
 
 export interface WeatherData {
-  location: string;
+  location: {
+    name: string;
+    region: string;
+    country: string;
+    lat: number;
+    lon: number;
+    localtime: string;
+  };
   current: {
     temp_c: number;
     temp_f: number;
@@ -67,11 +76,17 @@ export interface WeatherData {
  */
 export const fetchCurrentWeather = async (lat: number, lng: number): Promise<WeatherData | null> => {
   try {
-    const response = await apiRequest('GET', `/api/weather?lat=${lat}&lng=${lng}`);
+    const response = await fetch(`/api/weather/current?lat=${lat}&lng=${lng}`);
+    
+    if (!response.ok) {
+      console.error('Weather API error:', await response.text());
+      return null;
+    }
+    
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error fetching weather data:', error);
+    console.error('Error fetching current weather:', error);
     return null;
   }
 };
@@ -85,7 +100,13 @@ export const fetchCurrentWeather = async (lat: number, lng: number): Promise<Wea
  */
 export const fetchWeatherForecast = async (lat: number, lng: number, days: number = 3): Promise<WeatherData | null> => {
   try {
-    const response = await apiRequest('GET', `/api/weather/forecast?lat=${lat}&lng=${lng}&days=${days}`);
+    const response = await fetch(`/api/weather/forecast?lat=${lat}&lng=${lng}&days=${days}`);
+    
+    if (!response.ok) {
+      console.error('Weather forecast API error:', await response.text());
+      return null;
+    }
+    
     const data = await response.json();
     return data;
   } catch (error) {
@@ -101,9 +122,8 @@ export const fetchWeatherForecast = async (lat: number, lng: number, days: numbe
  * @returns URL string for the weather icon
  */
 export const getWeatherIconUrl = (code: number, isDay: boolean = true): string => {
-  const baseUrl = 'https://cdn.weatherapi.com/weather/64x64';
-  const timeOfDay = isDay ? 'day' : 'night';
-  return `${baseUrl}/${timeOfDay}/${code}.png`;
+  // The API already provides icon URLs, but this function is here for future customization
+  return `https://cdn.weatherapi.com/weather/64x64/${isDay ? 'day' : 'night'}/${code}.png`;
 };
 
 /**
@@ -112,32 +132,28 @@ export const getWeatherIconUrl = (code: number, isDay: boolean = true): string =
  * @returns Hex color string
  */
 export const getWeatherColor = (code: number): string => {
-  // Clear/Sunny
-  if (code === 1000) return '#FDB813';
+  // Clear, sunny
+  if (code === 1000) return '#f59e0b'; // amber-500
   
-  // Partly cloudy
-  if (code === 1003) return '#87CEEB';
+  // Partly cloudy, cloudy
+  if (code >= 1003 && code <= 1030) return '#6b7280'; // gray-500
   
-  // Cloudy, overcast
-  if (code >= 1006 && code <= 1009) return '#A9A9A9';
+  // Fog, mist
+  if (code >= 1135 && code <= 1147) return '#9ca3af'; // gray-400
   
-  // Mist, fog
-  if (code >= 1030 && code <= 1039) return '#C0C0C0';
+  // Rain, drizzle
+  if ((code >= 1063 && code <= 1069) || (code >= 1150 && code <= 1201)) 
+    return '#3b82f6'; // blue-500
   
-  // Rain
-  if ((code >= 1063 && code <= 1069) || (code >= 1150 && code <= 1201)) return '#4682B4';
-  
-  // Snow
-  if ((code >= 1114 && code <= 1117) || (code >= 1210 && code <= 1225)) return '#E0FFFF';
-  
-  // Sleet, freezing rain
-  if ((code >= 1204 && code <= 1207) || (code >= 1237 && code <= 1252)) return '#6495ED';
+  // Snow, sleet
+  if ((code >= 1114 && code <= 1117) || (code >= 1210 && code <= 1225)) 
+    return '#e5e7eb'; // gray-200
   
   // Thunderstorm
-  if (code >= 1273 && code <= 1282) return '#483D8B';
+  if (code >= 1273 && code <= 1282) return '#6366f1'; // indigo-500
   
-  // Default
-  return '#FFFFFF';
+  // Default - unknown condition
+  return '#6b7280'; // gray-500
 };
 
 /**
@@ -147,5 +163,34 @@ export const getWeatherColor = (code: number): string => {
  * @returns Formatted temperature string
  */
 export const formatTemperature = (temp: number, unit: 'C' | 'F' = 'F'): string => {
-  return `${Math.round(temp)}°${unit}`;
+  const roundedTemp = Math.round(temp);
+  return `${roundedTemp}°${unit}`;
+};
+
+/**
+ * Formats the date for display in weather forecasts
+ * @param dateStr Date string in format YYYY-MM-DD
+ * @returns Formatted date string (e.g., "Mon, Jan 1")
+ */
+export const formatForecastDate = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+};
+
+/**
+ * Gets a human-readable description of precipitation chances
+ * @param rainChance Chance of rain (0-100)
+ * @param snowChance Chance of snow (0-100)
+ * @returns Descriptive string about precipitation
+ */
+export const getPrecipitationDescription = (rainChance: number, snowChance: number): string => {
+  if (rainChance > 70 || snowChance > 70) {
+    return snowChance > rainChance ? 'Heavy snow likely' : 'Heavy rain likely';
+  } else if (rainChance > 40 || snowChance > 40) {
+    return snowChance > rainChance ? 'Possible snow' : 'Possible rain';
+  } else if (rainChance > 20 || snowChance > 20) {
+    return snowChance > rainChance ? 'Slight chance of snow' : 'Slight chance of rain';
+  } else {
+    return 'Precipitation unlikely';
+  }
 };

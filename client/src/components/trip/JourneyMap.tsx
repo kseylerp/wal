@@ -545,22 +545,35 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
       
       {/* Map info - condensed on mobile */}
       {!loading && journey && journey.segments && (
-        <div className={`absolute ${isMobile ? 'bottom-3 left-3 max-w-[120px]' : 'bottom-4 left-4'} bg-white px-2 py-1.5 sm:px-3 sm:py-2 rounded shadow-md text-[10px] sm:text-xs z-10`}>
+        <div className={`absolute ${isMobile ? 'bottom-3 left-3 max-w-[140px]' : 'bottom-4 left-4'} bg-white px-2 py-1.5 sm:px-3 sm:py-2 rounded shadow-md text-[10px] sm:text-xs z-10`}>
           {isMobile ? (
             <div className="font-medium text-xs">
               {calculateTotalDistance()} miles
               <span className="block text-[10px] text-gray-500 mt-0.5">
                 {journey.segments.length} segment{journey.segments.length !== 1 ? 's' : ''}
               </span>
+              {weatherData && showWeather && (
+                <div className="flex items-center mt-1 text-[10px]">
+                  <Cloud className="h-3 w-3 mr-1 text-blue-500" />
+                  <span>{weatherData.current.condition.text}</span>
+                </div>
+              )}
             </div>
           ) : (
             <>
               <div className="font-medium text-sm mb-1">
                 {journey.segments.length} Route Segment{journey.segments.length !== 1 ? 's' : ''}
               </div>
-              <div className="text-gray-600">
-                {calculateTotalDistance()} miles
+              <div className="flex items-center text-gray-600">
+                <MapPin className="h-3 w-3 mr-1" />
+                <span>{calculateTotalDistance()} miles</span>
               </div>
+              {weatherData && showWeather && (
+                <div className="flex items-center mt-1 text-gray-600">
+                  <Cloud className="h-3 w-3 mr-1 text-blue-500" />
+                  <span>{weatherData.current.condition.text}, {weatherData.current.temp_f}°F</span>
+                </div>
+              )}
             </>
           )}
         </div>
