@@ -1,8 +1,8 @@
+@import '@fontsource/jost/700.css';
+@import '@fontsource/jost/800.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import '@fontsource/jost/700.css';
-@import '@fontsource/jost/800.css';
 
 /* Custom app styling */
 body {

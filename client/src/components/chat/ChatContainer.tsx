@@ -48,22 +48,22 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
       <div className="chat-container flex-1 overflow-y-auto p-4 sm:px-6 space-y-6">
         {/* Title when no messages */}
         {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full px-6 text-center">
-            <div className="flex flex-col md:flex-row items-center justify-center gap-8 max-w-4xl mx-auto">
-              <div className="flex-shrink-0 max-w-sm">
-                <h1 className="font-jost text-[70px] leading-[65px] text-gray-800 text-center font-black mb-4">
+          <div className="flex flex-col justify-center h-full px-6">
+            <div className="flex flex-col md:flex-row items-start justify-between max-w-4xl mx-auto">
+              <div className="flex-shrink-0 max-w-sm text-left mb-8 md:mb-0">
+                <h1 className="font-jost text-[70px] leading-[65px] text-gray-800 text-left font-black mb-6">
                   GO BEYOND<br />THE POST
                 </h1>
-                <h2 className="font-jost text-[30px] leading-tight font-bold uppercase mt-2">
-                  <span className="text-pink-500">THE POWER OF WALLY</span><br />
+                <h2 className="font-jost text-[30px] leading-tight font-bold uppercase mt-4">
+                  THE POWER OF <span style={{color: "#FB8C9A"}}>WALLY</span><br />
                   <span className="text-gray-700">RESTS WITH LOCAL GUIDES.</span>
                 </h2>
               </div>
-              <div className="flex-shrink-0">
+              <div className="flex-shrink-0 ml-0 md:ml-24 self-center md:self-start">
                 <img 
                   src={hikerImage} 
                   alt="Hiker on mountain trail" 
-                  className="rounded-lg h-[400px] w-auto object-cover shadow-lg"
+                  className="rounded-lg h-[350px] md:h-[400px] w-auto object-cover shadow-lg"
                 />
               </div>
             </div>
