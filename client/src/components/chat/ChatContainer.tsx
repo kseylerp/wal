@@ -56,7 +56,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
                 GO BEYOND<br />THE POST
               </h1>
               <h2 className={`font-jost ${isMobile ? 'text-[20px] leading-[24px]' : 'text-[30px] leading-[36px]'} text-gray-800 font-semibold`}>
-                The power of <span className="text-[#FB8C9A]">wally</span>, rests with local guides.
+                Meet <span className="text-[#FB8C9A]">Wally</span>: powered by local guides.
               </h2>
             </div>
             <div className={`flex-shrink-0 ${isMobile ? '' : 'pl-4'}`}>

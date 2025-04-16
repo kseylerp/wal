@@ -24,7 +24,7 @@ export default function AuthPage() {
       <div className="flex flex-col justify-center w-full px-6 py-12 lg:w-1/2">
         <div className="mx-auto w-full max-w-sm">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-800">Welcome to Wally</h1>
+            <h1 className="text-3xl font-bold text-gray-800">Welcome to <span className="text-[#FB8C9A]">Wally</span></h1>
             <p className="mt-2 text-sm text-gray-600">
               Your personal AI travel planner for off-the-beaten-path adventures
             </p>
@@ -96,7 +96,7 @@ export default function AuthPage() {
               GO BEYOND<br />THE POST
             </h2>
             <p className="text-lg">
-              Plan authentic adventures with AI-powered insights from local guides
+              Meet <span className="text-[#FB8C9A]">Wally</span>: powered by local guides
             </p>
           </div>
         </div>

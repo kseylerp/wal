@@ -4,6 +4,7 @@ import { eq, desc } from 'drizzle-orm';
 import session from 'express-session';
 import connectPg from 'connect-pg-simple';
 import { pool } from './db';
+import { randomUUID } from 'crypto';
 
 const PostgresSessionStore = connectPg(session);
 
@@ -16,9 +17,12 @@ export interface IStorage {
   // Trip methods
   getTripsByUserId(userId: number): Promise<Trip[]>;
   getTrip(id: number): Promise<Trip | undefined>;
+  getTripByShareableId(shareableId: string): Promise<Trip | undefined>;
   createTrip(trip: InsertTrip): Promise<Trip>;
   updateTrip(id: number, trip: Partial<InsertTrip>): Promise<Trip | undefined>;
   deleteTrip(id: number): Promise<boolean>;
+  shareTrip(id: number): Promise<Trip | undefined>;
+  unshareTrip(id: number): Promise<Trip | undefined>;
   
   // Session store
   sessionStore: any; // Using any for SessionStore type
@@ -87,6 +91,44 @@ export class DatabaseStorage implements IStorage {
       .returning({ id: trips.id });
     
     return result.length > 0;
+  }
+  
+  async getTripByShareableId(shareableId: string): Promise<Trip | undefined> {
+    const result = await db
+      .select()
+      .from(trips)
+      .where(eq(trips.shareableId, shareableId))
+      .where(eq(trips.isPublic, true));
+    
+    return result[0];
+  }
+  
+  async shareTrip(id: number): Promise<Trip | undefined> {
+    // Generate a unique shareable ID
+    const shareableId = randomUUID();
+    
+    const result = await db
+      .update(trips)
+      .set({ 
+        shareableId,
+        isPublic: true 
+      })
+      .where(eq(trips.id, id))
+      .returning();
+    
+    return result[0];
+  }
+  
+  async unshareTrip(id: number): Promise<Trip | undefined> {
+    const result = await db
+      .update(trips)
+      .set({ 
+        isPublic: false 
+      })
+      .where(eq(trips.id, id))
+      .returning();
+    
+    return result[0];
   }
 }
 
