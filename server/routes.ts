@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { processChatMessage } from "./api/chat";
 import { setupAuth } from "./auth";
 import { tripsRouter } from "./api/trips";
+import { weatherRouter } from "./api/weather";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
@@ -11,6 +12,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Use the trips router for /api/trips
   app.use('/api/trips', tripsRouter);
+  
+  // Use the weather router for /api/weather
+  app.use('/api/weather', weatherRouter);
   
   // prefix all routes with /api
   
