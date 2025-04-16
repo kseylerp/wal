@@ -3,6 +3,9 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Journey, Marker } from '@/types/chat';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Cloud, MapPin, Clock } from 'lucide-react';
+import WeatherOverlay from '@/components/weather/WeatherOverlay';
+import { WeatherData } from '@/lib/weatherService';
 
 interface JourneyMapProps {
   mapId: string; // This is actually the trip ID prefixed with "map-"
@@ -14,6 +17,7 @@ interface JourneyMapProps {
   focusedActivity?: string;
   highlightedActivity?: string;
   isThumbnail?: boolean; // Indicates if this is a small preview thumbnail
+  showWeather?: boolean; // Whether to show the weather overlay
 }
 
 const JourneyMap: React.FC<JourneyMapProps> = ({
@@ -25,7 +29,8 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
   toggleExpand,
   focusedActivity,
   highlightedActivity,
-  isThumbnail = false
+  isThumbnail = false,
+  showWeather = false
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -33,6 +38,7 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [routesLoaded, setRoutesLoaded] = useState<number>(0);
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const isMobile = useIsMobile();
 
   // Calculate distance from segment data
@@ -487,6 +493,15 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
         ref={mapContainer} 
         className={`w-full ${isMobile ? 'aspect-[4/3]' : 'aspect-square'} h-full min-h-[260px]`}
       />
+      
+      {/* Weather overlay */}
+      {showWeather && !isThumbnail && map.current && (
+        <WeatherOverlay 
+          map={map.current} 
+          location={center}
+          onWeatherDataLoaded={(data) => setWeatherData(data)}
+        />
+      )}
       
       {/* Map controls - positioned differently on mobile */}
       <div className={`absolute ${isMobile ? 'bottom-3 right-3' : 'bottom-4 right-4'} flex flex-col space-y-2 z-10`}>
