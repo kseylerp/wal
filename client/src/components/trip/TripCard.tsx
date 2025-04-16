@@ -115,9 +115,9 @@ const TripCard: React.FC<TripCardProps> = ({
 
   return (
     <div className="border rounded-lg overflow-hidden shadow-lg bg-white mb-8 w-full">
-      <div className="flex flex-col-reverse md:flex-row">
+      <div className="md:flex">
         {/* Left side: Trip details */}
-        <div className="p-6 md:w-1/2">
+        <div className="p-6 md:w-3/5">
           <h2 className="text-2xl font-bold mb-3 text-gray-800">{title}</h2>
           <div className="flex flex-wrap gap-2 mb-4">
             {location && (
@@ -142,7 +142,16 @@ const TripCard: React.FC<TripCardProps> = ({
             )}
           </div>
           
-          <p className="text-gray-700 mb-6 text-base">{description}</p>
+          <p className="text-gray-700 mb-5 text-base">{description}</p>
+          
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-6 text-sm">
+            <div>
+              <span className="font-medium">Distance:</span> {totalDistanceMiles} miles
+            </div>
+            <div>
+              <span className="font-medium">Duration:</span> ~{totalDurationHours} hrs
+            </div>
+          </div>
           
           {/* Tab navigation */}
           <div className="flex border-b mb-5">
@@ -181,6 +190,12 @@ const TripCard: React.FC<TripCardProps> = ({
           </div>
           
           <div className="flex flex-wrap gap-2 mt-6">
+            <a 
+              href={`/map?id=${id}`}
+              className="bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-md transition-colors text-sm"
+            >
+              View Full Map
+            </a>
             <button
               onClick={saveTrip}
               className="bg-green-100 hover:bg-green-200 text-green-700 px-4 py-2 rounded-md transition-colors text-sm"
@@ -197,7 +212,7 @@ const TripCard: React.FC<TripCardProps> = ({
         </div>
         
         {/* Right side: Map */}
-        <div className="md:w-1/2">
+        <div className="md:w-2/5">
           <JourneyMap
             mapId={`map-${id}`}
             center={mapCenter}

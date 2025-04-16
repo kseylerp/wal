@@ -4,10 +4,9 @@ import { ArrowUp } from 'lucide-react';
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
   isDisabled: boolean;
-  isCentered?: boolean;
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isDisabled, isCentered = false }) => {
+const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isDisabled }) => {
   const [message, setMessage] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -38,18 +37,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isDisabled, isCent
     }
   };
 
-  // Adjust className based on whether the input is centered or at the bottom
-  const containerClassName = isCentered 
-    ? "w-full" 
-    : "sticky bottom-0 z-10 bg-white border-t border-gray-200 p-3 sm:p-4 shadow-[0_0_10px_0_rgba(0,0,0,0.05)]";
-    
-  // Different placeholder for centered vs bottom input
-  const placeholderText = isCentered
-    ? "Where are you looking to explore? (e.g., 'I want to go hiking in Colorado')"
-    : "Ask about adventures or modify trip suggestions...";
-    
   return (
-    <div className={containerClassName}>
+    <div className="sticky bottom-0 z-10 bg-white border-t border-gray-200 p-3 sm:p-4 shadow-[0_0_10px_0_rgba(0,0,0,0.05)]">
       <form onSubmit={handleSubmit} className="flex items-end space-x-2 max-w-4xl mx-auto">
         <div className="relative flex-1">
           <textarea
@@ -57,12 +46,10 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isDisabled, isCent
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={placeholderText}
+            placeholder="Ask about adventures or modify trip suggestions..."
             disabled={isDisabled}
             rows={1}
-            className={`w-full border border-gray-300 rounded-xl py-3 px-4 focus:ring-2 focus:ring-[#655590] focus:border-[#655590] resize-none overflow-hidden text-gray-900 ${
-              isCentered ? 'shadow-lg' : ''
-            }`}
+            className="w-full border border-gray-300 rounded-xl py-3 px-4 focus:ring-2 focus:ring-[#655590] focus:border-[#655590] resize-none overflow-hidden text-gray-900"
           />
         </div>
         <button
