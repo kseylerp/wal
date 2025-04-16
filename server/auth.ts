@@ -5,7 +5,9 @@ import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
-import { User as SelectUser } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
+import { User as SelectUser, users } from "@shared/schema";
 
 // Extend Express.User with our user type
 declare global {
@@ -92,11 +94,18 @@ export function setupAuth(app: Express) {
       if (existingUser) {
         return res.status(400).json({ message: "Username already exists" });
       }
+      
+      // Check if email exists by querying users with the same email
+      const usersWithEmail = await db.select().from(users).where(eq(users.email, req.body.email));
+      if (usersWithEmail.length > 0) {
+        return res.status(400).json({ message: "Email already in use" });
+      }
 
       // Create user with hashed password
       const hashedPassword = await hashPassword(req.body.password);
       const user = await storage.createUser({
         username: req.body.username,
+        email: req.body.email,
         password: hashedPassword,
       });
 

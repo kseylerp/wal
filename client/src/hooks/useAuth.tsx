@@ -14,7 +14,7 @@ interface LoginData {
 }
 
 interface RegisterData extends LoginData {
-  // Add any additional fields here if needed
+  email: string;
 }
 
 type AuthContextType = {

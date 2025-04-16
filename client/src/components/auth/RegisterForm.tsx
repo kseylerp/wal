@@ -8,6 +8,7 @@ import { Loader2 } from "lucide-react";
 export function RegisterForm() {
   const { register } = useAuth();
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -25,7 +26,7 @@ export function RegisterForm() {
     setIsLoading(true);
 
     try {
-      await register({ username, password });
+      await register({ username, email, password });
     } catch (err) {
       setError(
         (err as Error).message || "Registration failed. Please try again."
@@ -45,6 +46,19 @@ export function RegisterForm() {
           onChange={(e) => setUsername(e.target.value)}
           required
           autoComplete="username"
+          disabled={isLoading}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="reg-email">Email</Label>
+        <Input
+          id="reg-email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          autoComplete="email"
           disabled={isLoading}
         />
       </div>
