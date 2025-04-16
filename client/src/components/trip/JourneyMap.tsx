@@ -78,9 +78,13 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
     // Reset all route line widths first
     journey?.segments?.forEach((_, index) => {
       const layerId = `route-${index}`;
-      if (map.current?.getLayer(layerId)) {
-        map.current.setPaintProperty(layerId, 'line-width', 5); // Reset to default width
-        map.current.setPaintProperty(layerId, 'line-opacity', 0.75); // Reset to default opacity
+      try {
+        if (map.current && map.current.getStyle() && map.current.getLayer(layerId)) {
+          map.current.setPaintProperty(layerId, 'line-width', 5); // Reset to default width
+          map.current.setPaintProperty(layerId, 'line-opacity', 0.75); // Reset to default opacity
+        }
+      } catch (e) {
+        console.log(`Couldn't reset layer ${layerId} in highlightActivityRoute:`, e);
       }
     });
     
@@ -98,18 +102,22 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
           
           // Highlight this segment
           const layerId = `route-${index}`;
-          if (map.current?.getLayer(layerId)) {
-            map.current.setPaintProperty(layerId, 'line-width', 8); // Make it wider
-            map.current.setPaintProperty(layerId, 'line-opacity', 1); // Full opacity
-            
-            // Fly to this route
-            map.current.fitBounds([
-              [Math.min(...coords.map(c => c[0])), Math.min(...coords.map(c => c[1]))],
-              [Math.max(...coords.map(c => c[0])), Math.max(...coords.map(c => c[1]))]
-            ], {
-              padding: 80,
-              maxZoom: 14
-            });
+          try {
+            if (map.current && map.current.getStyle() && map.current.getLayer(layerId)) {
+              map.current.setPaintProperty(layerId, 'line-width', 8); // Make it wider
+              map.current.setPaintProperty(layerId, 'line-opacity', 1); // Full opacity
+              
+              // Fly to this route
+              map.current.fitBounds([
+                [Math.min(...coords.map(c => c[0])), Math.min(...coords.map(c => c[1]))],
+                [Math.max(...coords.map(c => c[0])), Math.max(...coords.map(c => c[1]))]
+              ], {
+                padding: 80,
+                maxZoom: 14
+              });
+            }
+          } catch (e) {
+            console.log(`Couldn't highlight selected layer ${layerId}:`, e);
           }
         }
       });
