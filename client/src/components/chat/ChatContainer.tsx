@@ -67,15 +67,8 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
           </div>
         )}
         
-        {/* Thinking indicator - Show at the top when chat is active */}
-        {messages.length > 0 && thinking.isActive && (
-          <div className="mb-4">
-            <ThinkingIndicator thinking={thinking} />
-          </div>
-        )}
-        
         {messages.length > 0 && (
-          <div className="flex flex-col-reverse gap-6">
+          <div className="flex flex-col gap-6">
             {messages.map((message) => (
               <MessageBubble
                 key={message.id}
@@ -87,13 +80,16 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
           </div>
         )}
         
-        {/* Thinking indicator - Show at the bottom only when chat is empty */}
-        {messages.length === 0 && thinking.isActive && (
-          <ThinkingIndicator thinking={thinking} />
+        {/* Thinking indicator */}
+        {thinking.isActive && (
+          <div className="mt-2">
+            <ThinkingIndicator thinking={thinking} />
+          </div>
         )}
         
-        {/* Invisible element to help with scrolling to bottom */}
-        <div ref={messagesEndRef} />
+        {/* Invisible element to help with scrolling to latest message 
+             Positioned after the last message to ensure it scrolls to show the newest message */}
+        <div ref={messagesEndRef} className="h-12" />
       </div>
 
       {/* Thinking dialog */}

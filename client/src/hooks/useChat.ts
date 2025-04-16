@@ -17,7 +17,15 @@ export function useChat() {
 
   const scrollToBottom = useCallback(() => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      // Scroll to bottom with a better view of the new message at the top of viewport
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      
+      // For mobile devices, sometimes we need to force scroll after a short delay
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 200);
     }
   }, []);
 
