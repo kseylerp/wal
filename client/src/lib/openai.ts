@@ -94,7 +94,8 @@ export function parseTripsFromResponse(response: any): TripData[] | undefined {
         bestSeasons: trip.best_seasons || [],
         recommendedMonths: trip.recommended_months || [],
         weather: trip.weather_info || trip.weather || '',
-        historical: trip.historical || trip.historical_info || '',
+        // Use either historical or historical_info field, with preference for historical_info
+        historical: trip.historical_info || trip.historical || '',
         recommendedOutfitters: trip.recommended_outfitters || [],
         notes: trip.notes || [],
         warnings: trip.safety_warnings || trip.warnings || [],
