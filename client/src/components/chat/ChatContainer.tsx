@@ -3,6 +3,7 @@ import { Message } from '@/types/chat';
 import MessageBubble from './MessageBubble';
 import ThinkingIndicator from './ThinkingIndicator';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import hikerImage from '@/assets/hiker_mountain.png';
 // Create local formatThinking function
 const formatThinking = (thinking: string): string => {
   if (!thinking) return '';
@@ -47,10 +48,19 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
       <div className="chat-container flex-1 overflow-y-auto p-4 sm:px-6 space-y-6">
         {/* Title when no messages */}
         {messages.length === 0 && (
-          <div className="flex flex-col justify-center h-full max-w-sm ml-6">
-            <h1 className="font-jost text-[70px] leading-[65px] text-gray-800 text-left font-black mb-6">
-              GO BEYOND<br />THE POST
-            </h1>
+          <div className="flex justify-between items-center h-full px-6">
+            <div className="flex-shrink-0 max-w-sm">
+              <h1 className="font-jost text-[70px] leading-[65px] text-gray-800 text-left font-black mb-6">
+                GO BEYOND<br />THE POST
+              </h1>
+            </div>
+            <div className="flex-shrink-0 ml-8">
+              <img 
+                src={hikerImage} 
+                alt="Hiker on mountain trail" 
+                className="rounded-lg h-[400px] w-auto object-cover shadow-lg"
+              />
+            </div>
           </div>
         )}
         
