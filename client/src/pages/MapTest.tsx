@@ -261,9 +261,10 @@ const MapTest: React.FC = () => {
         }
         
         // Calculate center of the map (average of all waypoints or use provided center)
-        const center: [number, number] = tripData.mapCenter || [
-          waypoints.reduce((sum, wp) => sum + wp.coordinates[0], 0) / Math.max(1, waypoints.length),
-          waypoints.reduce((sum, wp) => sum + wp.coordinates[1], 0) / Math.max(1, waypoints.length)
+        // At this point tripData cannot be null since we have the check at the beginning of useEffect
+        const center: [number, number] = (tripData && tripData.mapCenter) ? tripData.mapCenter : [
+          waypoints.reduce((sum: number, wp: {coordinates: [number, number]}) => sum + wp.coordinates[0], 0) / Math.max(1, waypoints.length),
+          waypoints.reduce((sum: number, wp: {coordinates: [number, number]}) => sum + wp.coordinates[1], 0) / Math.max(1, waypoints.length)
         ];
         
         // Create the map
@@ -449,7 +450,7 @@ const MapTest: React.FC = () => {
         mapRef.current.remove();
       }
     };
-  }, []);
+  }, [tripData, tripLoaded, waypoints, activityPoints, routeSegments]);
   
   // Early return if not loaded or error or no trip data
   if (error) {
