@@ -190,6 +190,67 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
     console.log(`Route ${segmentId} added to map (${mode})`);
   };
 
+  // Effect to handle focused activity (clicked from itinerary)
+  useEffect(() => {
+    if (!map.current || !focusedActivity) return;
+    
+    const coords = getCoordinatesForActivity(focusedActivity);
+    if (coords) {
+      flyToLocation(coords);
+      
+      // Highlight the corresponding route if found
+      if (journey?.segments) {
+        journey.segments.forEach((segment, index) => {
+          if (map.current && map.current.getLayer(`route-${index}`)) {
+            const shouldHighlight = 
+              segment.from.toLowerCase().includes(focusedActivity.toLowerCase()) || 
+              segment.to.toLowerCase().includes(focusedActivity.toLowerCase()) ||
+              focusedActivity.toLowerCase().includes(segment.from.toLowerCase()) ||
+              focusedActivity.toLowerCase().includes(segment.to.toLowerCase());
+            
+            // Make the line thicker and brighter if this is the active segment
+            map.current.setPaintProperty(
+              `route-${index}`,
+              'line-width',
+              shouldHighlight ? 8 : 5
+            );
+            
+            map.current.setPaintProperty(
+              `route-${index}`,
+              'line-opacity',
+              shouldHighlight ? 0.9 : 0.75
+            );
+          }
+        });
+      }
+    }
+  }, [focusedActivity, journey]);
+  
+  // Effect to handle highlighted activity (hovered in itinerary)
+  useEffect(() => {
+    if (!map.current || !highlightedActivity) return;
+    
+    // Reset highlights first
+    if (journey?.segments) {
+      journey.segments.forEach((segment, index) => {
+        if (map.current && map.current.getLayer(`route-${index}`)) {
+          const isHighlighted = 
+            segment.from.toLowerCase().includes(highlightedActivity.toLowerCase()) || 
+            segment.to.toLowerCase().includes(highlightedActivity.toLowerCase()) ||
+            highlightedActivity.toLowerCase().includes(segment.from.toLowerCase()) ||
+            highlightedActivity.toLowerCase().includes(segment.to.toLowerCase());
+          
+          // Subtle highlight effect on hover
+          map.current.setPaintProperty(
+            `route-${index}`,
+            'line-opacity',
+            isHighlighted ? 0.9 : 0.75
+          );
+        }
+      });
+    }
+  }, [highlightedActivity, journey]);
+
   // Initialize map when token is available and component is mounted
   useEffect(() => {
     if (!mapboxToken || !mapContainer.current) return;
@@ -201,7 +262,8 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/outdoors-v12',
       center: center,
-      zoom: 9
+      zoom: 9,
+      pitch: 45 // Add slight tilt for better 3D perspective
     });
 
     map.current = initialMap;
