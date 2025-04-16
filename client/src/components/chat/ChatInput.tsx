@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowUp, Mic, MicOff } from 'lucide-react';
+import { ArrowUp, MicOff, Mic } from 'lucide-react';
+import soundWaveIcon from '../../assets/sound-wave-icon.png';
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -192,7 +193,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isDisabled }) => {
 
   return (
     <div className="sticky bottom-0 z-10 bg-white border-t border-gray-200 p-3 sm:p-4 shadow-[0_0_10px_0_rgba(0,0,0,0.05)]">
-      <form onSubmit={handleSubmit} className="flex items-end space-x-2 max-w-4xl mx-auto">
+      <form onSubmit={handleSubmit} className="flex items-center space-x-3 max-w-4xl mx-auto">
         <div className="relative flex-1">
           <textarea
             ref={textareaRef}
@@ -202,7 +203,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isDisabled }) => {
             placeholder="Ask about adventures or modify trip suggestions..."
             disabled={isDisabled || isListening}
             rows={1}
-            className={`w-full border border-gray-300 rounded-xl py-3 px-4 focus:ring-2 focus:ring-[#655590] focus:border-[#655590] resize-none overflow-hidden text-gray-900 
+            className={`w-full border border-gray-300 rounded-xl py-3 pl-4 pr-12 focus:ring-2 focus:ring-[#655590] focus:border-[#655590] resize-none overflow-hidden text-gray-900 
               ${isListening ? 'bg-pink-50 border-pink-300' : ''}`}
           />
           {isListening && (
@@ -222,13 +223,17 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isDisabled }) => {
             type="button"
             onClick={toggleListening}
             disabled={isDisabled}
-            className={`flex-shrink-0 p-2.5 rounded-xl text-white 
-              ${isListening ? 'bg-[#FB8C9A] hover:bg-[#FB8C9A]/90' : 'bg-gray-400 hover:bg-gray-500'} 
+            className={`flex-shrink-0 rounded-full w-10 h-10 flex items-center justify-center
+              ${isListening ? 'bg-[#FB8C9A] hover:bg-[#FB8C9A]/90' : 'bg-gray-100 hover:bg-gray-200 border border-gray-300'} 
               ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
               focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#655590] transition-colors duration-150 ease-in-out`}
             aria-label={isListening ? "Stop voice input" : "Start voice input"}
           >
-            {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+            {isListening ? (
+              <MicOff className="h-5 w-5 text-white" />
+            ) : (
+              <img src={soundWaveIcon} alt="Sound wave" className="h-5 w-5 object-contain" />
+            )}
           </button>
         )}
         
@@ -236,9 +241,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isDisabled }) => {
         <button
           type="submit"
           disabled={isDisabled || !message.trim()}
-          className={`flex-shrink-0 bg-[#655590] p-2.5 rounded-xl text-white ${
-            isDisabled || !message.trim() ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#655590]/90'
-          } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#655590] transition-colors duration-150 ease-in-out`}
+          className={`flex-shrink-0 rounded-full w-10 h-10 flex items-center justify-center
+            ${isDisabled || !message.trim() 
+              ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+              : 'bg-[#655590] text-white hover:bg-[#655590]/90'}
+            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#655590] transition-colors duration-150 ease-in-out`}
         >
           <ArrowUp className="h-5 w-5" />
         </button>
