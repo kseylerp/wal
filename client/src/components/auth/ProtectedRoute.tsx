@@ -1,5 +1,5 @@
 import { ReactNode, useEffect } from 'react';
-import { useLocation, useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { Loader2 } from 'lucide-react';
 
@@ -13,13 +13,13 @@ export function ProtectedRoute({
   fallbackPath = '/auth' 
 }: ProtectedRouteProps) {
   const { user, isLoading } = useAuth();
-  const [, navigate] = useLocation();
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     if (!isLoading && !user) {
-      navigate(fallbackPath);
+      setLocation(fallbackPath);
     }
-  }, [user, isLoading, navigate, fallbackPath]);
+  }, [user, isLoading, setLocation, fallbackPath]);
 
   if (isLoading) {
     return (
