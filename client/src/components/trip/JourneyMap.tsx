@@ -31,6 +31,7 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [routesLoaded, setRoutesLoaded] = useState<number>(0);
+  const isMobile = useIsMobile();
 
   // Calculate distance from segment data
   const calculateTotalDistance = (): string => {
@@ -342,10 +343,10 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
       )}
       
       {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 z-10">
+        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 z-20">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary mx-auto mb-2"></div>
-            <p className="text-gray-700">Loading map data...</p>
+            <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 border-t-2 border-b-2 border-[#655590] mx-auto mb-2"></div>
+            <p className="text-gray-700 text-sm sm:text-base">Loading map data...</p>
             {routesLoaded > 0 && journey?.segments && (
               <p className="text-xs text-gray-500 mt-1">
                 Routes loaded: {routesLoaded}/{journey.segments.length}
@@ -355,19 +356,20 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
         </div>
       )}
       
+      {/* The map container - aspect ratio is different on mobile vs desktop */}
       <div 
         ref={mapContainer} 
-        className="w-full aspect-square md:aspect-auto md:h-full min-h-[300px]"
+        className={`w-full ${isMobile ? 'aspect-[4/3]' : 'aspect-square md:aspect-auto'} md:h-full min-h-[260px]`}
       />
       
-      {/* Map controls in the bottom right corner */}
-      <div className="absolute bottom-4 right-4 flex flex-col space-y-2">
+      {/* Map controls - positioned differently on mobile */}
+      <div className={`absolute ${isMobile ? 'bottom-3 right-3' : 'bottom-4 right-4'} flex flex-col space-y-2 z-10`}>
         <button 
           onClick={toggleExpand}
-          className="bg-white p-2 rounded-full shadow-md hover:bg-gray-100 transition-colors"
+          className="bg-white p-2 rounded-full shadow-md hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#655590]/50"
           aria-label={isExpanded ? "Collapse map" : "Expand map"}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg xmlns="http://www.w3.org/2000/svg" width={isMobile ? "14" : "16"} height={isMobile ? "14" : "16"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             {isExpanded ? (
               <>
                 <polyline points="4 14 10 14 10 20"></polyline>
@@ -387,26 +389,39 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
         </button>
       </div>
       
-      {/* Full map view button in top left */}
-      <div className="absolute top-4 left-4 z-10">
+      {/* Full map view button - more compact on mobile */}
+      <div className={`absolute ${isMobile ? 'top-3 left-3' : 'top-4 left-4'} z-10`}>
         <a 
           href={`/map?id=${mapId.replace('map-', '')}`}
-          className="bg-white px-3 py-2 rounded shadow-md hover:bg-gray-100 transition-colors text-xs font-medium text-blue-700 flex items-center"
+          className={`bg-white ${isMobile ? 'px-2 py-1 text-[10px]' : 'px-3 py-2 text-xs'} rounded shadow-md hover:bg-gray-100 transition-colors font-medium text-blue-700 flex items-center`}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} mr-1`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6-3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
           </svg>
           Full Map
         </a>
       </div>
       
-      {/* Map info on bottom left */}
+      {/* Map info - condensed on mobile */}
       {!loading && journey && journey.segments && (
-        <div className="absolute bottom-4 left-4 bg-white px-3 py-2 rounded shadow-md text-xs z-10">
-          <div className="font-medium text-sm mb-1">{journey.segments.length} Route Segment{journey.segments.length !== 1 ? 's' : ''}</div>
-          <div className="text-gray-600">
-            {calculateTotalDistance()} miles
-          </div>
+        <div className={`absolute ${isMobile ? 'bottom-3 left-3 max-w-[120px]' : 'bottom-4 left-4'} bg-white px-2 py-1.5 sm:px-3 sm:py-2 rounded shadow-md text-[10px] sm:text-xs z-10`}>
+          {isMobile ? (
+            <div className="font-medium text-xs">
+              {calculateTotalDistance()} miles
+              <span className="block text-[10px] text-gray-500 mt-0.5">
+                {journey.segments.length} segment{journey.segments.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+          ) : (
+            <>
+              <div className="font-medium text-sm mb-1">
+                {journey.segments.length} Route Segment{journey.segments.length !== 1 ? 's' : ''}
+              </div>
+              <div className="text-gray-600">
+                {calculateTotalDistance()} miles
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>
