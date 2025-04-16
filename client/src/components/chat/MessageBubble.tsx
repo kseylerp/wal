@@ -31,7 +31,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     return (
       <div className="ai-message bg-white p-4 max-w-[85%] sm:max-w-[75%] md:max-w-[65%] lg:max-w-[100%] shadow-sm border border-gray-100 rounded-[1.25rem] rounded-bl-[0.25rem]">
         <div className="flex items-start space-x-2">
-          <div className="w-8 h-8 bg-[#655590] flex-shrink-0 flex items-center justify-center rounded-full">
+          <div className="w-8 h-8 bg-gray-700 flex-shrink-0 flex items-center justify-center rounded-full">
             <span className="text-white text-sm font-semibold">AI</span>
           </div>
           <div className={`w-full ${hasTripData ? 'max-w-full' : ''}`}>
@@ -42,7 +42,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             {hasThinking && (
               <button 
                 onClick={onShowThinking}
-                className="mt-2 text-xs text-primary hover:text-primary/80 underline"
+                className="mt-2 text-xs text-gray-700 hover:text-gray-900 underline"
               >
                 View thinking process
               </button>
@@ -51,9 +51,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             {/* Render trip cards if available */}
             {hasTripData && message.tripData && (
               <>
-                <div className="mt-4 mb-1 text-xs text-gray-500 text-right italic">
-                  Reply in chat to modify these suggestions
-                </div>
                 <div className="flex flex-col items-center w-full gap-6 mt-4">
                   {message.tripData.map(trip => (
                     <div key={trip.id} className="w-[90%] max-w-7xl">

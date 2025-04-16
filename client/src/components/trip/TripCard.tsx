@@ -159,8 +159,8 @@ const TripCard: React.FC<TripCardProps> = ({
               onClick={() => setActiveTab('info')}
               className={`px-4 py-2 text-sm font-medium ${
                 activeTab === 'info' 
-                  ? 'border-b-2 border-primary text-primary' 
-                  : 'text-gray-500 hover:text-primary'
+                  ? 'border-b-2 border-gray-700 text-gray-700' 
+                  : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               Why We Chose This
@@ -169,8 +169,8 @@ const TripCard: React.FC<TripCardProps> = ({
               onClick={() => setActiveTab('itinerary')}
               className={`px-4 py-2 text-sm font-medium ${
                 activeTab === 'itinerary' 
-                  ? 'border-b-2 border-primary text-primary' 
-                  : 'text-gray-500 hover:text-primary'
+                  ? 'border-b-2 border-gray-700 text-gray-700' 
+                  : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               Itinerary
