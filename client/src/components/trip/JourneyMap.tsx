@@ -311,8 +311,7 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
       
       <div 
         ref={mapContainer} 
-        className="w-full h-full"
-        style={{ height: '600px' }}
+        className="w-full aspect-square"
       />
       
       {/* Map controls in the bottom right corner */}
