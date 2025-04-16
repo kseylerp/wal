@@ -171,8 +171,8 @@ export default function TripCard({
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all hover:shadow-lg">
       <div className="lg:grid lg:grid-cols-2">
-        {/* Map Section */}
-        <div className={`${isMapExpanded ? 'h-[500px]' : 'h-[250px]'} lg:h-[700px] relative transition-all duration-300`}>
+        {/* Map Section - Made smaller */}
+        <div className={`${isMapExpanded ? 'h-[400px]' : 'h-[200px]'} lg:h-[350px] relative transition-all duration-300`}>
           {mapCenter && journey && (
             <JourneyMap
               mapId={`map-${id}`}
