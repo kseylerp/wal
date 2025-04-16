@@ -24,21 +24,19 @@ const TripCard: React.FC<TripCardProps> = ({
   onModifyRequest
 }) => {
   const [isMapExpanded, setIsMapExpanded] = useState(false);
-  const [activeTab, setActiveTab] = useState<'info' | 'itinerary'>('itinerary');
+  const [activeTab, setActiveTab] = useState<'info' | 'itinerary'>('info');
   
   // Add state for tracking focused and highlighted activities
   const [focusedActivity, setFocusedActivity] = useState<string | undefined>(undefined);
   const [highlightedActivity, setHighlightedActivity] = useState<string | undefined>(undefined);
   
   // Handlers for activity interaction
-  const handleActivityClick = (activity: string, coordinates?: [number, number][]) => {
+  const handleActivityClick = (activity: string) => {
     setFocusedActivity(activity);
-    console.log(`Activity clicked: ${activity}`, coordinates);
   };
   
   const handleActivityHover = (activity: string, isHovering: boolean) => {
     setHighlightedActivity(isHovering ? activity : undefined);
-    console.log(`Activity hover: ${activity}, isHovering: ${isHovering}`);
   };
 
   // Toggle map expansion

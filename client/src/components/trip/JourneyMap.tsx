@@ -67,57 +67,26 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
     });
   };
   
-  // Extract coordinates from an activity name if it corresponds to a segment or marker
+  // Extract coordinates from an activity name if it corresponds to a segment
   const getCoordinatesForActivity = (activityName: string): [number, number][] | null => {
-    if (!activityName) return null;
+    if (!journey?.segments || !activityName) return null;
     
-    console.log(`Looking for coordinates for activity: "${activityName}"`);
+    // Try to match the activity name with a segment's from or to location
+    const matchedSegment = journey.segments.find(segment => {
+      const activityLower = activityName.toLowerCase();
+      return (
+        segment.from.toLowerCase().includes(activityLower) || 
+        segment.to.toLowerCase().includes(activityLower) ||
+        activityLower.includes(segment.from.toLowerCase()) || 
+        activityLower.includes(segment.to.toLowerCase())
+      );
+    });
     
-    // First try to match with any marker
-    if (markers && markers.length > 0) {
-      const matchedMarker = markers.find(marker => {
-        const activityLower = activityName.toLowerCase();
-        const markerNameLower = marker.name.toLowerCase();
-        
-        return (
-          markerNameLower.includes(activityLower) || 
-          activityLower.includes(markerNameLower)
-        );
-      });
-      
-      if (matchedMarker) {
-        console.log(`Found matching marker: "${matchedMarker.name}"`, matchedMarker.coordinates);
-        // Return a single-element array of coordinates to match the expected format
-        return [matchedMarker.coordinates];
-      }
+    if (matchedSegment && matchedSegment.geometry && matchedSegment.geometry.coordinates) {
+      return matchedSegment.geometry.coordinates as [number, number][];
     }
     
-    // If no marker matches, try to match with journey segments
-    if (journey?.segments && journey.segments.length > 0) {
-      const matchedSegment = journey.segments.find(segment => {
-        if (!segment.from || !segment.to) return false;
-        
-        const activityLower = activityName.toLowerCase();
-        const fromLower = segment.from.toLowerCase();
-        const toLower = segment.to.toLowerCase();
-        
-        return (
-          fromLower.includes(activityLower) || 
-          toLower.includes(activityLower) ||
-          activityLower.includes(fromLower) || 
-          activityLower.includes(toLower)
-        );
-      });
-      
-      if (matchedSegment && matchedSegment.geometry && matchedSegment.geometry.coordinates) {
-        console.log(`Found matching segment: "${matchedSegment.from}" to "${matchedSegment.to}"`);
-        return matchedSegment.geometry.coordinates as [number, number][];
-      }
-    }
-    
-    // If no match is found, use the map center as a fallback
-    console.log(`No specific match found, using map center instead`);
-    return [center];
+    return null;
   };
 
   // Fetch MapBox token on component mount
@@ -225,13 +194,8 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
   useEffect(() => {
     if (!map.current || !focusedActivity) return;
     
-    console.log(`Map focus effect triggered for: ${focusedActivity}`);
-    
     const coords = getCoordinatesForActivity(focusedActivity);
-    console.log(`Coordinates found:`, coords);
-    
-    if (coords && coords.length > 0) {
-      console.log(`Flying to coordinates:`, coords[0]);
+    if (coords) {
       flyToLocation(coords);
       
       // Highlight the corresponding route if found
@@ -239,12 +203,10 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
         journey.segments.forEach((segment, index) => {
           if (map.current && map.current.getLayer(`route-${index}`)) {
             const shouldHighlight = 
-              segment.from?.toLowerCase().includes(focusedActivity.toLowerCase()) || 
-              segment.to?.toLowerCase().includes(focusedActivity.toLowerCase()) ||
-              focusedActivity.toLowerCase().includes(segment.from?.toLowerCase() || '') ||
-              focusedActivity.toLowerCase().includes(segment.to?.toLowerCase() || '');
-            
-            console.log(`Segment ${index}: ${segment.from} to ${segment.to}, highlight: ${shouldHighlight}`);
+              segment.from.toLowerCase().includes(focusedActivity.toLowerCase()) || 
+              segment.to.toLowerCase().includes(focusedActivity.toLowerCase()) ||
+              focusedActivity.toLowerCase().includes(segment.from.toLowerCase()) ||
+              focusedActivity.toLowerCase().includes(segment.to.toLowerCase());
             
             // Make the line thicker and brighter if this is the active segment
             map.current.setPaintProperty(
@@ -258,15 +220,9 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
               'line-opacity',
               shouldHighlight ? 0.9 : 0.75
             );
-          } else {
-            console.log(`Layer route-${index} not found on map`);
           }
         });
-      } else {
-        console.log('No journey segments available to highlight');
       }
-    } else {
-      console.log(`No coordinates found for activity: ${focusedActivity}`);
     }
   }, [focusedActivity, journey]);
   
@@ -274,19 +230,15 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
   useEffect(() => {
     if (!map.current || !highlightedActivity) return;
     
-    console.log(`Map hover effect triggered for: ${highlightedActivity}`);
-    
     // Reset highlights first
     if (journey?.segments) {
       journey.segments.forEach((segment, index) => {
         if (map.current && map.current.getLayer(`route-${index}`)) {
           const isHighlighted = 
-            segment.from?.toLowerCase().includes(highlightedActivity.toLowerCase()) || 
-            segment.to?.toLowerCase().includes(highlightedActivity.toLowerCase()) ||
-            highlightedActivity.toLowerCase().includes(segment.from?.toLowerCase() || '') ||
-            highlightedActivity.toLowerCase().includes(segment.to?.toLowerCase() || '');
-          
-          console.log(`Segment ${index} hover: ${segment.from} to ${segment.to}, highlight: ${isHighlighted}`);
+            segment.from.toLowerCase().includes(highlightedActivity.toLowerCase()) || 
+            segment.to.toLowerCase().includes(highlightedActivity.toLowerCase()) ||
+            highlightedActivity.toLowerCase().includes(segment.from.toLowerCase()) ||
+            highlightedActivity.toLowerCase().includes(segment.to.toLowerCase());
           
           // Subtle highlight effect on hover
           map.current.setPaintProperty(
@@ -294,12 +246,8 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
             'line-opacity',
             isHighlighted ? 0.9 : 0.75
           );
-        } else {
-          console.log(`Layer route-${index} not found on map for hover`);
         }
       });
-    } else {
-      console.log('No journey segments available to highlight on hover');
     }
   }, [highlightedActivity, journey]);
 
