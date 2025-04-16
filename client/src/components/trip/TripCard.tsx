@@ -31,12 +31,14 @@ const TripCard: React.FC<TripCardProps> = ({
   const [highlightedActivity, setHighlightedActivity] = useState<string | undefined>(undefined);
   
   // Handlers for activity interaction
-  const handleActivityClick = (activity: string) => {
+  const handleActivityClick = (activity: string, coordinates?: [number, number][]) => {
     setFocusedActivity(activity);
+    console.log(`Activity clicked: ${activity}`, coordinates);
   };
   
   const handleActivityHover = (activity: string, isHovering: boolean) => {
     setHighlightedActivity(isHovering ? activity : undefined);
+    console.log(`Activity hover: ${activity}, isHovering: ${isHovering}`);
   };
 
   // Toggle map expansion
