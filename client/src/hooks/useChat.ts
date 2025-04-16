@@ -5,14 +5,7 @@ import { sendChatMessage, parseTripsFromResponse } from '../lib/openai';
 
 export function useChat() {
   const [chatState, setChatState] = useState<ChatState>({
-    messages: [
-      {
-        id: uuidv4(),
-        role: 'assistant',
-        content: "Hi there! Let's plan your next offbeat adventure.",
-        timestamp: new Date().toISOString(),
-      },
-    ],
+    messages: [],
     thinking: {
       isActive: false,
       content: '',

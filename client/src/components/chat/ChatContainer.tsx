@@ -45,6 +45,15 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
   return (
     <main className="flex-1 flex flex-col overflow-hidden">
       <div className="chat-container flex-1 overflow-y-auto p-4 sm:px-6 space-y-6">
+        {/* Title when no messages */}
+        {messages.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-full">
+            <h1 className="font-jost text-[96px] leading-[90px] text-gray-800 text-center font-medium mb-6">
+              GO BEYOND THE POST
+            </h1>
+          </div>
+        )}
+        
         {messages.map((message) => (
           <MessageBubble
             key={message.id}
