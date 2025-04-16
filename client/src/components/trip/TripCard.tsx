@@ -270,6 +270,13 @@ export default function TripCard({
   // Create a state for the current activity details
   const [activeActivity, setActiveActivity] = useState<Activity | null>(null);
   
+  // Function to scroll to the map
+  const scrollToMap = () => {
+    if (mapContainerRef.current) {
+      mapContainerRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+  
   // Find activity data when selectedActivity changes
   useEffect(() => {
     if (selectedActivity && activities && activities.length > 0) {
@@ -308,8 +315,8 @@ export default function TripCard({
             )}
           </div>
           
-          {/* Display active activity details below map on mobile / small screens */}
-          {activeActivity && isMobile && (
+          {/* Display active activity details below map */}
+          {activeActivity && (
             <div className="p-4 bg-gray-50 border-t border-gray-200">
               <h4 className="font-medium text-sm mb-2">{activeActivity.title} Details</h4>
               <ActivityDetails activity={activeActivity} />
@@ -582,11 +589,9 @@ export default function TripCard({
                                 "p-2 rounded-md border cursor-pointer transition-all",
                                 selectedActivity === activityName 
                                   ? "border-[#655590] bg-[#655590]/5" 
-                                  : "border-gray-200 hover:border-[#655590]/50 hover:bg-[#655590]/5"
+                                  : "border-gray-200"
                               )}
                               onClick={() => handleActivityClick(activityName)}
-                              onMouseEnter={() => setHoveredActivity(activityName)}
-                              onMouseLeave={() => setHoveredActivity(undefined)}
                             >
                               <div className="flex justify-between items-start">
                                 <div>
@@ -681,7 +686,7 @@ export default function TripCard({
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       if (!isMapExpanded) toggleMapExpand();
-                                      // The selected activity will be highlighted in the map
+                                      scrollToMap(); // Scroll to the map section
                                     }}
                                   >
                                     View Route on Map
