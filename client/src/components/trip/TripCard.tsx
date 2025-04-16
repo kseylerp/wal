@@ -24,7 +24,7 @@ const TripCard: React.FC<TripCardProps> = ({
   onModifyRequest
 }) => {
   const [isMapExpanded, setIsMapExpanded] = useState(false);
-  const [activeTab, setActiveTab] = useState<'info' | 'itinerary'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'itinerary'>('itinerary');
   
   // Add state for tracking focused and highlighted activities
   const [focusedActivity, setFocusedActivity] = useState<string | undefined>(undefined);

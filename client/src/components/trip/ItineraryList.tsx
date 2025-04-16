@@ -42,9 +42,10 @@ const ItineraryList: React.FC<ItineraryListProps> = ({
   };
   
   // Function to handle click on activity
-  const handleActivityClick = (text: string) => {
+  const handleActivityClick = (text: string, providedCoords?: Coordinates) => {
     if (onActivityClick) {
-      const coords = getCoordinatesForActivity(text);
+      // Use provided coordinates or get them from journey data
+      const coords = providedCoords || getCoordinatesForActivity(text);
       onActivityClick(text, coords);
     }
   };
@@ -84,11 +85,11 @@ const ItineraryList: React.FC<ItineraryListProps> = ({
                       key={index} 
                       type="single" 
                       collapsible 
-                      className="border-0 mb-1"
+                      className="border-0 mb-2"
                     >
-                      <AccordionItem value={`activity-${index}`} className="border-0">
+                      <AccordionItem value={`activity-${index}`} className="border border-gray-100 rounded-md shadow-sm">
                         <AccordionTrigger 
-                          className="py-1 pr-0 hover:no-underline group"
+                          className="py-2 px-2 hover:no-underline group bg-blue-50 hover:bg-blue-100 rounded-t-md"
                           onClick={(e) => {
                             // Prevent the accordion from toggling when clicking with intent to focus on map
                             if (onActivityClick) {
@@ -103,37 +104,39 @@ const ItineraryList: React.FC<ItineraryListProps> = ({
                             onMouseEnter={() => handleActivityHover(activityTitle, true)}
                             onMouseLeave={() => handleActivityHover(activityTitle, false)}
                           >
-                            <span className="text-primary mr-2 mt-0.5 text-xs flex-shrink-0 
-                              group-hover:text-blue-600 transition-colors">•</span>
+                            <span className="text-blue-500 mr-2 mt-0.5 text-sm flex-shrink-0 
+                              group-hover:text-blue-600 transition-colors">→</span>
                             <span className="text-sm text-gray-700 font-medium 
                               group-hover:text-blue-700 transition-colors">{activityTitle}</span>
                           </div>
                         </AccordionTrigger>
-                        <AccordionContent className="pl-6 text-sm text-gray-600 pt-0">
-                          {activityDetails}
-                          
-                          {/* Show elevation data if available */}
-                          {hasElevationData && (
-                            <div className="mt-2 text-xs bg-gray-50 p-2 rounded">
-                              <span className="font-medium">Elevation: </span>
-                              {elevationMatch[2] 
-                                ? `${elevationMatch[1]}-${elevationMatch[2]} ft` 
-                                : `${elevationMatch[1]} ft`}
-                            </div>
-                          )}
+                        <AccordionContent className="pl-4 pr-2 py-3 text-sm text-gray-600">
+                          <div className="border-l-2 border-gray-200 pl-3">
+                            {activityDetails}
+                            
+                            {/* Show elevation data if available */}
+                            {hasElevationData && (
+                              <div className="mt-2 text-xs bg-blue-50 p-2 rounded border border-blue-100">
+                                <span className="font-medium">Elevation: </span>
+                                {elevationMatch[2] 
+                                  ? `${elevationMatch[1]}-${elevationMatch[2]} ft` 
+                                  : `${elevationMatch[1]} ft`}
+                              </div>
+                            )}
+                          </div>
                         </AccordionContent>
                       </AccordionItem>
                     </Accordion>
                   ) : (
                     <div 
                       key={index} 
-                      className="flex items-start space-x-2 py-1 group cursor-pointer hover:bg-gray-50 rounded px-1"
-                      onClick={() => isInteractive && onActivityClick(activity)}
-                      onMouseEnter={() => isInteractive && onActivityHover(activity, true)}
-                      onMouseLeave={() => isInteractive && onActivityHover(activity, false)}
+                      className="flex items-start space-x-2 py-2 group cursor-pointer hover:bg-blue-50 rounded px-2 mb-1 border border-gray-100 shadow-sm"
+                      onClick={() => handleActivityClick(activity)}
+                      onMouseEnter={() => handleActivityHover(activity, true)}
+                      onMouseLeave={() => handleActivityHover(activity, false)}
                     >
-                      <span className="text-primary mt-0.5 text-xs group-hover:text-blue-600 transition-colors">•</span>
-                      <span className="text-sm text-gray-700 group-hover:text-blue-700 transition-colors">{activity}</span>
+                      <span className="text-blue-500 mt-0.5 text-sm group-hover:text-blue-600 transition-colors">→</span>
+                      <span className="text-sm text-gray-700 group-hover:text-blue-700 transition-colors font-medium">{activity}</span>
                     </div>
                   );
                 })}
@@ -141,13 +144,13 @@ const ItineraryList: React.FC<ItineraryListProps> = ({
                 
               {day.accommodations && (
                 <div 
-                  className="flex items-start space-x-2 mt-2 group cursor-pointer hover:bg-gray-50 rounded px-1 py-1"
-                  onClick={() => isInteractive && onActivityClick(`Stay: ${day.accommodations}`)}
-                  onMouseEnter={() => isInteractive && onActivityHover(`Stay: ${day.accommodations}`, true)}
-                  onMouseLeave={() => isInteractive && onActivityHover(`Stay: ${day.accommodations}`, false)}
+                  className="flex items-start space-x-2 mt-3 group cursor-pointer hover:bg-blue-50 rounded px-2 py-2 border border-gray-100 shadow-sm"
+                  onClick={() => handleActivityClick(`Stay: ${day.accommodations}`)}
+                  onMouseEnter={() => handleActivityHover(`Stay: ${day.accommodations}`, true)}
+                  onMouseLeave={() => handleActivityHover(`Stay: ${day.accommodations}`, false)}
                 >
-                  <span className="text-blue-500 mt-0.5 text-xs group-hover:text-blue-600 transition-colors">🏠</span>
-                  <span className="text-sm text-gray-700 italic group-hover:text-blue-700 transition-colors">
+                  <span className="text-blue-500 mt-0.5 text-sm group-hover:text-blue-600 transition-colors">🏠</span>
+                  <span className="text-sm text-gray-700 font-medium group-hover:text-blue-700 transition-colors">
                     Stay: {day.accommodations}
                   </span>
                 </div>
