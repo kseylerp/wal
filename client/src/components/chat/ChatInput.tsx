@@ -4,7 +4,6 @@ import { ArrowUp, Mic, MicOff } from 'lucide-react';
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
   isDisabled: boolean;
-  isVoiceEnabled?: boolean;
 }
 
 // Define the SpeechRecognition interface for TypeScript
@@ -46,123 +45,28 @@ interface SpeechRecognitionErrorEvent extends Event {
   message: string;
 }
 
-// This ensures TypeScript recognizes the global SpeechRecognition and SpeechSynthesis objects
+// This ensures TypeScript recognizes the global SpeechRecognition object
 declare global {
   interface Window {
     SpeechRecognition: new () => SpeechRecognition;
     webkitSpeechRecognition: new () => SpeechRecognition;
-    speechSynthesis: SpeechSynthesis;
   }
 }
 
-// Speech synthesis interfaces
-interface SpeechSynthesis {
-  pending: boolean;
-  speaking: boolean;
-  paused: boolean;
-  onvoiceschanged: ((this: SpeechSynthesis, ev: Event) => any) | null;
-  getVoices(): SpeechSynthesisVoice[];
-  speak(utterance: SpeechSynthesisUtterance): void;
-  cancel(): void;
-  pause(): void;
-  resume(): void;
-}
-
-interface SpeechSynthesisUtterance extends EventTarget {
-  text: string;
-  lang: string;
-  voice: SpeechSynthesisVoice | null;
-  volume: number;
-  rate: number;
-  pitch: number;
-  onstart: ((this: SpeechSynthesisUtterance, ev: SpeechSynthesisEvent) => any) | null;
-  onend: ((this: SpeechSynthesisUtterance, ev: SpeechSynthesisEvent) => any) | null;
-  onerror: ((this: SpeechSynthesisUtterance, ev: SpeechSynthesisEvent) => any) | null;
-  onpause: ((this: SpeechSynthesisUtterance, ev: SpeechSynthesisEvent) => any) | null;
-  onresume: ((this: SpeechSynthesisUtterance, ev: SpeechSynthesisEvent) => any) | null;
-  onboundary: ((this: SpeechSynthesisUtterance, ev: SpeechSynthesisEvent) => any) | null;
-  onmark: ((this: SpeechSynthesisUtterance, ev: SpeechSynthesisEvent) => any) | null;
-}
-
-interface SpeechSynthesisVoice {
-  readonly voiceURI: string;
-  readonly name: string;
-  readonly lang: string;
-  readonly localService: boolean;
-  readonly default: boolean;
-}
-
-interface SpeechSynthesisEvent extends Event {
-  readonly utterance: SpeechSynthesisUtterance;
-  readonly charIndex?: number;
-  readonly charLength?: number;
-  readonly elapsedTime?: number;
-  readonly name?: string;
-}
-
-const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isDisabled, isVoiceEnabled = true }) => {
+const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isDisabled }) => {
   const [message, setMessage] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
-  const [synthSupported, setSynthSupported] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
-  
-  // Helper function to speak text using Speech Synthesis
-  const speak = (text: string, rate = 1) => {
-    if (!synthSupported || !window.speechSynthesis || !isVoiceEnabled) return;
-    
-    // Cancel any ongoing speech
-    window.speechSynthesis.cancel();
-    
-    // Create utterance
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = rate;
-    utterance.pitch = 1;
-    utterance.volume = 1;
-    
-    // Try to find a female voice if available
-    const voices = window.speechSynthesis.getVoices();
-    const femaleVoice = voices.find(voice => 
-      voice.name.includes('Female') || 
-      voice.name.includes('Samantha') || 
-      voice.name.includes('Google UK English Female')
-    );
-    
-    if (femaleVoice) {
-      utterance.voice = femaleVoice;
-    }
-    
-    // Speak the text
-    window.speechSynthesis.speak(utterance);
-  };
 
-  // Check if speech recognition and synthesis are supported by the browser
+  // Check if speech recognition is supported by the browser
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       setSpeechSupported(true);
     } else {
       console.warn('Speech recognition not supported in this browser');
-    }
-    
-    // Check speech synthesis support
-    if (window.speechSynthesis) {
-      setSynthSupported(true);
-      
-      // Load voices (they might not be available immediately)
-      const loadVoices = () => {
-        window.speechSynthesis.getVoices();
-      };
-      
-      loadVoices();
-      
-      // Chrome loads voices asynchronously
-      if (speechSynthesis.onvoiceschanged !== undefined) {
-        speechSynthesis.onvoiceschanged = loadVoices;
-      }
-    } else {
-      console.warn('Speech synthesis not supported in this browser');
     }
   }, []);
 
@@ -246,31 +150,13 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isDisabled, isVoic
         recognitionRef.current = null;
       }
       setIsListening(false);
-      
-      // Speak feedback when stopping
-      if (synthSupported) {
-        speak("Voice input stopped.");
-      }
     } else {
       // Start listening
       const recognition = initializeSpeechRecognition();
       if (recognition) {
-        // Speak feedback before starting
-        if (synthSupported) {
-          // Using a faster rate for system messages
-          speak("Hi, I'm wally, your travel assistant. How can I help plan your adventure today?", 1.1);
-          
-          // Short delay to let the intro finish before starting recognition
-          setTimeout(() => {
-            recognition.start();
-            recognitionRef.current = recognition;
-            setIsListening(true);
-          }, 2500);
-        } else {
-          recognition.start();
-          recognitionRef.current = recognition;
-          setIsListening(true);
-        }
+        recognition.start();
+        recognitionRef.current = recognition;
+        setIsListening(true);
       }
     }
   };
