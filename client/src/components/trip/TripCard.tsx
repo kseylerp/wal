@@ -114,114 +114,104 @@ const TripCard: React.FC<TripCardProps> = ({
   };
 
   return (
-    <div className="border rounded-lg overflow-hidden shadow-lg bg-white mb-8 w-full">
-      <div className="md:flex">
-        {/* Left side: Trip details */}
-        <div className="p-6 md:w-3/5">
-          <h2 className="text-2xl font-bold mb-3 text-gray-800">{title}</h2>
-          <div className="flex flex-wrap gap-2 mb-4">
-            {location && (
-              <span className="bg-primary/10 text-primary text-xs px-3 py-1 rounded-full">
-                {location}
-              </span>
-            )}
-            {duration && (
-              <span className="bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-full">
-                {duration}
-              </span>
-            )}
-            {difficultyLevel && (
-              <span className="bg-primary/5 text-primary/80 text-xs px-3 py-1 rounded-full">
-                {difficultyLevel}
-              </span>
-            )}
-            {priceEstimate && (
-              <span className="bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-full">
-                {priceEstimate}
-              </span>
-            )}
-          </div>
-          
-          <p className="text-gray-700 mb-5 text-base">{description}</p>
-          
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-6 text-sm">
-            <div>
-              <span className="font-medium">Distance:</span> {totalDistanceMiles} miles
+    <div className="w-full mb-8">
+      <div className="w-full bg-white">
+        <div className="md:flex">
+          {/* Left side: Trip details */}
+          <div className="p-6 md:w-1/2">
+            <h2 className="text-2xl font-bold mb-3 text-gray-800">{title}</h2>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {location && (
+                <span className="bg-primary/10 text-primary text-xs px-3 py-1 rounded-full">
+                  {location}
+                </span>
+              )}
+              {duration && (
+                <span className="bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-full">
+                  {duration}
+                </span>
+              )}
+              {difficultyLevel && (
+                <span className="bg-primary/5 text-primary/80 text-xs px-3 py-1 rounded-full">
+                  {difficultyLevel}
+                </span>
+              )}
+              {priceEstimate && (
+                <span className="bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-full">
+                  {priceEstimate}
+                </span>
+              )}
             </div>
-            <div>
-              <span className="font-medium">Duration:</span> ~{totalDurationHours} hrs
-            </div>
-          </div>
-          
-          {/* Tab navigation */}
-          <div className="flex border-b mb-5">
-            <button
-              onClick={() => setActiveTab('info')}
-              className={`px-4 py-2 text-sm font-medium ${
-                activeTab === 'info' 
-                  ? 'border-b-2 border-gray-700 text-gray-700' 
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Why We Chose This
-            </button>
-            <button
-              onClick={() => setActiveTab('itinerary')}
-              className={`px-4 py-2 text-sm font-medium ${
-                activeTab === 'itinerary' 
-                  ? 'border-b-2 border-gray-700 text-gray-700' 
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Itinerary
-            </button>
-          </div>
-          
-          {/* Tab content */}
-          <div className="text-sm max-h-96 overflow-y-auto">
-            {activeTab === 'info' ? (
+            
+            <p className="text-gray-700 mb-5 text-base">{description}</p>
+            
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-6 text-sm">
               <div>
-                <h3 className="font-medium text-base mb-2">Why We Chose This For You</h3>
-                <p className="text-gray-600">{whyWeChoseThis}</p>
+                <span className="font-medium">Distance:</span> {totalDistanceMiles} miles
               </div>
-            ) : (
-              <ItineraryList itinerary={itinerary} suggestedGuides={suggestedGuides} />
-            )}
+              <div>
+                <span className="font-medium">Duration:</span> ~{totalDurationHours} hrs
+              </div>
+            </div>
+            
+            {/* Tab navigation */}
+            <div className="flex border-b mb-5">
+              <button
+                onClick={() => setActiveTab('info')}
+                className={`px-4 py-2 text-sm font-medium ${
+                  activeTab === 'info' 
+                    ? 'border-b-2 border-gray-700 text-gray-700' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Why We Chose This
+              </button>
+              <button
+                onClick={() => setActiveTab('itinerary')}
+                className={`px-4 py-2 text-sm font-medium ${
+                  activeTab === 'itinerary' 
+                    ? 'border-b-2 border-gray-700 text-gray-700' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Itinerary
+              </button>
+            </div>
+            
+            {/* Tab content */}
+            <div className="text-sm max-h-96 overflow-y-auto">
+              {activeTab === 'info' ? (
+                <div>
+                  <h3 className="font-medium text-base mb-2">Why We Chose This For You</h3>
+                  <p className="text-gray-600">{whyWeChoseThis}</p>
+                </div>
+              ) : (
+                <ItineraryList itinerary={itinerary} suggestedGuides={suggestedGuides} />
+              )}
+            </div>
           </div>
           
-          <div className="flex flex-wrap gap-2 mt-6">
-            <a 
-              href={`/map?id=${id}`}
-              className="bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-md transition-colors text-sm"
-            >
-              View Full Map
-            </a>
-            <button
-              onClick={saveTrip}
-              className="bg-green-100 hover:bg-green-200 text-green-700 px-4 py-2 rounded-md transition-colors text-sm"
-            >
-              Save Trip
-            </button>
-            <a 
-              href="/saved-trips"
-              className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md transition-colors text-sm"
-            >
-              Saved Trips
-            </a>
+          {/* Right side: Map */}
+          <div className="md:w-1/2">
+            <JourneyMap
+              mapId={`map-${id}`}
+              center={mapCenter}
+              markers={markers}
+              journey={journey}
+              isExpanded={isMapExpanded}
+              toggleExpand={toggleMapExpand}
+            />
           </div>
         </div>
-        
-        {/* Right side: Map */}
-        <div className="md:w-2/5">
-          <JourneyMap
-            mapId={`map-${id}`}
-            center={mapCenter}
-            markers={markers}
-            journey={journey}
-            isExpanded={isMapExpanded}
-            toggleExpand={toggleMapExpand}
-          />
-        </div>
+      </div>
+      {/* Save trip button outside the card */}
+      <div className="flex justify-end mt-3">
+        <button
+          onClick={saveTrip}
+          className="bg-green-100 hover:bg-green-200 text-green-700 px-4 py-2 rounded-md transition-colors text-sm"
+        >
+          Save Trip
+        </button>
       </div>
     </div>
   );

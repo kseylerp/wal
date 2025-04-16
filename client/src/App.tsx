@@ -16,7 +16,7 @@ function Router() {
           <Link href="/">
             <div className="flex items-center hover:opacity-90 transition-opacity cursor-pointer">
               <img src={logo} alt="offbeat Logo" className="h-10 mr-3" />
-              <span className="font-bold text-xl text-gray-700">offbeat</span>
+              <span className="font-bold text-xl text-primary">offbeat</span>
             </div>
           </Link>
         </div>
