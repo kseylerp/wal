@@ -83,6 +83,11 @@ interface TripCardProps {
   notes?: string[];
   warnings?: string[];
   activities?: Activity[];
+  priceRange?: {
+    min: number;
+    max: number;
+    currency: string;
+  };
 }
 
 // ActivityDetails Component
@@ -245,6 +250,24 @@ export default function TripCard({
     month: 'long',
     day: 'numeric'
   });
+  
+  // Format price range from object to string
+  const formatPriceRange = () => {
+    if (!priceRange) return priceEstimate; // Use existing value if no priceRange object
+    
+    const min = priceRange.min;
+    const max = priceRange.max;
+    const currency = priceRange.currency || 'USD';
+    
+    const formatter = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    });
+    
+    return `${formatter.format(min)} - ${formatter.format(max)}`;
+  };
   
   const toggleMapExpand = () => {
     setIsMapExpanded(!isMapExpanded);

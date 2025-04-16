@@ -18,6 +18,32 @@ export interface ChatState {
   isWaitingForResponse: boolean;
 }
 
+export interface RouteDetails {
+  distance_miles: number;
+  elevation_gain_ft: number;
+  elevation_loss_ft: number;
+  high_point_ft: number;
+  terrain: string;
+  route_type: string;
+}
+
+export interface Activity {
+  id: string;
+  title: string;
+  type: string;
+  difficulty: string;
+  duration_hours: number;
+  start_location: string;
+  end_location: string;
+  highlights: string[];
+  hazards: string[];
+  route_details: RouteDetails;
+  route_geometry?: {
+    type: string;
+    coordinates: [number, number][];
+  };
+}
+
 export interface TripData {
   id: string;
   title: string;
@@ -32,6 +58,20 @@ export interface TripData {
   markers: Marker[];
   journey: Journey;
   itinerary: ItineraryDay[];
+  // Added fields
+  bestSeasons?: string[];
+  recommendedMonths?: string[];
+  weather?: string;
+  historical?: string;
+  recommendedOutfitters?: string[];
+  notes?: string[];
+  warnings?: string[];
+  activities?: Activity[];
+  priceRange?: {
+    min: number;
+    max: number;
+    currency: string;
+  };
 }
 
 export interface Marker {
