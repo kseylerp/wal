@@ -32,102 +32,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import JourneyMap from './JourneyMap';
 import { cn } from '@/lib/utils';
 
-// ActivityDetails Component
-interface ActivityDetailsProps {
-  activity: Activity;
-}
-
-const ActivityDetails = ({ activity }: ActivityDetailsProps) => {
-  return (
-    <div className="text-xs">
-      {/* Basic Details */}
-      <div className="grid grid-cols-2 gap-x-4 gap-y-1 mb-3">
-        <div>
-          <span className="text-gray-500">Type:</span> {activity.type}
-        </div>
-        <div>
-          <span className="text-gray-500">Difficulty:</span> {activity.difficulty}
-        </div>
-        <div>
-          <span className="text-gray-500">Duration:</span> {activity.duration_hours} hours
-        </div>
-      </div>
-      
-      {/* Start/End Locations */}
-      <div className="bg-white p-3 rounded border border-gray-200 mb-3">
-        <div className="flex items-center mb-1">
-          <Navigation className="h-3.5 w-3.5 mr-1.5 text-green-600" />
-          <span className="font-medium">Start:</span> <span className="ml-1">{activity.start_location}</span>
-        </div>
-        <div className="flex items-center">
-          <MapPin className="h-3.5 w-3.5 mr-1.5 text-red-600" />
-          <span className="font-medium">End:</span> <span className="ml-1">{activity.end_location}</span>
-        </div>
-      </div>
-      
-      {/* Route Details */}
-      {activity.route_details && (
-        <div className="bg-white p-3 rounded border border-gray-200 mb-3">
-          <h5 className="font-medium mb-2 flex items-center">
-            <Map className="h-3.5 w-3.5 mr-1.5 text-[#655590]" />
-            Route Details
-          </h5>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-            <div>
-              <span className="text-gray-500">Distance:</span> {activity.route_details.distance_miles} miles
-            </div>
-            <div>
-              <span className="text-gray-500">Terrain:</span> {activity.route_details.terrain}
-            </div>
-            <div>
-              <span className="text-gray-500">Elevation gain:</span> {activity.route_details.elevation_gain_ft} ft
-            </div>
-            <div>
-              <span className="text-gray-500">Elevation loss:</span> {activity.route_details.elevation_loss_ft} ft
-            </div>
-            <div>
-              <span className="text-gray-500">High point:</span> {activity.route_details.high_point_ft} ft
-            </div>
-            <div>
-              <span className="text-gray-500">Route type:</span> {activity.route_details.route_type}
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Highlights */}
-      {activity.highlights && activity.highlights.length > 0 && (
-        <div className="bg-white p-3 rounded border border-gray-200 mb-3">
-          <h5 className="font-medium mb-2 flex items-center">
-            <Mountain className="h-3.5 w-3.5 mr-1.5 text-green-700" />
-            Highlights
-          </h5>
-          <ul className="list-disc pl-4 space-y-1">
-            {activity.highlights.map((highlight, idx) => (
-              <li key={idx}>{highlight}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-      
-      {/* Hazards */}
-      {activity.hazards && activity.hazards.length > 0 && (
-        <div className="bg-white p-3 rounded border border-gray-200">
-          <h5 className="font-medium mb-2 flex items-center text-red-700">
-            <AlertTriangle className="h-3.5 w-3.5 mr-1.5 text-red-700" />
-            Hazards
-          </h5>
-          <ul className="list-disc pl-4 space-y-1 text-red-700">
-            {activity.hazards.map((hazard, idx) => (
-              <li key={idx}>{hazard}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  );
-};
-
+// Define interfaces
 interface RouteDetails {
   distance_miles: number;
   elevation_gain_ft: number;
@@ -180,6 +85,128 @@ interface TripCardProps {
   activities?: Activity[];
 }
 
+// ActivityDetails Component
+interface ActivityDetailsProps {
+  activity: Activity;
+  onScrollToMap?: () => void;
+}
+
+const ActivityDetails = ({ activity, onScrollToMap }: ActivityDetailsProps) => {
+  return (
+    <div className="text-xs">
+      {/* Basic Details - these match the preview data */}
+      <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-4 p-3 bg-white rounded border border-gray-200">
+        <div>
+          <span className="text-gray-500 font-medium">Type:</span> {activity.type}
+        </div>
+        <div>
+          <span className="text-gray-500 font-medium">Difficulty:</span> {activity.difficulty}
+        </div>
+        <div>
+          <span className="text-gray-500 font-medium">Duration:</span> {activity.duration_hours} hours
+        </div>
+      </div>
+      
+      {/* Start/End Locations */}
+      <div className="bg-white p-3 rounded border border-gray-200 mb-3">
+        <h5 className="font-medium mb-2 flex items-center">
+          <MapPin className="h-3.5 w-3.5 mr-1.5 text-[#655590]" />
+          Locations
+        </h5>
+        <div className="flex items-center mb-2">
+          <Navigation className="h-3.5 w-3.5 mr-1.5 text-green-600" />
+          <span className="font-medium">Start:</span> <span className="ml-1">{activity.start_location}</span>
+        </div>
+        <div className="flex items-center">
+          <MapPin className="h-3.5 w-3.5 mr-1.5 text-red-600" />
+          <span className="font-medium">End:</span> <span className="ml-1">{activity.end_location}</span>
+        </div>
+      </div>
+      
+      {/* Route Details */}
+      {activity.route_details && (
+        <div className="bg-white p-3 rounded border border-gray-200 mb-3">
+          <h5 className="font-medium mb-2 flex items-center">
+            <Map className="h-3.5 w-3.5 mr-1.5 text-[#655590]" />
+            Route Details
+          </h5>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+            <div>
+              <span className="text-gray-500 font-medium">Distance:</span> {activity.route_details.distance_miles} miles
+            </div>
+            <div>
+              <span className="text-gray-500 font-medium">Terrain:</span> {activity.route_details.terrain}
+            </div>
+            <div>
+              <span className="text-gray-500 font-medium">Elevation gain:</span> {activity.route_details.elevation_gain_ft} ft
+            </div>
+            <div>
+              <span className="text-gray-500 font-medium">Elevation loss:</span> {activity.route_details.elevation_loss_ft} ft
+            </div>
+            <div>
+              <span className="text-gray-500 font-medium">High point:</span> {activity.route_details.high_point_ft} ft
+            </div>
+            <div>
+              <span className="text-gray-500 font-medium">Route type:</span> {activity.route_details.route_type}
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Highlights */}
+      {activity.highlights && activity.highlights.length > 0 && (
+        <div className="bg-white p-3 rounded border border-gray-200 mb-3">
+          <h5 className="font-medium mb-2 flex items-center">
+            <Mountain className="h-3.5 w-3.5 mr-1.5 text-green-700" />
+            Highlights
+          </h5>
+          <ul className="list-disc pl-4 space-y-1">
+            {activity.highlights.map((highlight, idx) => (
+              <li key={idx}>{highlight}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      
+      {/* Hazards */}
+      {activity.hazards && activity.hazards.length > 0 && (
+        <div className="bg-white p-3 rounded border border-gray-200 mb-3">
+          <h5 className="font-medium mb-2 flex items-center text-red-700">
+            <AlertTriangle className="h-3.5 w-3.5 mr-1.5 text-red-700" />
+            Hazards
+          </h5>
+          <ul className="list-disc pl-4 space-y-1 text-red-700">
+            {activity.hazards.map((hazard, idx) => (
+              <li key={idx}>{hazard}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      
+      {/* Route geometry info */}
+      {activity.route_geometry && (
+        <div className="bg-white p-3 rounded border border-gray-200">
+          <h5 className="font-medium mb-2 flex items-center">
+            <Map className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
+            Route Information
+          </h5>
+          <p className="text-xs text-gray-600">
+            This route has detailed geometry data that is displayed on the map.
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-2 w-full text-xs"
+            onClick={onScrollToMap}
+          >
+            View on Map
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function TripCard({ 
   id,
   title,
@@ -209,7 +236,6 @@ export default function TripCard({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isMapExpanded, setIsMapExpanded] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<string | undefined>(undefined);
-  const [hoveredActivity, setHoveredActivity] = useState<string | undefined>(undefined);
   const { toast } = useToast();
   const isMobile = useIsMobile();
   
@@ -298,7 +324,7 @@ export default function TripCard({
         <div className="col-span-1 lg:col-span-5">
           <div 
             ref={mapContainerRef}
-            className={`${isMapExpanded ? 'h-[400px]' : 'h-[250px]'} lg:h-[350px] lg:sticky lg:top-4 relative transition-all duration-300`}
+            className={`${isMapExpanded ? 'h-[400px]' : 'h-[250px]'} lg:h-[400px] lg:sticky lg:top-0 relative transition-all duration-300`}
           >
             {mapCenter && journey && (
               <JourneyMap
@@ -309,7 +335,7 @@ export default function TripCard({
                 isExpanded={isMapExpanded}
                 toggleExpand={toggleMapExpand}
                 focusedActivity={selectedActivity}
-                highlightedActivity={undefined} // Removed hover highlighting
+                highlightedActivity={undefined}
                 isThumbnail={false}
               />
             )}
@@ -319,7 +345,7 @@ export default function TripCard({
           {activeActivity && (
             <div className="p-4 bg-gray-50 border-t border-gray-200">
               <h4 className="font-medium text-sm mb-2">{activeActivity.title} Details</h4>
-              <ActivityDetails activity={activeActivity} />
+              <ActivityDetails activity={activeActivity} onScrollToMap={scrollToMap} />
             </div>
           )}
         </div>
@@ -480,82 +506,96 @@ export default function TripCard({
             </div>
           )}
           
-          {/* Additional Information Accordions */}
-          <Accordion type="single" collapsible className="mb-4">
-            {whyWeChoseThis && (
-              <AccordionItem value="why-we-chose">
-                <AccordionTrigger className="text-sm font-medium text-[#655590]">
-                  Why We Chose This Trip
-                </AccordionTrigger>
-                <AccordionContent>
-                  <p className="text-sm text-gray-600">{whyWeChoseThis}</p>
-                </AccordionContent>
-              </AccordionItem>
-            )}
-            
-            {recommendedOutfitters && recommendedOutfitters.length > 0 && (
-              <AccordionItem value="outfitters">
-                <AccordionTrigger className="text-sm font-medium text-[#655590]">
-                  Recommended Outfitters
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-3">
-                    {recommendedOutfitters.map((outfitter, index) => (
-                      <div key={index} className="bg-gray-50 p-3 rounded-md">
-                        <h5 className="font-medium text-sm">{outfitter.name}</h5>
-                        <p className="text-xs text-gray-500">{outfitter.specialty}</p>
-                        <p className="text-xs text-gray-600 mt-1">{outfitter.location}</p>
-                        {outfitter.website && (
-                          <a 
-                            href={outfitter.website} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-xs text-blue-600 hover:underline mt-1 inline-block"
-                          >
-                            Visit Website
-                          </a>
-                        )}
-                        {outfitter.description && (
-                          <p className="text-xs text-gray-600 mt-1">{outfitter.description}</p>
-                        )}
+          {/* Additional Information Accordions - Each in separate collapsible sections */}
+          
+          {/* Why We Chose This */}
+          {whyWeChoseThis && (
+            <div className="mb-4 border border-gray-200 rounded-md">
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="why-we-chose" className="border-none">
+                  <AccordionTrigger className="text-sm font-medium text-[#655590] px-4 py-3 hover:bg-gray-50">
+                    Why We Chose This Trip
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-3">
+                    <p className="text-sm text-gray-600">{whyWeChoseThis}</p>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+          )}
+          
+          {/* Recommended Outfitters */}
+          {recommendedOutfitters && recommendedOutfitters.length > 0 && (
+            <div className="mb-4 border border-gray-200 rounded-md">
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="outfitters" className="border-none">
+                  <AccordionTrigger className="text-sm font-medium text-[#655590] px-4 py-3 hover:bg-gray-50">
+                    Recommended Outfitters
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-3">
+                    <div className="space-y-3">
+                      {recommendedOutfitters.map((outfitter, index) => (
+                        <div key={index} className="bg-gray-50 p-3 rounded-md">
+                          <h5 className="font-medium text-sm">{outfitter.name}</h5>
+                          <p className="text-xs text-gray-500">{outfitter.specialty}</p>
+                          <p className="text-xs text-gray-600 mt-1">{outfitter.location}</p>
+                          {outfitter.website && (
+                            <a 
+                              href={outfitter.website} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-600 hover:underline mt-1 inline-block"
+                            >
+                              Visit Website
+                            </a>
+                          )}
+                          {outfitter.description && (
+                            <p className="text-xs text-gray-600 mt-1">{outfitter.description}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+          )}
+          
+          {/* Notes & Warnings */}
+          {((notes && notes.length > 0) || (warnings && warnings.length > 0)) && (
+            <div className="mb-4 border border-gray-200 rounded-md">
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="notes-warnings" className="border-none">
+                  <AccordionTrigger className="text-sm font-medium text-[#655590] px-4 py-3 hover:bg-gray-50">
+                    Notes & Warnings
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-3">
+                    {notes && notes.length > 0 && (
+                      <div className="mb-3">
+                        <h5 className="font-medium text-sm mb-2">Notes:</h5>
+                        <ul className="list-disc pl-5 space-y-1">
+                          {notes.map((note, index) => (
+                            <li key={index} className="text-xs text-gray-600">{note}</li>
+                          ))}
+                        </ul>
                       </div>
-                    ))}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            )}
-            
-            {((notes && notes.length > 0) || (warnings && warnings.length > 0)) && (
-              <AccordionItem value="notes-warnings">
-                <AccordionTrigger className="text-sm font-medium text-[#655590]">
-                  Notes & Warnings
-                </AccordionTrigger>
-                <AccordionContent>
-                  {notes && notes.length > 0 && (
-                    <div className="mb-3">
-                      <h5 className="font-medium text-sm mb-2">Notes:</h5>
-                      <ul className="list-disc pl-5 space-y-1">
-                        {notes.map((note, index) => (
-                          <li key={index} className="text-xs text-gray-600">{note}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  
-                  {warnings && warnings.length > 0 && (
-                    <div>
-                      <h5 className="font-medium text-sm mb-2 text-red-600">Warnings:</h5>
-                      <ul className="list-disc pl-5 space-y-1">
-                        {warnings.map((warning, index) => (
-                          <li key={index} className="text-xs text-red-600">{warning}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </AccordionContent>
-              </AccordionItem>
-            )}
-          </Accordion>
+                    )}
+                    
+                    {warnings && warnings.length > 0 && (
+                      <div>
+                        <h5 className="font-medium text-sm mb-2 text-red-600">Warnings:</h5>
+                        <ul className="list-disc pl-5 space-y-1">
+                          {warnings.map((warning, index) => (
+                            <li key={index} className="text-xs text-red-600">{warning}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+          )}
           
           {/* Itinerary Section (Default Open) */}
           <div className="border-t pt-4 mb-4">
