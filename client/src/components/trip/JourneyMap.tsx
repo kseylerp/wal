@@ -27,6 +27,23 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
   const [loading, setLoading] = useState<boolean>(true);
   const [routesLoaded, setRoutesLoaded] = useState<number>(0);
 
+  // Calculate distance from segment data
+  const calculateTotalDistance = (): string => {
+    if (!journey?.segments || journey.segments.length === 0) {
+      return '0.0';
+    }
+
+    let totalMeters = 0;
+    journey.segments.forEach(segment => {
+      if (segment.distance) {
+        totalMeters += segment.distance;
+      }
+    });
+
+    // Convert to miles (1 meter = 0.000621371 miles)
+    return totalMeters > 0 ? (totalMeters * 0.000621371).toFixed(1) : '0.0';
+  };
+
   // Fetch MapBox token on component mount
   useEffect(() => {
     const fetchToken = async () => {
@@ -295,7 +312,7 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
       <div 
         ref={mapContainer} 
         className="w-full h-full"
-        style={{ height: '500px' }}
+        style={{ height: '600px' }}
       />
       
       {/* Map controls in the bottom right corner */}
@@ -341,9 +358,9 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
       {/* Map info on bottom left */}
       {!loading && journey && journey.segments && (
         <div className="absolute bottom-4 left-4 bg-white px-3 py-2 rounded shadow-md text-xs z-10">
-          <div className="font-medium text-sm mb-1">{journey.segments.length} Route Segments</div>
+          <div className="font-medium text-sm mb-1">{journey.segments.length} Route Segment{journey.segments.length !== 1 ? 's' : ''}</div>
           <div className="text-gray-600">
-            {journey.totalDistance ? `${(journey.totalDistance / 1609.34).toFixed(1)} miles` : 'Distance: N/A'}
+            {calculateTotalDistance()} miles
           </div>
         </div>
       )}

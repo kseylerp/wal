@@ -24,22 +24,52 @@ const TripCard: React.FC<TripCardProps> = ({
   onModifyRequest
 }) => {
   const [isMapExpanded, setIsMapExpanded] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
+  const [activeTab, setActiveTab] = useState<'info' | 'itinerary'>('info');
 
   // Toggle map expansion
   const toggleMapExpand = () => {
     setIsMapExpanded(!isMapExpanded);
   };
 
-  // Convert distance from meters to miles with safety checks
+  // Calculate actual distance by summing up segment distances if available
+  const calculateTotalDistance = () => {
+    if (!journey?.segments || journey.segments.length === 0) return '0.0';
+
+    let totalMeters = 0;
+    journey.segments.forEach(segment => {
+      if (segment.distance) {
+        totalMeters += segment.distance;
+      }
+    });
+
+    // Convert to miles (1 meter = 0.000621371 miles)
+    return totalMeters > 0 ? (totalMeters * 0.000621371).toFixed(1) : '0.0';
+  };
+
+  // Calculate actual duration by summing up segment durations if available
+  const calculateTotalDuration = () => {
+    if (!journey?.segments || journey.segments.length === 0) return '0.0';
+
+    let totalMinutes = 0;
+    journey.segments.forEach(segment => {
+      if (segment.duration) {
+        // Convert seconds to minutes
+        totalMinutes += segment.duration / 60;
+      }
+    });
+
+    // Convert to hours and format
+    return totalMinutes > 0 ? (totalMinutes / 60).toFixed(1) : '0.0';
+  };
+
+  // Get distance and duration from actual data
   const totalDistanceMiles = journey && journey.totalDistance 
-    ? (journey.totalDistance / 1609.34).toFixed(1) 
-    : '0.0';
+    ? (journey.totalDistance * 0.000621371).toFixed(1) 
+    : calculateTotalDistance();
   
-  // Convert duration from seconds to hours with safety checks
   const totalDurationHours = journey && journey.totalDuration 
     ? (journey.totalDuration / 3600).toFixed(1) 
-    : '0.0';
+    : calculateTotalDuration();
 
   // Function to save trip to localStorage
   const saveTrip = () => {
@@ -52,12 +82,21 @@ const TripCard: React.FC<TripCardProps> = ({
       const isAlreadySaved = savedTrips.some((trip: any) => trip.id === id);
       
       if (!isAlreadySaved) {
-        // Add this trip to saved trips
+        // Add this trip to saved trips with complete data
         savedTrips.push({
           id,
           title,
+          description,
+          whyWeChoseThis,
+          difficultyLevel,
+          priceEstimate,
           location,
           duration,
+          mapCenter,
+          markers,
+          journey,
+          itinerary,
+          suggestedGuides,
           dateAdded: new Date().toISOString()
         });
         
@@ -75,86 +114,82 @@ const TripCard: React.FC<TripCardProps> = ({
   };
 
   return (
-    <div className="border rounded-lg overflow-hidden shadow-md bg-white mb-6">
+    <div className="border rounded-lg overflow-hidden shadow-lg bg-white mb-8 w-full">
       <div className="md:flex">
         {/* Left side: Trip details */}
-        <div className="p-5 md:w-3/5">
+        <div className="p-6 md:w-3/5">
           <h2 className="text-2xl font-bold mb-3 text-gray-800">{title}</h2>
-          <div className="flex flex-wrap gap-2 mb-3">
+          <div className="flex flex-wrap gap-2 mb-4">
             {location && (
-              <span className="bg-primary/10 text-primary text-xs px-2 py-1 rounded">
+              <span className="bg-primary/10 text-primary text-xs px-3 py-1 rounded-full">
                 {location}
               </span>
             )}
             {duration && (
-              <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
+              <span className="bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-full">
                 {duration}
               </span>
             )}
             {difficultyLevel && (
-              <span className="bg-primary/5 text-primary/80 text-xs px-2 py-1 rounded">
+              <span className="bg-primary/5 text-primary/80 text-xs px-3 py-1 rounded-full">
                 {difficultyLevel}
               </span>
             )}
             {priceEstimate && (
-              <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
+              <span className="bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-full">
                 {priceEstimate}
               </span>
             )}
           </div>
           
-          <p className="text-gray-700 mb-4 text-base">{description}</p>
+          <p className="text-gray-700 mb-5 text-base">{description}</p>
           
-          {(journey?.totalDistance || journey?.totalDuration) && (
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-4 text-sm">
-              {journey?.totalDistance && (
-                <div>
-                  <span className="font-medium">Distance:</span> {totalDistanceMiles} miles
-                </div>
-              )}
-              {journey?.totalDuration && (
-                <div>
-                  <span className="font-medium">Duration:</span> ~{totalDurationHours} hrs
-                </div>
-              )}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-6 text-sm">
+            <div>
+              <span className="font-medium">Distance:</span> {totalDistanceMiles} miles
             </div>
-          )}
+            <div>
+              <span className="font-medium">Duration:</span> ~{totalDurationHours} hrs
+            </div>
+          </div>
           
-          <div className="mb-4">
+          {/* Tab navigation */}
+          <div className="flex border-b mb-5">
             <button
-              onClick={() => setShowDetails(!showDetails)}
-              className="text-primary hover:text-primary/80 text-sm flex items-center"
+              onClick={() => setActiveTab('info')}
+              className={`px-4 py-2 text-sm font-medium ${
+                activeTab === 'info' 
+                  ? 'border-b-2 border-primary text-primary' 
+                  : 'text-gray-500 hover:text-primary'
+              }`}
             >
-              {showDetails ? 'Hide details' : 'Show details'}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className={`ml-1 transition-transform ${showDetails ? 'rotate-180' : 'rotate-0'}`}
-              >
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
+              Why We Chose This
             </button>
-            
-            {showDetails && (
-              <div className="mt-4 text-sm">
-                <div className="mb-4">
-                  <h3 className="font-medium text-base">Why We Chose This For You</h3>
-                  <p className="text-gray-600 mt-1">{whyWeChoseThis}</p>
-                </div>
-                
-                <ItineraryList itinerary={itinerary} suggestedGuides={suggestedGuides} />
+            <button
+              onClick={() => setActiveTab('itinerary')}
+              className={`px-4 py-2 text-sm font-medium ${
+                activeTab === 'itinerary' 
+                  ? 'border-b-2 border-primary text-primary' 
+                  : 'text-gray-500 hover:text-primary'
+              }`}
+            >
+              Itinerary
+            </button>
+          </div>
+          
+          {/* Tab content */}
+          <div className="text-sm max-h-96 overflow-y-auto">
+            {activeTab === 'info' ? (
+              <div>
+                <h3 className="font-medium text-base mb-2">Why We Chose This For You</h3>
+                <p className="text-gray-600">{whyWeChoseThis}</p>
               </div>
+            ) : (
+              <ItineraryList itinerary={itinerary} suggestedGuides={suggestedGuides} />
             )}
           </div>
           
-          <div className="flex flex-wrap gap-2 mt-5">
+          <div className="flex flex-wrap gap-2 mt-6">
             <a 
               href={`/map?id=${id}`}
               className="bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-md transition-colors text-sm"
