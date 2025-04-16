@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { Link } from 'wouter';
 import { COLORADO_TRIP_DATA, prepareMapSegments } from '@/lib/tripData';
 
 type RouteSegment = {
@@ -364,7 +365,14 @@ const MapTest: React.FC = () => {
   
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-2">{TRIP_DATA.title}</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">{TRIP_DATA.title}</h1>
+        <Link href="/">
+          <a className="text-secondary hover:text-primary transition-colors">
+            &larr; Back to Home
+          </a>
+        </Link>
+      </div>
       <div className="flex flex-col md:flex-row gap-2 mb-4">
         <span className="bg-primary/10 text-primary text-xs px-2 py-1 rounded">
           {TRIP_DATA.location}
