@@ -279,6 +279,18 @@ export default function TripCard({
     setSelectedActivity(activity === selectedActivity ? undefined : activity);
   };
   
+  // Determine grid columns for tabs based on available content
+  const getTabsGridColumns = () => {
+    let count = 0;
+    if (whyWeChoseThis && typeof whyWeChoseThis === 'string') count++;
+    if (recommendedOutfitters && recommendedOutfitters.length > 0) count++;
+    if ((notes && notes.length > 0) || (warnings && warnings.length > 0)) count++;
+    
+    if (count === 1) return 'grid-cols-1';
+    if (count === 2) return 'grid-cols-2';
+    return 'grid-cols-3';
+  };
+  
   const handleDelete = async () => {
     setIsDeleting(true);
     
