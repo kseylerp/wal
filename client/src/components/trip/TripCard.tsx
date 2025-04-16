@@ -41,22 +41,149 @@ const TripCard: React.FC<TripCardProps> = ({
     ? (journey.totalDuration / 3600).toFixed(1) 
     : '0.0';
 
+  // Function to save trip to localStorage
+  const saveTrip = () => {
+    try {
+      // Get existing saved trips or initialize empty array
+      const savedTripsJSON = localStorage.getItem('savedTrips') || '[]';
+      const savedTrips = JSON.parse(savedTripsJSON);
+      
+      // Check if this trip is already saved
+      const isAlreadySaved = savedTrips.some((trip: any) => trip.id === id);
+      
+      if (!isAlreadySaved) {
+        // Add this trip to saved trips
+        savedTrips.push({
+          id,
+          title,
+          location,
+          duration,
+          dateAdded: new Date().toISOString()
+        });
+        
+        // Save back to localStorage
+        localStorage.setItem('savedTrips', JSON.stringify(savedTrips));
+        
+        // Could show toast notification here
+        alert('Trip saved successfully!');
+      } else {
+        alert('This trip is already saved!');
+      }
+    } catch (err) {
+      console.error('Error saving trip:', err);
+    }
+  };
+
   return (
-    <div className="border rounded-lg overflow-hidden shadow-md bg-white mb-4">
-      <div className="p-4">
-        <h2 className="text-xl font-bold mb-2">{title}</h2>
-        <div className="mb-2">
-          <span className="bg-primary/10 text-primary text-xs px-2 py-1 rounded mr-2">
-            {location}
-          </span>
-          <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
-            {duration}
-          </span>
+    <div className="border rounded-lg overflow-hidden shadow-md bg-white mb-6">
+      <div className="md:flex">
+        {/* Left side: Trip details */}
+        <div className="p-4 md:w-1/2">
+          <h2 className="text-xl font-bold mb-2">{title}</h2>
+          <div className="flex flex-wrap gap-2 mb-2">
+            {location && (
+              <span className="bg-primary/10 text-primary text-xs px-2 py-1 rounded">
+                {location}
+              </span>
+            )}
+            {duration && (
+              <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
+                {duration}
+              </span>
+            )}
+            {difficultyLevel && (
+              <span className="bg-primary/5 text-primary/80 text-xs px-2 py-1 rounded">
+                {difficultyLevel}
+              </span>
+            )}
+            {priceEstimate && (
+              <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
+                {priceEstimate}
+              </span>
+            )}
+          </div>
+          
+          <p className="text-gray-700 mb-4">{description}</p>
+          
+          {(journey?.totalDistance || journey?.totalDuration) && (
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-4 text-sm">
+              {journey?.totalDistance && (
+                <div>
+                  <span className="font-medium">Distance:</span> {totalDistanceMiles} miles
+                </div>
+              )}
+              {journey?.totalDuration && (
+                <div>
+                  <span className="font-medium">Duration:</span> ~{totalDurationHours} hrs
+                </div>
+              )}
+            </div>
+          )}
+          
+          <div className="mb-4">
+            <button
+              onClick={() => setShowDetails(!showDetails)}
+              className="text-primary hover:text-primary/80 text-sm flex items-center"
+            >
+              {showDetails ? 'Hide details' : 'Show details'}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={`ml-1 transition-transform ${showDetails ? 'rotate-180' : 'rotate-0'}`}
+              >
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            
+            {showDetails && (
+              <div className="mt-3 text-sm">
+                <div className="mb-3">
+                  <h3 className="font-medium">Why We Chose This For You</h3>
+                  <p className="text-gray-600">{whyWeChoseThis}</p>
+                </div>
+                
+                <ItineraryList itinerary={itinerary} suggestedGuides={suggestedGuides} />
+              </div>
+            )}
+          </div>
+          
+          <div className="flex flex-wrap gap-2">
+            <a 
+              href={`/map?id=${id}`}
+              className="bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded transition-colors text-sm"
+            >
+              View Full Map
+            </a>
+            <button
+              onClick={() => onModifyRequest(id)}
+              className="bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded transition-colors text-sm"
+            >
+              Modify This Trip
+            </button>
+            <button
+              onClick={saveTrip}
+              className="bg-green-100 hover:bg-green-200 text-green-700 px-4 py-2 rounded transition-colors text-sm"
+            >
+              Save Trip
+            </button>
+            <a 
+              href="/saved-trips"
+              className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded transition-colors text-sm"
+            >
+              Saved Trips
+            </a>
+          </div>
         </div>
         
-        <p className="text-gray-700 mb-4">{description}</p>
-        
-        <div className="mb-4">
+        {/* Right side: Map */}
+        <div className="md:w-1/2">
           <JourneyMap
             mapId={`map-${id}`}
             center={mapCenter}
@@ -65,70 +192,6 @@ const TripCard: React.FC<TripCardProps> = ({
             isExpanded={isMapExpanded}
             toggleExpand={toggleMapExpand}
           />
-        </div>
-        
-        <div className="grid grid-cols-2 gap-2 mb-4 text-sm">
-          <div>
-            <span className="font-medium">Difficulty:</span> {difficultyLevel}
-          </div>
-          <div>
-            <span className="font-medium">Price:</span> {priceEstimate}
-          </div>
-          <div>
-            <span className="font-medium">Distance:</span> {totalDistanceMiles} miles
-          </div>
-          <div>
-            <span className="font-medium">Duration:</span> ~{totalDurationHours} hrs
-          </div>
-        </div>
-        
-        <div className="mb-4">
-          <button
-            onClick={() => setShowDetails(!showDetails)}
-            className="text-primary hover:text-primary/80 text-sm flex items-center"
-          >
-            {showDetails ? 'Hide details' : 'Show details'}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className={`ml-1 transition-transform ${showDetails ? 'rotate-180' : 'rotate-0'}`}
-            >
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </button>
-          
-          {showDetails && (
-            <div className="mt-3 text-sm">
-              <div className="mb-3">
-                <h3 className="font-medium">Why We Chose This For You</h3>
-                <p className="text-gray-600">{whyWeChoseThis}</p>
-              </div>
-              
-              <ItineraryList itinerary={itinerary} suggestedGuides={suggestedGuides} />
-            </div>
-          )}
-        </div>
-        
-        <div className="flex justify-between">
-          <a 
-            href={`/map?id=${id}`}
-            className="bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded transition-colors text-sm"
-          >
-            View Full Map
-          </a>
-          <button
-            onClick={() => onModifyRequest(id)}
-            className="bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded transition-colors text-sm"
-          >
-            Modify This Trip
-          </button>
         </div>
       </div>
     </div>

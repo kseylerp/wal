@@ -148,73 +148,81 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
       console.log('Map loaded successfully!');
       
       // Process each journey segment to get real route data
-      for (let i = 0; i < journey.segments.length; i++) {
-        const segment = journey.segments[i];
-        
-        try {
-          // Extract start and end points
-          const segmentStartCoords = segment.geometry.coordinates[0] as [number, number];
-          const segmentEndCoords = segment.geometry.coordinates[segment.geometry.coordinates.length - 1] as [number, number];
+      if (journey && journey.segments && journey.segments.length > 0) {
+        for (let i = 0; i < journey.segments.length; i++) {
+          const segment = journey.segments[i];
           
-          // For each segment, fetch directions data from MapBox API via our proxy
-          const routeData = await fetchDirections(
-            segmentStartCoords,
-            segmentEndCoords,
-            segment.mode as 'driving' | 'walking' | 'cycling'
-          );
-          
-          if (routeData) {
-            // Add the route to the map
-            addRouteToMap(initialMap, routeData, `route-${i}`, segment.mode);
-            setRoutesLoaded(prev => prev + 1);
-            
-            // Log the route info
-            console.log(`Segment ${i} (${segment.mode}):`, {
-              from: segment.from,
-              to: segment.to,
-              distance: `${(routeData.distance / 1609.34).toFixed(2)} miles`,
-              duration: `${Math.floor(routeData.duration / 60)} minutes`
-            });
-          } else {
-            // If directions API fails, fall back to using the provided geometry
-            console.warn(`Using provided geometry for segment ${i} (${segment.mode})`);
-            
-            // Add source with the geometry from the segment
-            initialMap.addSource(`route-${i}`, {
-              type: 'geojson',
-              data: {
-                type: 'Feature',
-                properties: {},
-                geometry: {
-                  type: 'LineString',
-                  coordinates: segment.geometry.coordinates
-                }
-              }
-            });
-            
-            // Add layer for this source
-            initialMap.addLayer({
-              id: `route-${i}`,
-              type: 'line',
-              source: `route-${i}`,
-              layout: {
-                'line-join': 'round',
-                'line-cap': 'round'
-              },
-              paint: {
-                'line-color': segment.mode === 'walking' ? '#10b981' : 
-                              segment.mode === 'driving' ? '#3b82f6' : 
-                              segment.mode === 'cycling' ? '#f59e0b' : 
-                              '#6366f1',
-                'line-width': 5,
-                'line-opacity': 0.75
-              }
-            });
-            
-            setRoutesLoaded(prev => prev + 1);
+          // Skip if segment or geometry is missing
+          if (!segment || !segment.geometry || !segment.geometry.coordinates || segment.geometry.coordinates.length < 2) {
+            console.warn(`Skipping segment ${i} due to missing geometry data`);
+            continue;
           }
-        } catch (err) {
-          console.error(`Error processing segment ${i}:`, err);
+          
+          try {
+            // Extract start and end points
+            const segmentStartCoords = segment.geometry.coordinates[0] as [number, number];
+            const segmentEndCoords = segment.geometry.coordinates[segment.geometry.coordinates.length - 1] as [number, number];
+            
+            // For each segment, fetch directions data from MapBox API via our proxy
+            const routeData = await fetchDirections(
+              segmentStartCoords,
+              segmentEndCoords,
+              segment.mode as 'driving' | 'walking' | 'cycling'
+            );
+            
+            if (routeData) {
+              // Add the route to the map
+              addRouteToMap(initialMap, routeData, `route-${i}`, segment.mode);
+              setRoutesLoaded(prev => prev + 1);
+              
+              // Log the route info
+              console.log(`Segment ${i} (${segment.mode}):`, {
+                from: segment.from,
+                to: segment.to,
+                distance: `${(routeData.distance / 1609.34).toFixed(2)} miles`,
+                duration: `${Math.floor(routeData.duration / 60)} minutes`
+              });
+            } else {
+              // If directions API fails, fall back to using the provided geometry
+              console.warn(`Using provided geometry for segment ${i} (${segment.mode})`);
+              
+              // Add source with the geometry from the segment
+              initialMap.addSource(`route-${i}`, {
+                type: 'geojson',
+                data: {
+                  type: 'Feature',
+                  properties: {},
+                  geometry: {
+                    type: 'LineString',
+                    coordinates: segment.geometry.coordinates
+                  }
+                }
+              });
+              
+              // Add layer for this source
+              initialMap.addLayer({
+                id: `route-${i}`,
+                type: 'line',
+                source: `route-${i}`,
+                layout: {
+                  'line-join': 'round',
+                  'line-cap': 'round'
+                },
+                paint: {
+                  'line-color': segment.mode === 'walking' ? '#10b981' : 
+                                segment.mode === 'driving' ? '#3b82f6' : 
+                                segment.mode === 'cycling' ? '#f59e0b' : 
+                                '#6366f1',
+                  'line-width': 5,
+                  'line-opacity': 0.75
+                }
+              });
+              
+              setRoutesLoaded(prev => prev + 1);
+            }
+          } catch (err) {
+            console.error(`Error processing segment ${i}:`, err);
+          }
         }
       }
 
@@ -245,7 +253,7 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
       });
 
       // Fit map to show the entire journey
-      if (journey.bounds && journey.bounds.length === 2) {
+      if (journey?.bounds && journey.bounds.length === 2) {
         initialMap.fitBounds(journey.bounds as mapboxgl.LngLatBoundsLike, {
           padding: 50
         });
@@ -263,7 +271,7 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
   }, [mapboxToken, center, markers, journey]);
 
   return (
-    <div className="relative border rounded-lg overflow-hidden shadow-md">
+    <div className="relative border rounded-lg overflow-hidden shadow-md h-full">
       {error && (
         <div className="p-4 bg-red-100 text-red-700">
           <p>{error}</p>
@@ -275,7 +283,7 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
           <div className="text-center">
             <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary mx-auto mb-2"></div>
             <p className="text-gray-700">Loading map data...</p>
-            {routesLoaded > 0 && (
+            {routesLoaded > 0 && journey?.segments && (
               <p className="text-xs text-gray-500 mt-1">
                 Routes loaded: {routesLoaded}/{journey.segments.length}
               </p>
@@ -286,41 +294,59 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
       
       <div 
         ref={mapContainer} 
-        className={`w-full transition-all duration-300 ease-in-out ${isExpanded ? 'h-96' : 'h-64'}`}
-        style={{ minHeight: isExpanded ? '24rem' : '16rem' }}
+        className="w-full h-full"
+        style={{ minHeight: '400px' }}
       />
       
-      {/* Extract the trip ID from the mapId (removing the 'map-' prefix) */}
-      <a 
-        href={`/map?id=${mapId.replace('map-', '')}`}
-        className="absolute top-2 left-2 bg-white px-2 py-1 rounded shadow-md hover:bg-gray-100 transition-colors text-xs font-medium text-primary"
-      >
-        View Full Map
-      </a>
+      {/* Map controls in the bottom right corner */}
+      <div className="absolute bottom-4 right-4 flex flex-col space-y-2">
+        <button 
+          onClick={toggleExpand}
+          className="bg-white p-2 rounded-full shadow-md hover:bg-gray-100 transition-colors"
+          aria-label={isExpanded ? "Collapse map" : "Expand map"}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            {isExpanded ? (
+              <>
+                <polyline points="4 14 10 14 10 20"></polyline>
+                <polyline points="20 10 14 10 14 4"></polyline>
+                <line x1="14" y1="10" x2="21" y2="3"></line>
+                <line x1="3" y1="21" x2="10" y2="14"></line>
+              </>
+            ) : (
+              <>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <polyline points="9 21 3 21 3 15"></polyline>
+                <line x1="21" y1="3" x2="14" y2="10"></line>
+                <line x1="3" y1="21" x2="10" y2="14"></line>
+              </>
+            )}
+          </svg>
+        </button>
+      </div>
       
-      <button 
-        onClick={toggleExpand}
-        className="absolute top-2 right-2 bg-white p-2 rounded-full shadow-md hover:bg-gray-100 transition-colors"
-        aria-label={isExpanded ? "Collapse map" : "Expand map"}
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          {isExpanded ? (
-            <>
-              <polyline points="4 14 10 14 10 20"></polyline>
-              <polyline points="20 10 14 10 14 4"></polyline>
-              <line x1="14" y1="10" x2="21" y2="3"></line>
-              <line x1="3" y1="21" x2="10" y2="14"></line>
-            </>
-          ) : (
-            <>
-              <polyline points="15 3 21 3 21 9"></polyline>
-              <polyline points="9 21 3 21 3 15"></polyline>
-              <line x1="21" y1="3" x2="14" y2="10"></line>
-              <line x1="3" y1="21" x2="10" y2="14"></line>
-            </>
-          )}
-        </svg>
-      </button>
+      {/* Full map view button in top left */}
+      <div className="absolute top-4 left-4 z-10">
+        <a 
+          href={`/map?id=${mapId.replace('map-', '')}`}
+          className="bg-white px-3 py-2 rounded shadow-md hover:bg-gray-100 transition-colors text-sm font-medium text-primary flex items-center"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6-3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+          </svg>
+          Full Map
+        </a>
+      </div>
+      
+      {/* Map info on bottom left */}
+      {!loading && journey && journey.segments && (
+        <div className="absolute bottom-4 left-4 bg-white px-3 py-2 rounded shadow-md text-xs z-10">
+          <div className="font-medium text-sm mb-1">{journey.segments.length} Route Segments</div>
+          <div className="text-gray-600">
+            {journey.totalDistance ? `${(journey.totalDistance / 1609.34).toFixed(1)} miles` : 'Distance: N/A'}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
