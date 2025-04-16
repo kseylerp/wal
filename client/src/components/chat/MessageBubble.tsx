@@ -31,7 +31,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     return (
       <div className="ai-message bg-white p-4 max-w-[85%] sm:max-w-[75%] md:max-w-[65%] lg:max-w-[100%] shadow-sm border border-gray-100 rounded-[1.25rem] rounded-bl-[0.25rem]">
         <div className="flex items-start space-x-2">
-          <div className="w-8 h-8 bg-primary flex-shrink-0 flex items-center justify-center rounded-full">
+          <div className="w-8 h-8 bg-[#655590] flex-shrink-0 flex items-center justify-center rounded-full">
             <span className="text-white text-sm font-semibold">AI</span>
           </div>
           <div className={`w-full ${hasTripData ? 'max-w-full' : ''}`}>
@@ -57,6 +57,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                     id={trip.id}
                     title={trip.title}
                     description={trip.description}
+                    whyWeChoseThis={trip.whyWeChoseThis}
                     difficultyLevel={trip.difficultyLevel}
                     priceEstimate={trip.priceEstimate}
                     duration={trip.duration}
@@ -77,8 +78,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     );
   } else {
     return (
-      <div className="user-message ml-auto bg-primary-100 p-4 max-w-[85%] sm:max-w-[75%] md:max-w-[65%] lg:max-w-[60%] rounded-[1.25rem] rounded-br-[0.25rem]">
-        <div className="text-gray-800">
+      <div className="user-message ml-auto p-4 max-w-[85%] sm:max-w-[75%] md:max-w-[65%] lg:max-w-[60%] rounded-[1.25rem] rounded-br-[0.25rem]">
+        <div className="text-white">
           {formatMessageContent(message.content)}
         </div>
       </div>

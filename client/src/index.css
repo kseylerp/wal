@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom app styling */
+body {
+  background-color: #fcf8f5;
+}
+
+/* Chat styling */
+.user-message {
+  background-color: #655590 !important;
+  color: white !important;
+}
+
 /* MapBox custom styling */
 .map-container {
   width: 100%;

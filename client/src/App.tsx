@@ -12,8 +12,8 @@ function Router() {
     <div className="h-screen flex flex-col">
       <header className="border-b py-2 px-4 flex items-center">
         <div className="flex items-center">
-          <img src={logo} alt="TrailTrek Logo" className="h-10 mr-3" />
-          <span className="font-bold text-xl text-primary">TrailTrek</span>
+          <img src={logo} alt="offbeat Logo" className="h-10 mr-3" />
+          <span className="font-bold text-xl text-[#655590]">offbeat</span>
         </div>
         <nav className="ml-auto">
           <Link href="/">

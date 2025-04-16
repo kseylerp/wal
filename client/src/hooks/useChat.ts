@@ -9,7 +9,7 @@ export function useChat() {
       {
         id: uuidv4(),
         role: 'assistant',
-        content: "Hi there! I'm your adventure trip planning assistant. I'll help you discover amazing destinations and activities tailored to your preferences.\n\nLet me know what kind of trip you're interested in - where you'd like to go, activities you enjoy, duration, who's joining, etc.\n\nFor example: \"I want to bike, hike, and raft in Colorado with friends and my 12-year-old son for 10 days.\"",
+        content: "Hi there! Let's plan your next offbeat adventure.",
         timestamp: new Date().toISOString(),
       },
     ],
