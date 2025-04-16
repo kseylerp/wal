@@ -10,6 +10,8 @@ interface JourneyMapProps {
   journey: Journey;
   isExpanded: boolean;
   toggleExpand: () => void;
+  focusedActivity?: string;
+  highlightedActivity?: string;
 }
 
 const JourneyMap: React.FC<JourneyMapProps> = ({
@@ -18,7 +20,9 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
   markers,
   journey,
   isExpanded,
-  toggleExpand
+  toggleExpand,
+  focusedActivity,
+  highlightedActivity
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -42,6 +46,47 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
 
     // Convert to miles (1 meter = 0.000621371 miles)
     return totalMeters > 0 ? (totalMeters * 0.000621371).toFixed(1) : '0.0';
+  };
+  
+  // Function to fly to a specific coordinate with animation
+  const flyToLocation = (coords: [number, number] | [number, number][], zoom = 12) => {
+    if (!map.current) return;
+    
+    // If it's an array of coordinates, use the first one
+    const targetCoords = Array.isArray(coords[0]) 
+      ? (coords as [number, number][])[0] 
+      : coords as [number, number];
+    
+    map.current.flyTo({
+      center: targetCoords,
+      zoom: zoom,
+      pitch: 60, // Tilt view for better perspective
+      bearing: 0,
+      essential: true,
+      duration: 2000 // Animation duration in milliseconds
+    });
+  };
+  
+  // Extract coordinates from an activity name if it corresponds to a segment
+  const getCoordinatesForActivity = (activityName: string): [number, number][] | null => {
+    if (!journey?.segments || !activityName) return null;
+    
+    // Try to match the activity name with a segment's from or to location
+    const matchedSegment = journey.segments.find(segment => {
+      const activityLower = activityName.toLowerCase();
+      return (
+        segment.from.toLowerCase().includes(activityLower) || 
+        segment.to.toLowerCase().includes(activityLower) ||
+        activityLower.includes(segment.from.toLowerCase()) || 
+        activityLower.includes(segment.to.toLowerCase())
+      );
+    });
+    
+    if (matchedSegment && matchedSegment.geometry && matchedSegment.geometry.coordinates) {
+      return matchedSegment.geometry.coordinates as [number, number][];
+    }
+    
+    return null;
   };
 
   // Fetch MapBox token on component mount

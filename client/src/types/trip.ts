@@ -29,6 +29,9 @@ export interface JourneyMapProps {
 export interface ItineraryListProps {
   itinerary: ItineraryDay[];
   suggestedGuides: string[];
+  onActivityClick?: (activity: string, coordinates: [number, number][]) => void;
+  onActivityHover?: (activity: string, isHovering: boolean) => void;
+  journey?: Journey;
 }
 
 export interface SegmentOption {

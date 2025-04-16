@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Adventure Trip Planner</title>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+  <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.js"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.css" rel="stylesheet" />
+  <style>
+    body { font-family: sans-serif; display: flex; margin: 0; }
+    #map { width: 60%; height: 100vh; }
+    .sidebar { width: 40%; padding: 1rem; overflow-y: auto; height: 100vh; }
+    .trip-card { margin-bottom: 2rem; border: 1px solid #ccc; border-radius: 8px; padding: 1rem; }
+    .clickable { cursor: pointer; color: blue; text-decoration: underline; }
+    .route-details { margin-top: 0.5rem; font-size: 0.9em; color: #333; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div class="sidebar" id="sidebar"></div>
+
+  <script>
+    mapboxgl.accessToken = 'pk.eyJ1Ijoia3NleWxlcnAiLCJhIjoiY204cGJnM2M0MDk1ZjJrb2F3b3o0ZWlnaCJ9.a2VxRsgFb9FwElyHeUUaTw';
+
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/outdoors-v12',
+      center: [-112.0946583, 36.1058389],
+      zoom: 10,
+      pitch: 75,
+      antialias: true
+    });
+
+    map.on('load', () => {
+      map.addControl(new mapboxgl.NavigationControl());
+
+      const trips = [];
+
+      const sidebar = document.getElementById('sidebar');
+
+      trips.forEach(trip => {
+        const card = document.createElement('div');
+        card.className = 'trip-card';
+        card.innerHTML = `<h3>${trip.title}</h3>`;
+
+        trip.itinerary.forEach(section => {
+          const coords = section.activity.coordinates;
+          const lineId = `route-${section.activity.id}`;
+
+          map.addSource(lineId, {
+            type: 'geojson',
+            data: {
+              type: 'Feature',
+              geometry: {
+                type: 'LineString',
+                coordinates: coords
+              }
+            }
+          });
+
+          map.addLayer({
+            id: lineId,
+            type: 'line',
+            source: lineId,
+            layout: { 'line-join': 'round', 'line-cap': 'round' },
+            paint: { 'line-color': '#ff6600', 'line-width': 4 }
+          });
+
+          new mapboxgl.Marker().setLngLat(coords[0]).addTo(map);
+          new mapboxgl.Marker().setLngLat(coords[1]).addTo(map);
+
+          const btn = document.createElement('div');
+          btn.className = 'clickable';
+          btn.innerText = section.title;
+          btn.onclick = () => {
+            map.flyTo({ center: coords[0], zoom: 13, pitch: 75 });
+
+            const details = section.activity.route_details;
+            const activityType = section.title.toLowerCase().includes('bike') ? 'cycling' : details.route_type.replace(/_/g, ' ');
+            const detailHTML = `
+              <div class="route-details">
+                <strong>Route Details:</strong><br/>
+                Distance: ${details.distance_miles} miles<br/>
+                Elevation Gain: ${details.elevation_gain_ft} ft<br/>
+                Elevation Loss: ${details.elevation_loss_ft} ft<br/>
+                High Point: ${details.high_point_ft} ft<br/>
+                Terrain: ${details.terrain}<br/>
+                Type: ${activityType}
+              </div>`;
+
+            card.querySelectorAll('.route-details').forEach(d => d.remove());
+            btn.insertAdjacentHTML('afterend', detailHTML);
+          };
+
+          card.appendChild(btn);
+        });
+
+        sidebar.appendChild(card);
+      });
+    });
+  </script>
+</body>
+</html>
