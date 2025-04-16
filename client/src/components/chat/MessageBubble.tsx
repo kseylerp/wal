@@ -65,12 +65,10 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                         priceEstimate={trip.priceEstimate}
                         duration={trip.duration}
                         location={trip.location}
-                        suggestedGuides={trip.suggestedGuides}
                         mapCenter={trip.mapCenter}
-                        markers={trip.markers}
                         journey={trip.journey}
                         itinerary={trip.itinerary}
-                        onModifyRequest={onModifyRequest}
+                        createdAt={new Date().toISOString()}
                         // Added fields
                         themes={trip.themes}
                         bestSeasons={trip.bestSeasons}

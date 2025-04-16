@@ -59,7 +59,7 @@ interface Activity {
 }
 
 interface TripCardProps {
-  id: number;
+  id: number | string;
   title: string;
   description: string;
   location: string;
@@ -283,7 +283,9 @@ export default function TripCard({
     setIsDeleting(true);
     
     try {
-      await apiRequest('DELETE', `/api/trips/${id}`);
+      // Convert string id to number if needed
+      const numericId = typeof id === 'string' ? parseInt(id) : id;
+      await apiRequest('DELETE', `/api/trips/${numericId}`);
       
       // Invalidate trips cache to trigger refresh
       queryClient.invalidateQueries({ queryKey: ['/api/trips'] });
@@ -385,13 +387,13 @@ export default function TripCard({
               <p className="text-sm text-gray-500 mb-3">Added on {formattedDate}</p>
             </div>
             <div className="flex space-x-1">
-              <ShareTripButton tripId={id} />
+              <ShareTripButton tripId={typeof id === 'string' ? parseInt(id) || 0 : id} />
               
               {onEdit && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => onEdit(id)}
+                  onClick={() => onEdit(typeof id === 'string' ? parseInt(id) : id)}
                   className="flex items-center gap-1.5"
                 >
                   <Edit className="h-4 w-4" />
