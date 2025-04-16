@@ -263,9 +263,13 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
             
             // Highlight this segment
             const layerId = `route-${index}`;
-            if (map.current?.getLayer(layerId)) {
-              map.current.setPaintProperty(layerId, 'line-width', 6); // Slightly wider
-              map.current.setPaintProperty(layerId, 'line-opacity', 0.9); // Slightly more opaque
+            try {
+              if (map.current && map.current.getStyle() && map.current.getLayer(layerId)) {
+                map.current.setPaintProperty(layerId, 'line-width', 6); // Slightly wider
+                map.current.setPaintProperty(layerId, 'line-opacity', 0.9); // Slightly more opaque
+              }
+            } catch (e) {
+              console.log(`Couldn't highlight layer ${layerId}:`, e);
             }
           }
         });
@@ -274,9 +278,13 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
       // Reset all route line widths if nothing is highlighted
       journey?.segments?.forEach((_, index) => {
         const layerId = `route-${index}`;
-        if (map.current?.getLayer(layerId)) {
-          map.current.setPaintProperty(layerId, 'line-width', 5); // Reset to default width
-          map.current.setPaintProperty(layerId, 'line-opacity', 0.75); // Reset to default opacity
+        try {
+          if (map.current && map.current.getStyle() && map.current.getLayer(layerId)) {
+            map.current.setPaintProperty(layerId, 'line-width', 5); // Reset to default width
+            map.current.setPaintProperty(layerId, 'line-opacity', 0.75); // Reset to default opacity
+          }
+        } catch (e) {
+          console.log(`Couldn't reset layer ${layerId}:`, e);
         }
       });
     }
