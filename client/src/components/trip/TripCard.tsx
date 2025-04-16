@@ -122,7 +122,7 @@ const TripCard: React.FC<TripCardProps> = ({
             <h2 className="text-2xl font-bold mb-3 text-gray-800">{title}</h2>
             <div className="flex flex-wrap gap-2 mb-4">
               {location && (
-                <span className="bg-primary/10 text-primary text-xs px-3 py-1 rounded-full">
+                <span className="bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-full">
                   {location}
                 </span>
               )}
@@ -132,7 +132,7 @@ const TripCard: React.FC<TripCardProps> = ({
                 </span>
               )}
               {difficultyLevel && (
-                <span className="bg-primary/5 text-primary/80 text-xs px-3 py-1 rounded-full">
+                <span className="bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-full">
                   {difficultyLevel}
                 </span>
               )}
@@ -208,7 +208,7 @@ const TripCard: React.FC<TripCardProps> = ({
       <div className="flex justify-end mt-3">
         <button
           onClick={saveTrip}
-          className="bg-green-100 hover:bg-green-200 text-green-700 px-4 py-2 rounded-md transition-colors text-sm"
+          className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md transition-colors text-sm"
         >
           Save Trip
         </button>

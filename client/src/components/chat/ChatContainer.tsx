@@ -45,14 +45,20 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
   return (
     <main className="flex-1 flex flex-col overflow-hidden">
       <div className="chat-container flex-1 overflow-y-auto p-4 sm:px-6 space-y-6">
-        {messages.map((message) => (
-          <MessageBubble
-            key={message.id}
-            message={message}
-            onShowThinking={() => handleShowThinking(message.thinking)}
-            onModifyRequest={onModifyRequest}
-          />
-        ))}
+        {messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full mt-20">
+            <h1 className="text-4xl md:text-5xl font-light text-gray-800 mb-8 tracking-wide">Go beyond the post</h1>
+          </div>
+        ) : (
+          messages.map((message) => (
+            <MessageBubble
+              key={message.id}
+              message={message}
+              onShowThinking={() => handleShowThinking(message.thinking)}
+              onModifyRequest={onModifyRequest}
+            />
+          ))
+        )}
         
         {/* Thinking indicator */}
         <ThinkingIndicator thinking={thinking} />
