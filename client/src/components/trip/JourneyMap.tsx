@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Journey, Marker } from '@/types/chat';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface JourneyMapProps {
   mapId: string; // This is actually the trip ID prefixed with "map-"
