@@ -1,9 +1,15 @@
 import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { Message } from '@/types/chat';
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+});
+
+// the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
 // Using the specific assistant ID as requested
