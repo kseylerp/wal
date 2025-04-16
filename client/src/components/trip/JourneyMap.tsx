@@ -4,7 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { Journey, Marker } from '@/types/chat';
 
 interface JourneyMapProps {
-  mapId: string;
+  mapId: string; // This is actually the trip ID prefixed with "map-"
   center: [number, number];
   markers: Marker[];
   journey: Journey;
@@ -289,6 +289,14 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
         className={`w-full transition-all duration-300 ease-in-out ${isExpanded ? 'h-96' : 'h-64'}`}
         style={{ minHeight: isExpanded ? '24rem' : '16rem' }}
       />
+      
+      {/* Extract the trip ID from the mapId (removing the 'map-' prefix) */}
+      <a 
+        href={`/map?id=${mapId.replace('map-', '')}`}
+        className="absolute top-2 left-2 bg-white px-2 py-1 rounded shadow-md hover:bg-gray-100 transition-colors text-xs font-medium text-primary"
+      >
+        View Full Map
+      </a>
       
       <button 
         onClick={toggleExpand}

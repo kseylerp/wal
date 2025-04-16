@@ -116,7 +116,13 @@ const TripCard: React.FC<TripCardProps> = ({
           )}
         </div>
         
-        <div className="flex justify-end">
+        <div className="flex justify-between">
+          <a 
+            href={`/map?id=${id}`}
+            className="bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded transition-colors text-sm"
+          >
+            View Full Map
+          </a>
           <button
             onClick={() => onModifyRequest(id)}
             className="bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded transition-colors text-sm"
