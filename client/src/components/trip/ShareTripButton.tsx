@@ -6,7 +6,7 @@ import { toast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 
 interface ShareTripButtonProps {
-  tripId: number;
+  tripId: number | string;
 }
 
 export function ShareTripButton({ tripId }: ShareTripButtonProps) {

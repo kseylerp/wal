@@ -842,7 +842,7 @@ export default function TripCard({
             <Button 
               size="sm" 
               className="bg-[#655590] hover:bg-[#655590]/90 text-xs"
-              onClick={() => onEdit && onEdit(id)}
+              onClick={() => onEdit && onEdit(typeof id === 'string' ? parseInt(id) : id)}
             >
               View Details
             </Button>
