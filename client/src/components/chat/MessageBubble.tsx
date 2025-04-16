@@ -81,7 +81,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     );
   } else {
     return (
-      <div className="user-message ml-auto bg-gray-700 p-4 max-w-[85%] sm:max-w-[75%] md:max-w-[65%] lg:max-w-[60%] rounded-[1.25rem] rounded-br-[0.25rem]">
+      <div className="user-message ml-auto p-4 max-w-[85%] sm:max-w-[75%] md:max-w-[65%] lg:max-w-[60%] rounded-[1.25rem] rounded-br-[0.25rem]">
         <div className="text-white">
           {formatMessageContent(message.content)}
         </div>
