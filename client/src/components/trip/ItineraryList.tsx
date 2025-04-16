@@ -22,22 +22,29 @@ const ItineraryList: React.FC<ItineraryListProps> = ({
   onActivityHover,
   journey
 }) => {
-  // Function to extract coordinates from journey segments based on activity name
+  // Function to extract coordinates from journey segments or markers based on activity name
   const getCoordinatesForActivity = (activityName: string): Coordinates => {
-    if (!journey?.segments || !activityName) return [];
+    if (!activityName) return [];
     
-    // Look for segments that might match this activity
-    const segment = journey.segments.find(seg => 
-      seg.from?.toLowerCase().includes(activityName.toLowerCase()) || 
-      activityName.toLowerCase().includes(seg.from?.toLowerCase() || '') ||
-      seg.to?.toLowerCase().includes(activityName.toLowerCase()) ||
-      activityName.toLowerCase().includes(seg.to?.toLowerCase() || '')
-    );
+    console.log(`ItineraryList looking for coordinates for: "${activityName}"`);
     
-    if (segment?.geometry?.coordinates) {
-      return segment.geometry.coordinates as Coordinates;
+    // Try to match with journey segments first
+    if (journey?.segments) {
+      const segment = journey.segments.find(seg => 
+        seg.from?.toLowerCase().includes(activityName.toLowerCase()) || 
+        activityName.toLowerCase().includes(seg.from?.toLowerCase() || '') ||
+        seg.to?.toLowerCase().includes(activityName.toLowerCase()) ||
+        activityName.toLowerCase().includes(seg.to?.toLowerCase() || '')
+      );
+      
+      if (segment?.geometry?.coordinates) {
+        console.log(`ItineraryList found matching segment with ${segment.geometry.coordinates.length} coordinates`);
+        return segment.geometry.coordinates as Coordinates;
+      }
     }
     
+    // Always return at least an empty array to avoid errors
+    console.log(`ItineraryList couldn't find coordinates for: "${activityName}"`);
     return [];
   };
   

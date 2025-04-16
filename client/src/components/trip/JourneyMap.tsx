@@ -67,26 +67,57 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
     });
   };
   
-  // Extract coordinates from an activity name if it corresponds to a segment
+  // Extract coordinates from an activity name if it corresponds to a segment or marker
   const getCoordinatesForActivity = (activityName: string): [number, number][] | null => {
-    if (!journey?.segments || !activityName) return null;
+    if (!activityName) return null;
     
-    // Try to match the activity name with a segment's from or to location
-    const matchedSegment = journey.segments.find(segment => {
-      const activityLower = activityName.toLowerCase();
-      return (
-        segment.from.toLowerCase().includes(activityLower) || 
-        segment.to.toLowerCase().includes(activityLower) ||
-        activityLower.includes(segment.from.toLowerCase()) || 
-        activityLower.includes(segment.to.toLowerCase())
-      );
-    });
+    console.log(`Looking for coordinates for activity: "${activityName}"`);
     
-    if (matchedSegment && matchedSegment.geometry && matchedSegment.geometry.coordinates) {
-      return matchedSegment.geometry.coordinates as [number, number][];
+    // First try to match with any marker
+    if (markers && markers.length > 0) {
+      const matchedMarker = markers.find(marker => {
+        const activityLower = activityName.toLowerCase();
+        const markerNameLower = marker.name.toLowerCase();
+        
+        return (
+          markerNameLower.includes(activityLower) || 
+          activityLower.includes(markerNameLower)
+        );
+      });
+      
+      if (matchedMarker) {
+        console.log(`Found matching marker: "${matchedMarker.name}"`, matchedMarker.coordinates);
+        // Return a single-element array of coordinates to match the expected format
+        return [matchedMarker.coordinates];
+      }
     }
     
-    return null;
+    // If no marker matches, try to match with journey segments
+    if (journey?.segments && journey.segments.length > 0) {
+      const matchedSegment = journey.segments.find(segment => {
+        if (!segment.from || !segment.to) return false;
+        
+        const activityLower = activityName.toLowerCase();
+        const fromLower = segment.from.toLowerCase();
+        const toLower = segment.to.toLowerCase();
+        
+        return (
+          fromLower.includes(activityLower) || 
+          toLower.includes(activityLower) ||
+          activityLower.includes(fromLower) || 
+          activityLower.includes(toLower)
+        );
+      });
+      
+      if (matchedSegment && matchedSegment.geometry && matchedSegment.geometry.coordinates) {
+        console.log(`Found matching segment: "${matchedSegment.from}" to "${matchedSegment.to}"`);
+        return matchedSegment.geometry.coordinates as [number, number][];
+      }
+    }
+    
+    // If no match is found, use the map center as a fallback
+    console.log(`No specific match found, using map center instead`);
+    return [center];
   };
 
   // Fetch MapBox token on component mount
