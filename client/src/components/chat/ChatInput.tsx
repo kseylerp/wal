@@ -49,15 +49,15 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isDisabled }) => {
             placeholder="Ask about adventures or modify trip suggestions..."
             disabled={isDisabled}
             rows={1}
-            className="w-full border border-gray-300 rounded-xl py-3 px-4 focus:ring-2 focus:ring-gray-700 focus:border-gray-700 resize-none overflow-hidden text-gray-900"
+            className="w-full border border-gray-300 rounded-xl py-3 px-4 focus:ring-2 focus:ring-[#655590] focus:border-[#655590] resize-none overflow-hidden text-gray-900"
           />
         </div>
         <button
           type="submit"
           disabled={isDisabled || !message.trim()}
-          className={`flex-shrink-0 bg-gray-700 p-2.5 rounded-xl text-white ${
-            isDisabled || !message.trim() ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-800'
-          } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700 transition-colors duration-150 ease-in-out`}
+          className={`flex-shrink-0 bg-[#655590] p-2.5 rounded-xl text-white ${
+            isDisabled || !message.trim() ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#655590]/90'
+          } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#655590] transition-colors duration-150 ease-in-out`}
         >
           <ArrowUp className="h-5 w-5" />
         </button>
