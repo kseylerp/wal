@@ -93,9 +93,20 @@ export function parseTripsFromResponse(response: any): TripData[] | undefined {
         // Add additional fields
         bestSeasons: trip.best_seasons || [],
         recommendedMonths: trip.recommended_months || [],
-        weather: trip.weather_info || trip.weather || '',
-        // Use either historical or historical_info field, with preference for historical_info
-        historical: trip.historical_info || trip.historical || '',
+        // Handle both string and object weather data
+        weather: typeof trip.weather === 'string' ? trip.weather :
+                 typeof trip.weather === 'object' && trip.weather ? 
+                   (trip.weather.typical_conditions ? 
+                     `${trip.weather.typical_conditions.join(', ')}. ` : '') + 
+                   (trip.weather.historical && trip.weather.historical.avg_high_f ? 
+                     `Avg high: ${trip.weather.historical.avg_high_f}°F, Avg low: ${trip.weather.historical.avg_low_f}°F` : '')
+                 : trip.weather_info || '',
+                 
+        // Handle historical data from various possible sources
+        historical: typeof trip.historical === 'string' ? trip.historical :
+                    trip.weather && trip.weather.historical && typeof trip.weather.historical === 'object' ?
+                      `Historical weather: Avg high ${trip.weather.historical.avg_high_f}°F, Avg low ${trip.weather.historical.avg_low_f}°F. ${trip.weather.historical.typical_conditions || []}` :
+                      trip.historical_info || '',
         recommendedOutfitters: trip.recommended_outfitters || [],
         notes: trip.notes || [],
         warnings: trip.safety_warnings || trip.warnings || [],

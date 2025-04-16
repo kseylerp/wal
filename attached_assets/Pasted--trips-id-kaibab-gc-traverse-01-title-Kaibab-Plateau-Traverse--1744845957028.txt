@@ -1,0 +1,122 @@
+{
+  "trips": [
+    {
+      "id": "kaibab-gc-traverse-01",
+      "title": "Kaibab Plateau Traverse & Grand Canyon Rim Exploration",
+      "description": "A rugged 8-day solo trek through the Kaibab Plateau and North Rim of the Grand Canyon, ideal for intense adventurers.",
+      "themes": ["Hiking", "Backpacking", "Wilderness", "Solo", "Scenic"],
+      "region": "Northern Arizona, USA",
+      "duration_days": 8,
+      "intensity": "high",
+      "price_range": {
+        "min": 375,
+        "max": 400,
+        "currency": "USD"
+      },
+      "best_seasons": ["summer", "fall"],
+      "recommended_months": [5, 6, 9, 10],
+      "weather": {
+        "historical": {
+          "avg_high_f": 75,
+          "avg_low_f": 45,
+          "avg_precipitation_inches": 0.6,
+          "typical_conditions": ["Sunny", "Dry", "Cool nights"]
+        }
+      },
+      "map_center": [-112.25, 36.45],
+      "bounds": [[-112.6, 36.2], [-111.9, 36.7]],
+      "key_locations": [
+        {
+          "id": "loc1",
+          "name": "Jacob Lake",
+          "type": "town",
+          "coordinates": [-112.2, 36.7],
+          "elevation_ft": 7925,
+          "description": "Starting point of the Kaibab Plateau Traverse."
+        },
+        {
+          "id": "loc2",
+          "name": "Timp Point",
+          "type": "viewpoint",
+          "coordinates": [-112.1, 36.3],
+          "elevation_ft": 8800,
+          "description": "Scenic overlook of the Grand Canyon's North Rim."
+        }
+      ],
+      "itinerary": [
+        {
+          "day": 1,
+          "title": "Arrival and Shuttle to Jacob Lake",
+          "description": "Travel to trailhead and camp at Jacob Lake.",
+          "lodging": {
+            "type": "camping",
+            "name": "Jacob Lake Campground",
+            "location": "Jacob Lake, AZ",
+            "coordinates": [-112.2, 36.7],
+            "booking_link": "",
+            "notes": "Pit toilets, no water."
+          },
+          "activities": []
+        },
+        {
+          "day": 2,
+          "title": "Jacob Lake to East Rim View",
+          "description": "Start hike southbound on AZT and detour to rim.",
+          "lodging": {
+            "type": "backcountry",
+            "name": "Dispersed Site",
+            "location": "East Rim",
+            "coordinates": [-112.18, 36.5],
+            "booking_link": "",
+            "notes": "Flat forest floor camping."
+          },
+          "activities": [
+            {
+              "id": "act1",
+              "title": "Plateau Hike to East Rim",
+              "type": "hiking",
+              "difficulty": "difficult",
+              "duration_hours": 6,
+              "start_location": "Jacob Lake",
+              "end_location": "East Rim View",
+              "highlights": ["Forest hiking", "Solitude"],
+              "hazards": ["Heat", "Navigation"],
+              "route_details": {
+                "distance_miles": 13,
+                "elevation_gain_ft": 1100,
+                "elevation_loss_ft": 800,
+                "high_point_ft": 8200,
+                "terrain": "Pine forest, singletrack",
+                "route_type": "point_to_point"
+              },
+              "route_geometry": {
+                "type": "LineString",
+                "coordinates": [[-112.2, 36.7], [-112.18, 36.5]]
+              }
+            }
+          ]
+        }
+      ],
+      "whyWeChoseThis": "Offers a remote and scenic alternative to crowded trails with Grand Canyon views and solitude.",
+      "recommended_outfitters": [
+        {
+          "name": "Babbitt's Backcountry",
+          "specialty": "Backpacking gear rental",
+          "location": "Flagstaff, AZ",
+          "website": "https://babbittsbackcountry.com",
+          "phone": "",
+          "description": "Great local shop with affordable gear rentals for long trips."
+        }
+      ],
+      "notes": [
+        "No water sources for long stretches — bring a filter.",
+        "No cell service on much of the route.",
+        "Self-issued backcountry permits may be required for certain zones."
+      ],
+      "warnings": [
+        "Watch for afternoon thunderstorms in July/August.",
+        "Elk and deer active — hang food or use canister."
+      ]
+    }
+  ]
+}
