@@ -10,6 +10,7 @@ import MapTest from "@/pages/MapTest";
 import SavedTrips from "@/pages/SavedTrips";
 import AuthPage from "@/pages/AuthPage";
 import ProfilePage from "@/pages/ProfilePage";
+import SharedTripPage from "@/pages/SharedTripPage";
 import logo from "./assets/new-logo.png";
 import { useAuth } from "@/hooks/useAuth";
 import { User, LogOut } from "lucide-react";
@@ -77,6 +78,7 @@ function Router() {
           <Route path="/saved-trips" component={SavedTrips} />
           <Route path="/auth" component={AuthPage} />
           <Route path="/profile" component={ProfilePage} />
+          <Route path="/trips/shared/:shareableId" component={SharedTripPage} />
           <Route component={NotFound} />
         </Switch>
       </div>

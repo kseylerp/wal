@@ -1,12 +1,39 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useLocation, useRoute } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2, MapPin, Calendar, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getQueryFn } from '@/lib/queryClient';
 import { Trip } from '@shared/schema';
-import { JourneyMap } from '@/components/trip/JourneyMap';
-import { ItineraryList } from '@/components/trip/ItineraryList';
+import JourneyMap from '@/components/trip/JourneyMap';
+import ItineraryList from '@/components/trip/ItineraryList';
+
+// Define interfaces for type safety
+interface JourneyData {
+  markers: Array<{
+    name: string;
+    coordinates: [number, number];
+  }>;
+  segments: any[];
+  totalDistance: number;
+  totalDuration: number;
+  bounds: [[number, number], [number, number]];
+}
+
+interface ItineraryDay {
+  day: number;
+  title: string;
+  description: string;
+  activities: string[];
+  accommodations?: string;
+}
+
+// Extended Trip type with proper typing for journey data and itinerary
+interface SharedTrip extends Trip {
+  mapCenter: [number, number];
+  journeyData: JourneyData;
+  itinerary: ItineraryDay[];
+}
 
 export default function SharedTripPage() {
   const [, params] = useRoute('/trips/shared/:shareableId');
@@ -17,7 +44,7 @@ export default function SharedTripPage() {
     data: trip, 
     isLoading, 
     error 
-  } = useQuery<Trip>({
+  } = useQuery<SharedTrip>({
     queryKey: [`/api/trips/shared/${params?.shareableId}`],
     queryFn: getQueryFn({ on401: 'returnNull' }),
     enabled: Boolean(params?.shareableId),
