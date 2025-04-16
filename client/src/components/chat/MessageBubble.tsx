@@ -54,25 +54,26 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                 <div className="mt-4 mb-1 text-xs text-gray-500 text-right italic">
                   Reply in chat to modify these suggestions
                 </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
+                <div className="flex flex-col items-center w-full gap-6 mt-4">
                   {message.tripData.map(trip => (
-                    <TripCard
-                      key={trip.id}
-                      id={trip.id}
-                      title={trip.title}
-                      description={trip.description}
-                      whyWeChoseThis={trip.whyWeChoseThis}
-                      difficultyLevel={trip.difficultyLevel}
-                      priceEstimate={trip.priceEstimate}
-                      duration={trip.duration}
-                      location={trip.location}
-                      suggestedGuides={trip.suggestedGuides}
-                      mapCenter={trip.mapCenter}
-                      markers={trip.markers}
-                      journey={trip.journey}
-                      itinerary={trip.itinerary}
-                      onModifyRequest={onModifyRequest}
-                    />
+                    <div key={trip.id} className="w-[90%] max-w-7xl">
+                      <TripCard
+                        id={trip.id}
+                        title={trip.title}
+                        description={trip.description}
+                        whyWeChoseThis={trip.whyWeChoseThis}
+                        difficultyLevel={trip.difficultyLevel}
+                        priceEstimate={trip.priceEstimate}
+                        duration={trip.duration}
+                        location={trip.location}
+                        suggestedGuides={trip.suggestedGuides}
+                        mapCenter={trip.mapCenter}
+                        markers={trip.markers}
+                        journey={trip.journey}
+                        itinerary={trip.itinerary}
+                        onModifyRequest={onModifyRequest}
+                      />
+                    </div>
                   ))}
                 </div>
               </>

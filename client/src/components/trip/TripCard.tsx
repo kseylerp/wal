@@ -78,9 +78,9 @@ const TripCard: React.FC<TripCardProps> = ({
     <div className="border rounded-lg overflow-hidden shadow-md bg-white mb-6">
       <div className="md:flex">
         {/* Left side: Trip details */}
-        <div className="p-4 md:w-1/2">
-          <h2 className="text-xl font-bold mb-2">{title}</h2>
-          <div className="flex flex-wrap gap-2 mb-2">
+        <div className="p-5 md:w-3/5">
+          <h2 className="text-2xl font-bold mb-3 text-gray-800">{title}</h2>
+          <div className="flex flex-wrap gap-2 mb-3">
             {location && (
               <span className="bg-primary/10 text-primary text-xs px-2 py-1 rounded">
                 {location}
@@ -103,7 +103,7 @@ const TripCard: React.FC<TripCardProps> = ({
             )}
           </div>
           
-          <p className="text-gray-700 mb-4">{description}</p>
+          <p className="text-gray-700 mb-4 text-base">{description}</p>
           
           {(journey?.totalDistance || journey?.totalDuration) && (
             <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-4 text-sm">
@@ -143,10 +143,10 @@ const TripCard: React.FC<TripCardProps> = ({
             </button>
             
             {showDetails && (
-              <div className="mt-3 text-sm">
-                <div className="mb-3">
-                  <h3 className="font-medium">Why We Chose This For You</h3>
-                  <p className="text-gray-600">{whyWeChoseThis}</p>
+              <div className="mt-4 text-sm">
+                <div className="mb-4">
+                  <h3 className="font-medium text-base">Why We Chose This For You</h3>
+                  <p className="text-gray-600 mt-1">{whyWeChoseThis}</p>
                 </div>
                 
                 <ItineraryList itinerary={itinerary} suggestedGuides={suggestedGuides} />
@@ -154,31 +154,30 @@ const TripCard: React.FC<TripCardProps> = ({
             )}
           </div>
           
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 mt-5">
             <a 
               href={`/map?id=${id}`}
-              className="bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded transition-colors text-sm"
+              className="bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-md transition-colors text-sm"
             >
               View Full Map
             </a>
             <button
               onClick={saveTrip}
-              className="bg-green-100 hover:bg-green-200 text-green-700 px-4 py-2 rounded transition-colors text-sm"
+              className="bg-green-100 hover:bg-green-200 text-green-700 px-4 py-2 rounded-md transition-colors text-sm"
             >
               Save Trip
             </button>
             <a 
               href="/saved-trips"
-              className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded transition-colors text-sm"
+              className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md transition-colors text-sm"
             >
               Saved Trips
             </a>
           </div>
-
         </div>
         
         {/* Right side: Map */}
-        <div className="md:w-1/2">
+        <div className="md:w-2/5">
           <JourneyMap
             mapId={`map-${id}`}
             center={mapCenter}
