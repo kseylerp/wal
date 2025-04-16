@@ -1,10 +1,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import '@fontsource/jost/700.css';
+@import '@fontsource/jost/800.css';
 
 /* Custom app styling */
 body {
   background-color: #fcf8f5;
+}
+
+/* Font classes */
+.font-jost {
+  font-family: 'Jost', ui-sans-serif, system-ui, sans-serif;
 }
 
 /* Chat styling */
