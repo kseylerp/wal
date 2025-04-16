@@ -202,8 +202,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isDisabled }) => {
             placeholder="Ask about adventures or modify trip suggestions..."
             disabled={isDisabled || isListening}
             rows={1}
-            className={`w-full border border-gray-300 rounded-xl py-3 px-4 pr-8 focus:ring-2 focus:ring-[#655590] focus:border-[#655590] resize-none overflow-hidden text-gray-900 
-              ${isListening ? 'bg-pink-50 border-pink-300' : ''}`}
+            className={`w-full border-2 ${isListening ? 'border-pink-300' : 'border-gray-300'} rounded-xl py-3 px-4 pr-8 focus:ring-2 focus:ring-[#655590] focus:border-[#655590] resize-none overflow-hidden text-gray-900 shadow-sm
+              ${isListening ? 'bg-pink-50' : 'bg-white'}`}
           />
           {isListening && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
@@ -223,9 +223,9 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isDisabled }) => {
             onClick={toggleListening}
             disabled={isDisabled}
             className={`flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-full text-white 
-              ${isListening ? 'bg-[#FB8C9A] hover:bg-[#FB8C9A]/90' : 'bg-[#8C76C7] hover:bg-[#8C76C7]/90'} 
+              ${isListening ? 'bg-[#FB8C9A] hover:bg-[#FB8C9A]/90 border-2 border-[#FB8C9A]/20' : 'bg-[#8C76C7] hover:bg-[#8C76C7]/90 border-2 border-[#8C76C7]/20'} 
               ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
-              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#655590] transition-colors duration-150 ease-in-out shadow-md`}
+              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#655590] transition-all duration-150 ease-in-out shadow-lg`}
             aria-label={isListening ? "Stop voice input" : "Start voice input"}
           >
             {isListening ? <MicOff className="h-5 w-5" /> : <AudioWaveform className="h-5 w-5" />}
@@ -236,9 +236,9 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isDisabled }) => {
         <button
           type="submit"
           disabled={isDisabled || !message.trim()}
-          className={`flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-full bg-[#655590] text-white shadow-md
+          className={`flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-full bg-[#655590] text-white shadow-lg border-2 border-[#655590]/20
             ${isDisabled || !message.trim() ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#655590]/90'}
-            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#655590] transition-colors duration-150 ease-in-out`}
+            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#655590] transition-all duration-150 ease-in-out`}
         >
           <ArrowUp className="h-5 w-5" />
         </button>
