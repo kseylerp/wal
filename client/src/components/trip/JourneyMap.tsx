@@ -70,6 +70,51 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
       duration: 2000 // Animation duration in milliseconds
     });
   };
+
+  // Function to highlight a route segment on the map based on an activity name
+  const highlightActivityRoute = (activityName: string | null) => {
+    if (!map.current || !activityName) return;
+    
+    // Reset all route line widths first
+    journey?.segments?.forEach((_, index) => {
+      const layerId = `route-${index}`;
+      if (map.current?.getLayer(layerId)) {
+        map.current.setPaintProperty(layerId, 'line-width', 5); // Reset to default width
+        map.current.setPaintProperty(layerId, 'line-opacity', 0.75); // Reset to default opacity
+      }
+    });
+    
+    // Try to find the matching segment
+    const coords = getCoordinatesForActivity(activityName);
+    if (coords) {
+      // Find which layer this might correspond to
+      journey?.segments?.forEach((segment, index) => {
+        // Simple comparison - check if first and last coordinate match
+        const segCoords = segment.geometry?.coordinates;
+        if (segCoords && 
+            ((segCoords[0][0] === coords[0][0] && segCoords[0][1] === coords[0][1]) ||
+            (segCoords[segCoords.length-1][0] === coords[coords.length-1][0] && 
+             segCoords[segCoords.length-1][1] === coords[coords.length-1][1]))) {
+          
+          // Highlight this segment
+          const layerId = `route-${index}`;
+          if (map.current?.getLayer(layerId)) {
+            map.current.setPaintProperty(layerId, 'line-width', 8); // Make it wider
+            map.current.setPaintProperty(layerId, 'line-opacity', 1); // Full opacity
+            
+            // Fly to this route
+            map.current.fitBounds([
+              [Math.min(...coords.map(c => c[0])), Math.min(...coords.map(c => c[1]))],
+              [Math.max(...coords.map(c => c[0])), Math.max(...coords.map(c => c[1]))]
+            ], {
+              padding: 80,
+              maxZoom: 14
+            });
+          }
+        }
+      });
+    }
+  };
   
   // Extract coordinates from an activity name if it corresponds to a segment
   const getCoordinatesForActivity = (activityName: string): [number, number][] | null => {
@@ -193,6 +238,49 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
     
     console.log(`Route ${segmentId} added to map (${mode})`);
   };
+
+  // Effect for highlighting activities when focusedActivity changes
+  useEffect(() => {
+    if (focusedActivity && !isThumbnail && map.current) {
+      highlightActivityRoute(focusedActivity);
+    }
+  }, [focusedActivity, isThumbnail]);
+  
+  // Effect for highlighting on hover
+  useEffect(() => {
+    if (highlightedActivity && !isThumbnail && map.current && highlightedActivity !== focusedActivity) {
+      // Temporary highlight (lighter than focused highlight)
+      const coords = getCoordinatesForActivity(highlightedActivity);
+      if (coords) {
+        // Find which layer this might correspond to
+        journey?.segments?.forEach((segment, index) => {
+          // Simple comparison - check if first and last coordinate match
+          const segCoords = segment.geometry?.coordinates;
+          if (segCoords && 
+              ((segCoords[0][0] === coords[0][0] && segCoords[0][1] === coords[0][1]) ||
+              (segCoords[segCoords.length-1][0] === coords[coords.length-1][0] && 
+               segCoords[segCoords.length-1][1] === coords[coords.length-1][1]))) {
+            
+            // Highlight this segment
+            const layerId = `route-${index}`;
+            if (map.current?.getLayer(layerId)) {
+              map.current.setPaintProperty(layerId, 'line-width', 6); // Slightly wider
+              map.current.setPaintProperty(layerId, 'line-opacity', 0.9); // Slightly more opaque
+            }
+          }
+        });
+      }
+    } else if (!highlightedActivity && !focusedActivity && !isThumbnail && map.current) {
+      // Reset all route line widths if nothing is highlighted
+      journey?.segments?.forEach((_, index) => {
+        const layerId = `route-${index}`;
+        if (map.current?.getLayer(layerId)) {
+          map.current.setPaintProperty(layerId, 'line-width', 5); // Reset to default width
+          map.current.setPaintProperty(layerId, 'line-opacity', 0.75); // Reset to default opacity
+        }
+      });
+    }
+  }, [highlightedActivity, focusedActivity, isThumbnail]);
 
   // Initialize map when token is available and component is mounted
   useEffect(() => {
