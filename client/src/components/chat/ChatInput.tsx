@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowUp, MicOff, Mic } from 'lucide-react';
-import soundWaveIcon from '../../assets/sound-wave-icon.png';
+import { ArrowUp, MicOff } from 'lucide-react';
+import soundWaveIcon from '../../assets/sound-wave-icon-teal.png';
+import { ColorFilteredImage } from '../ui/ColorFilteredImage';
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -207,12 +208,12 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isDisabled }) => {
               ${isListening ? 'bg-pink-50 border-pink-300' : ''}`}
           />
           {isListening && (
-            <div className="absolute right-3 top-3 flex items-center">
+            <div className="absolute right-3 top-3 flex items-center bg-white/80 px-2 py-1 rounded-full shadow-sm">
               <span className="animate-pulse flex h-2 w-2 mr-2">
                 <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-[#FB8C9A] opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FB8C9A]"></span>
               </span>
-              <span className="text-xs text-[#FB8C9A] font-medium">Listening...</span>
+              <span className="text-xs text-[#FB8C9A] font-semibold">Listening...</span>
             </div>
           )}
         </div>
@@ -224,15 +225,22 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isDisabled }) => {
             onClick={toggleListening}
             disabled={isDisabled}
             className={`flex-shrink-0 rounded-full w-10 h-10 flex items-center justify-center
-              ${isListening ? 'bg-[#FB8C9A] hover:bg-[#FB8C9A]/90' : 'bg-gray-100 hover:bg-gray-200 border border-gray-300'} 
+              ${isListening 
+                ? 'bg-[#FB8C9A] hover:bg-[#FB8C9A]/90' 
+                : 'bg-white hover:bg-gray-50 border border-[#FB8C9A]/40'} 
               ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
-              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#655590] transition-colors duration-150 ease-in-out`}
+              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FB8C9A] shadow-sm transition-colors duration-150 ease-in-out`}
             aria-label={isListening ? "Stop voice input" : "Start voice input"}
           >
             {isListening ? (
               <MicOff className="h-5 w-5 text-white" />
             ) : (
-              <img src={soundWaveIcon} alt="Sound wave" className="h-5 w-5 object-contain" />
+              <ColorFilteredImage 
+                src={soundWaveIcon} 
+                alt="Sound wave" 
+                filterColor="#FB8C9A" 
+                className="h-6 w-6 object-contain" 
+              />
             )}
           </button>
         )}
@@ -241,11 +249,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isDisabled }) => {
         <button
           type="submit"
           disabled={isDisabled || !message.trim()}
-          className={`flex-shrink-0 rounded-full w-10 h-10 flex items-center justify-center
+          className={`flex-shrink-0 rounded-full w-10 h-10 flex items-center justify-center shadow-sm
             ${isDisabled || !message.trim() 
               ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
-              : 'bg-[#655590] text-white hover:bg-[#655590]/90'}
-            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#655590] transition-colors duration-150 ease-in-out`}
+              : 'bg-[#FB8C9A] text-white hover:bg-[#FB8C9A]/90'}
+            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FB8C9A] transition-colors duration-150 ease-in-out`}
         >
           <ArrowUp className="h-5 w-5" />
         </button>
