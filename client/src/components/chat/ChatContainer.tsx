@@ -54,9 +54,9 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
                 <h1 className="font-jost text-[70px] leading-[65px] text-gray-800 text-left font-black mb-6">
                   GO BEYOND<br />THE POST
                 </h1>
-                <h2 className="font-jost text-[30px] leading-tight font-bold uppercase mt-4">
-                  THE POWER OF <span style={{color: "#FB8C9A"}}>WALLY</span><br />
-                  <span className="text-gray-700">RESTS WITH LOCAL GUIDES.</span>
+                <h2 className="font-jost text-[30px] leading-tight font-bold mt-4 text-gray-800">
+                  The power of <span style={{color: "#FB8C9A"}}>wally</span><br />
+                  rests with local guides.
                 </h2>
               </div>
               <div className="flex-shrink-0 ml-0 md:ml-24 self-center md:self-start">
