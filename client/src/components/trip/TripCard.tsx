@@ -25,19 +25,6 @@ const TripCard: React.FC<TripCardProps> = ({
 }) => {
   const [isMapExpanded, setIsMapExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<'info' | 'itinerary'>('info');
-  
-  // Add state for tracking focused and highlighted activities
-  const [focusedActivity, setFocusedActivity] = useState<string | undefined>(undefined);
-  const [highlightedActivity, setHighlightedActivity] = useState<string | undefined>(undefined);
-  
-  // Handlers for activity interaction
-  const handleActivityClick = (activity: string) => {
-    setFocusedActivity(activity);
-  };
-  
-  const handleActivityHover = (activity: string, isHovering: boolean) => {
-    setHighlightedActivity(isHovering ? activity : undefined);
-  };
 
   // Toggle map expansion
   const toggleMapExpand = () => {
@@ -199,13 +186,7 @@ const TripCard: React.FC<TripCardProps> = ({
                   <p className="text-gray-600">{whyWeChoseThis}</p>
                 </div>
               ) : (
-                <ItineraryList 
-                  itinerary={itinerary} 
-                  suggestedGuides={suggestedGuides} 
-                  onActivityClick={handleActivityClick}
-                  onActivityHover={handleActivityHover}
-                  journey={journey}
-                />
+                <ItineraryList itinerary={itinerary} suggestedGuides={suggestedGuides} />
               )}
             </div>
           </div>
@@ -219,8 +200,6 @@ const TripCard: React.FC<TripCardProps> = ({
               journey={journey}
               isExpanded={isMapExpanded}
               toggleExpand={toggleMapExpand}
-              focusedActivity={focusedActivity}
-              highlightedActivity={highlightedActivity}
             />
           </div>
         </div>
