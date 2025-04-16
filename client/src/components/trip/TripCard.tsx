@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { MapPin, Calendar, DollarSign, TrendingUp, Edit, Trash, ChevronDown, ChevronUp, Info } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { MapPin, Calendar, DollarSign, TrendingUp, Edit, Trash, ChevronDown, ChevronUp, Info, Map, Navigation, Mountain, Clock, AlertTriangle, Droplet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -31,6 +31,102 @@ import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import JourneyMap from './JourneyMap';
 import { cn } from '@/lib/utils';
+
+// ActivityDetails Component
+interface ActivityDetailsProps {
+  activity: Activity;
+}
+
+const ActivityDetails = ({ activity }: ActivityDetailsProps) => {
+  return (
+    <div className="text-xs">
+      {/* Basic Details */}
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1 mb-3">
+        <div>
+          <span className="text-gray-500">Type:</span> {activity.type}
+        </div>
+        <div>
+          <span className="text-gray-500">Difficulty:</span> {activity.difficulty}
+        </div>
+        <div>
+          <span className="text-gray-500">Duration:</span> {activity.duration_hours} hours
+        </div>
+      </div>
+      
+      {/* Start/End Locations */}
+      <div className="bg-white p-3 rounded border border-gray-200 mb-3">
+        <div className="flex items-center mb-1">
+          <Navigation className="h-3.5 w-3.5 mr-1.5 text-green-600" />
+          <span className="font-medium">Start:</span> <span className="ml-1">{activity.start_location}</span>
+        </div>
+        <div className="flex items-center">
+          <MapPin className="h-3.5 w-3.5 mr-1.5 text-red-600" />
+          <span className="font-medium">End:</span> <span className="ml-1">{activity.end_location}</span>
+        </div>
+      </div>
+      
+      {/* Route Details */}
+      {activity.route_details && (
+        <div className="bg-white p-3 rounded border border-gray-200 mb-3">
+          <h5 className="font-medium mb-2 flex items-center">
+            <Map className="h-3.5 w-3.5 mr-1.5 text-[#655590]" />
+            Route Details
+          </h5>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+            <div>
+              <span className="text-gray-500">Distance:</span> {activity.route_details.distance_miles} miles
+            </div>
+            <div>
+              <span className="text-gray-500">Terrain:</span> {activity.route_details.terrain}
+            </div>
+            <div>
+              <span className="text-gray-500">Elevation gain:</span> {activity.route_details.elevation_gain_ft} ft
+            </div>
+            <div>
+              <span className="text-gray-500">Elevation loss:</span> {activity.route_details.elevation_loss_ft} ft
+            </div>
+            <div>
+              <span className="text-gray-500">High point:</span> {activity.route_details.high_point_ft} ft
+            </div>
+            <div>
+              <span className="text-gray-500">Route type:</span> {activity.route_details.route_type}
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Highlights */}
+      {activity.highlights && activity.highlights.length > 0 && (
+        <div className="bg-white p-3 rounded border border-gray-200 mb-3">
+          <h5 className="font-medium mb-2 flex items-center">
+            <Mountain className="h-3.5 w-3.5 mr-1.5 text-green-700" />
+            Highlights
+          </h5>
+          <ul className="list-disc pl-4 space-y-1">
+            {activity.highlights.map((highlight, idx) => (
+              <li key={idx}>{highlight}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      
+      {/* Hazards */}
+      {activity.hazards && activity.hazards.length > 0 && (
+        <div className="bg-white p-3 rounded border border-gray-200">
+          <h5 className="font-medium mb-2 flex items-center text-red-700">
+            <AlertTriangle className="h-3.5 w-3.5 mr-1.5 text-red-700" />
+            Hazards
+          </h5>
+          <ul className="list-disc pl-4 space-y-1 text-red-700">
+            {activity.hazards.map((hazard, idx) => (
+              <li key={idx}>{hazard}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
 
 interface RouteDetails {
   distance_miles: number;
@@ -168,28 +264,61 @@ export default function TripCard({
     return null;
   };
   
+  // Create a ref for the sticky map container
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Create a state for the current activity details
+  const [activeActivity, setActiveActivity] = useState<Activity | null>(null);
+  
+  // Find activity data when selectedActivity changes
+  useEffect(() => {
+    if (selectedActivity && activities && activities.length > 0) {
+      const found = activities.find(activity => 
+        activity.title.toLowerCase() === selectedActivity.toLowerCase() ||
+        selectedActivity.toLowerCase().includes(activity.title.toLowerCase())
+      );
+      
+      setActiveActivity(found || null);
+    } else {
+      setActiveActivity(null);
+    }
+  }, [selectedActivity, activities]);
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all hover:shadow-lg">
-      <div className="lg:grid lg:grid-cols-2">
-        {/* Map Section - Made smaller */}
-        <div className={`${isMapExpanded ? 'h-[400px]' : 'h-[200px]'} lg:h-[350px] relative transition-all duration-300`}>
-          {mapCenter && journey && (
-            <JourneyMap
-              mapId={`map-${id}`}
-              center={mapCenter}
-              markers={journey.markers || []}
-              journey={journey}
-              isExpanded={isMapExpanded}
-              toggleExpand={toggleMapExpand}
-              focusedActivity={selectedActivity}
-              highlightedActivity={hoveredActivity}
-              isThumbnail={false}
-            />
+      <div className="grid grid-cols-1 lg:grid-cols-12">
+        {/* Map Section - Now sticky on desktop */}
+        <div className="col-span-1 lg:col-span-5">
+          <div 
+            ref={mapContainerRef}
+            className={`${isMapExpanded ? 'h-[400px]' : 'h-[250px]'} lg:h-[350px] lg:sticky lg:top-4 relative transition-all duration-300`}
+          >
+            {mapCenter && journey && (
+              <JourneyMap
+                mapId={`map-${id}`}
+                center={mapCenter}
+                markers={journey.markers || []}
+                journey={journey}
+                isExpanded={isMapExpanded}
+                toggleExpand={toggleMapExpand}
+                focusedActivity={selectedActivity}
+                highlightedActivity={undefined} // Removed hover highlighting
+                isThumbnail={false}
+              />
+            )}
+          </div>
+          
+          {/* Display active activity details below map on mobile / small screens */}
+          {activeActivity && isMobile && (
+            <div className="p-4 bg-gray-50 border-t border-gray-200">
+              <h4 className="font-medium text-sm mb-2">{activeActivity.title} Details</h4>
+              <ActivityDetails activity={activeActivity} />
+            </div>
           )}
         </div>
         
         {/* Trip Info Section */}
-        <div className="p-5 overflow-y-auto lg:max-h-[700px]">
+        <div className="col-span-1 lg:col-span-7 p-5 overflow-y-auto lg:max-h-[700px]">
           <div className="flex justify-between items-start">
             <div className="flex-1">
               <h3 className="text-xl font-bold text-gray-800 mb-1">{title}</h3>
