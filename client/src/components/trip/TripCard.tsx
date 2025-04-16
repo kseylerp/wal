@@ -117,63 +117,120 @@ const TripCard: React.FC<TripCardProps> = ({
   };
 
   return (
-    <div className="w-full mb-6 border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+    <div className="w-full mb-6 border border-gray-200 rounded-lg shadow-sm overflow-hidden mx-auto">
       <div className="w-full bg-white">
-        {/* Trip Header - Always visible */}
-        <div className={`${isMobile ? 'px-3 py-3' : 'px-4 py-4 sm:p-6'} border-b border-gray-100`}>
-          <h2 className={`${isMobile ? 'text-lg' : 'text-xl sm:text-2xl'} font-bold mb-2 text-gray-800 break-words`}>
-            {title}
-          </h2>
-          
-          <div className="flex flex-wrap gap-1.5 mb-2">
-            {location && (
-              <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full">
-                {location}
-              </span>
-            )}
-            {duration && (
-              <span className="bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded-full">
-                {duration}
-              </span>
-            )}
-            {difficultyLevel && (
-              <span className="bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full">
-                {difficultyLevel}
-              </span>
-            )}
-            {priceEstimate && (
-              <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 rounded-full">
-                {priceEstimate}
-              </span>
-            )}
-          </div>
-          
-          {/* Quick Stats - Horizontal layout on mobile */}
-          <div className={`flex ${isMobile ? 'justify-between' : 'flex-wrap gap-x-6'} gap-y-1 text-xs sm:text-sm text-gray-700`}>
-            <div className="flex items-center">
-              <span className="font-medium mr-1">Distance:</span> {totalDistanceMiles} miles
+        {/* Trip Header - left-justified title on mobile and desktop */}
+        {isMobile ? (
+          <div className="px-3 py-3 border-b border-gray-100">
+            <h2 className="text-lg font-bold text-gray-800 break-words">
+              {title}
+            </h2>
+            
+            <div className="flex flex-wrap gap-1.5 mt-1.5 mb-1.5">
+              {location && (
+                <span className="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full">
+                  {location}
+                </span>
+              )}
+              {duration && (
+                <span className="bg-gray-100 text-gray-700 text-[10px] px-2 py-0.5 rounded-full">
+                  {duration}
+                </span>
+              )}
+              {difficultyLevel && (
+                <span className="bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded-full">
+                  {difficultyLevel}
+                </span>
+              )}
+              {priceEstimate && (
+                <span className="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-0.5 rounded-full">
+                  {priceEstimate}
+                </span>
+              )}
             </div>
-            <div className="flex items-center">
-              <span className="font-medium mr-1">Duration:</span> ~{totalDurationHours} hrs
+
+            {/* Stats under title */}
+            <div className="flex justify-between gap-y-1 text-xs text-gray-700 mb-1">
+              <div className="flex items-center">
+                <span className="font-medium mr-1">Distance:</span> {totalDistanceMiles} miles
+              </div>
+              <div className="flex items-center">
+                <span className="font-medium mr-1">Duration:</span> ~{totalDurationHours} hrs
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          /* Desktop layout */
+          <div className="px-4 py-4 sm:p-6 border-b border-gray-100">
+            <h2 className="text-xl sm:text-2xl font-bold mb-2 text-gray-800 break-words">
+              {title}
+            </h2>
+            
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {location && (
+                <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full">
+                  {location}
+                </span>
+              )}
+              {duration && (
+                <span className="bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded-full">
+                  {duration}
+                </span>
+              )}
+              {difficultyLevel && (
+                <span className="bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full">
+                  {difficultyLevel}
+                </span>
+              )}
+              {priceEstimate && (
+                <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 rounded-full">
+                  {priceEstimate}
+                </span>
+              )}
+            </div>
+            
+            <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-700">
+              <div className="flex items-center">
+                <span className="font-medium mr-1">Distance:</span> {totalDistanceMiles} miles
+              </div>
+              <div className="flex items-center">
+                <span className="font-medium mr-1">Duration:</span> ~{totalDurationHours} hrs
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex flex-col md:flex-row">
-          {/* Right side: Map - On top for mobile */}
-          <div className="order-1 md:order-2 md:w-1/2 h-[250px] md:h-auto w-full">
-            <JourneyMap
-              mapId={`map-${id}`}
-              center={mapCenter}
-              markers={markers}
-              journey={journey}
-              isExpanded={isMapExpanded}
-              toggleExpand={toggleMapExpand}
-            />
-          </div>
+          {!isMobile && (
+            /* Full map on desktop only */
+            <div className="order-2 md:w-1/2 h-auto w-full">
+              <JourneyMap
+                mapId={`map-${id}`}
+                center={mapCenter}
+                markers={markers}
+                journey={journey}
+                isExpanded={isMapExpanded}
+                toggleExpand={toggleMapExpand}
+              />
+            </div>
+          )}
         
-          {/* Left side: Trip details - Below map on mobile */}
-          <div className="order-2 md:order-1 p-3 sm:p-6 md:w-1/2 w-full">
+          {/* Trip details */}
+          <div className={`order-1 p-3 sm:p-6 ${isMobile ? 'w-full' : 'md:w-1/2 w-full'}`}>
+            {/* Main map on mobile */}
+            {isMobile && (
+              <div className="mb-3 h-[200px] w-full">
+                <JourneyMap
+                  mapId={`map-main-${id}`}
+                  center={mapCenter}
+                  markers={markers}
+                  journey={journey}
+                  isExpanded={isMapExpanded}
+                  toggleExpand={toggleMapExpand}
+                />
+              </div>
+            )}
+            
             {/* Description - Shorter on mobile with option to expand */}
             <div className="mb-3 sm:mb-5">
               <p className="text-gray-700 text-xs sm:text-base leading-snug">

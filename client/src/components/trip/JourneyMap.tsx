@@ -13,6 +13,7 @@ interface JourneyMapProps {
   toggleExpand: () => void;
   focusedActivity?: string;
   highlightedActivity?: string;
+  isThumbnail?: boolean; // Indicates if this is a small preview thumbnail
 }
 
 const JourneyMap: React.FC<JourneyMapProps> = ({
@@ -23,7 +24,8 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
   isExpanded,
   toggleExpand,
   focusedActivity,
-  highlightedActivity
+  highlightedActivity,
+  isThumbnail = false
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -199,19 +201,92 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
     mapboxgl.accessToken = mapboxToken;
     setLoading(true);
 
+    // Different map initialization for thumbnail vs full map
     const initialMap = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/outdoors-v12',
       center: center,
-      zoom: 9
+      zoom: isThumbnail ? 8 : 9,
+      interactive: !isThumbnail, // Disable interactions for thumbnail
+      attributionControl: !isThumbnail, // Hide attribution for thumbnail
+      dragRotate: !isThumbnail, // Disable rotation for thumbnail
     });
 
     map.current = initialMap;
 
     initialMap.on('load', async () => {
-      console.log('Map loaded successfully!');
+      console.log(`Map loaded successfully! (${isThumbnail ? 'thumbnail' : 'full view'})`);
       
-      // Process each journey segment to get real route data
+      // For thumbnail view, use a simplified approach
+      if (isThumbnail) {
+        // Just add a simplified route overview without fetching directions
+        if (journey && journey.segments && journey.segments.length > 0) {
+          // Collect all coordinates from all segments
+          const allCoords: [number, number][] = [];
+          journey.segments.forEach(segment => {
+            if (segment.geometry && segment.geometry.coordinates) {
+              allCoords.push(...segment.geometry.coordinates as [number, number][]);
+            }
+          });
+          
+          if (allCoords.length > 0) {
+            // Add a simplified route
+            initialMap.addSource('thumbnail-route', {
+              type: 'geojson',
+              data: {
+                type: 'Feature',
+                properties: {},
+                geometry: {
+                  type: 'LineString',
+                  coordinates: allCoords
+                }
+              }
+            });
+            
+            initialMap.addLayer({
+              id: 'thumbnail-route',
+              type: 'line',
+              source: 'thumbnail-route',
+              layout: {
+                'line-join': 'round',
+                'line-cap': 'round'
+              },
+              paint: {
+                'line-color': '#3b82f6',
+                'line-width': 3,
+                'line-opacity': 0.8
+              }
+            });
+          }
+          
+          // Add start and end markers only
+          if (markers.length > 0) {
+            // Start marker (green)
+            new mapboxgl.Marker({ color: '#22c55e', scale: 0.6 })
+              .setLngLat(markers[0].coordinates)
+              .addTo(initialMap);
+            
+            // End marker if different (red)
+            if (markers.length > 1) {
+              new mapboxgl.Marker({ color: '#ef4444', scale: 0.6 })
+                .setLngLat(markers[markers.length - 1].coordinates)
+                .addTo(initialMap);
+            }
+          }
+          
+          // Fit bounds to show the journey
+          if (journey?.bounds && journey.bounds.length === 2) {
+            initialMap.fitBounds(journey.bounds as mapboxgl.LngLatBoundsLike, {
+              padding: 5
+            });
+          }
+          
+          setLoading(false);
+          return;
+        }
+      }
+      
+      // For full view, proceed with detailed route processing
       if (journey && journey.segments && journey.segments.length > 0) {
         for (let i = 0; i < journey.segments.length; i++) {
           const segment = journey.segments[i];
@@ -332,8 +407,31 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
         map.current.remove();
       }
     };
-  }, [mapboxToken, center, markers, journey]);
+  }, [mapboxToken, center, markers, journey, isThumbnail]);
 
+  // Simplified version for thumbnail view
+  if (isThumbnail) {
+    return (
+      <div className="relative w-full h-full overflow-hidden">
+        {error && (
+          <div className="absolute inset-0 flex items-center justify-center bg-red-100 text-red-700 text-xs">
+            <span>Error</span>
+          </div>
+        )}
+        
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white">
+            <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-[#655590]"></div>
+          </div>
+        )}
+        
+        {/* The map container - fixed aspect ratio for thumbnail */}
+        <div ref={mapContainer} className="w-full h-full" />
+      </div>
+    );
+  }
+  
+  // Full version for regular map
   return (
     <div className="relative border rounded-lg overflow-hidden shadow-md h-full">
       {error && (
