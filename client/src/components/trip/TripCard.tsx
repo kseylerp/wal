@@ -117,36 +117,39 @@ const TripCard: React.FC<TripCardProps> = ({
   };
 
   return (
-    <div className="w-full mb-10 border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+    <div className="w-full mb-6 border border-gray-200 rounded-lg shadow-sm overflow-hidden">
       <div className="w-full bg-white">
         {/* Trip Header - Always visible */}
-        <div className="px-4 py-4 sm:p-6 border-b border-gray-100">
-          <h2 className="text-xl sm:text-2xl font-bold mb-2 text-gray-800 break-words">{title}</h2>
-          <div className="flex flex-wrap gap-2 mb-3">
+        <div className={`${isMobile ? 'px-3 py-3' : 'px-4 py-4 sm:p-6'} border-b border-gray-100`}>
+          <h2 className={`${isMobile ? 'text-lg' : 'text-xl sm:text-2xl'} font-bold mb-2 text-gray-800 break-words`}>
+            {title}
+          </h2>
+          
+          <div className="flex flex-wrap gap-1.5 mb-2">
             {location && (
-              <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">
+              <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full">
                 {location}
               </span>
             )}
             {duration && (
-              <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">
+              <span className="bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded-full">
                 {duration}
               </span>
             )}
             {difficultyLevel && (
-              <span className="bg-amber-100 text-amber-700 text-xs px-2 py-1 rounded-full">
+              <span className="bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full">
                 {difficultyLevel}
               </span>
             )}
             {priceEstimate && (
-              <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded-full">
+              <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 rounded-full">
                 {priceEstimate}
               </span>
             )}
           </div>
           
-          {/* Quick Stats - More compact on mobile */}
-          <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-700 mb-2">
+          {/* Quick Stats - Horizontal layout on mobile */}
+          <div className={`flex ${isMobile ? 'justify-between' : 'flex-wrap gap-x-6'} gap-y-1 text-xs sm:text-sm text-gray-700`}>
             <div className="flex items-center">
               <span className="font-medium mr-1">Distance:</span> {totalDistanceMiles} miles
             </div>
@@ -157,16 +160,28 @@ const TripCard: React.FC<TripCardProps> = ({
         </div>
 
         <div className="flex flex-col md:flex-row">
-          {/* Left side: Trip details - Order changes on mobile */}
-          <div className="order-2 md:order-1 p-4 sm:p-6 md:w-1/2">
+          {/* Right side: Map - On top for mobile */}
+          <div className="order-1 md:order-2 md:w-1/2 h-[250px] md:h-auto w-full">
+            <JourneyMap
+              mapId={`map-${id}`}
+              center={mapCenter}
+              markers={markers}
+              journey={journey}
+              isExpanded={isMapExpanded}
+              toggleExpand={toggleMapExpand}
+            />
+          </div>
+        
+          {/* Left side: Trip details - Below map on mobile */}
+          <div className="order-2 md:order-1 p-3 sm:p-6 md:w-1/2 w-full">
             {/* Description - Shorter on mobile with option to expand */}
-            <div className="mb-5">
-              <p className="text-gray-700 text-sm sm:text-base">
-                {isMobile && description.length > 150 && !showFullDescription
-                  ? `${description.substring(0, 150)}...` 
+            <div className="mb-3 sm:mb-5">
+              <p className="text-gray-700 text-xs sm:text-base leading-snug">
+                {isMobile && description.length > 100 && !showFullDescription
+                  ? `${description.substring(0, 100)}...` 
                   : description}
               </p>
-              {isMobile && description.length > 150 && (
+              {isMobile && description.length > 100 && (
                 <button 
                   onClick={() => setShowFullDescription(!showFullDescription)}
                   className="text-xs text-[#655590] mt-1 font-medium"
@@ -177,12 +192,12 @@ const TripCard: React.FC<TripCardProps> = ({
             </div>
             
             {/* Tab navigation */}
-            <div className="flex border-b mb-4">
+            <div className="flex border-b mb-2 sm:mb-4">
               <button
                 onClick={() => setActiveTab('info')}
-                className={`px-3 sm:px-4 py-2 text-sm font-medium ${
+                className={`${isMobile ? 'px-2 py-1.5 text-xs' : 'px-3 sm:px-4 py-2 text-sm'} font-medium ${
                   activeTab === 'info' 
-                    ? 'border-b-2 border-gray-700 text-gray-700' 
+                    ? 'border-b-2 border-[#655590] text-[#655590]' 
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
@@ -190,9 +205,9 @@ const TripCard: React.FC<TripCardProps> = ({
               </button>
               <button
                 onClick={() => setActiveTab('itinerary')}
-                className={`px-3 sm:px-4 py-2 text-sm font-medium ${
+                className={`${isMobile ? 'px-2 py-1.5 text-xs' : 'px-3 sm:px-4 py-2 text-sm'} font-medium ${
                   activeTab === 'itinerary' 
-                    ? 'border-b-2 border-gray-700 text-gray-700' 
+                    ? 'border-b-2 border-[#655590] text-[#655590]' 
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
@@ -201,48 +216,36 @@ const TripCard: React.FC<TripCardProps> = ({
             </div>
             
             {/* Tab content - Adjusted height for mobile */}
-            <div className="text-sm max-h-[60vh] md:max-h-96 overflow-y-auto pr-1">
+            <div className={`${isMobile ? 'text-xs' : 'text-sm'} max-h-[40vh] md:max-h-96 overflow-y-auto pr-1`}>
               {activeTab === 'info' ? (
                 <div>
-                  <h3 className="font-medium text-base mb-2">Why We Chose This For You</h3>
+                  <h3 className={`font-medium ${isMobile ? 'text-sm' : 'text-base'} mb-1 sm:mb-2`}>Why We Chose This For You</h3>
                   <p className="text-gray-600">{whyWeChoseThis}</p>
                 </div>
               ) : (
-                <ItineraryList itinerary={itinerary} suggestedGuides={suggestedGuides} />
+                <ItineraryList itinerary={itinerary} suggestedGuides={suggestedGuides} journey={journey} />
               )}
             </div>
-          </div>
-          
-          {/* Right side: Map - Takes up full width on mobile */}
-          <div className="order-1 md:order-2 md:w-1/2 h-[300px] md:h-auto">
-            <JourneyMap
-              mapId={`map-${id}`}
-              center={mapCenter}
-              markers={markers}
-              journey={journey}
-              isExpanded={isMapExpanded}
-              toggleExpand={toggleMapExpand}
-            />
           </div>
         </div>
       </div>
       
       {/* Action buttons - Fixed to bottom on mobile */}
-      <div className="flex justify-between items-center p-3 sm:p-4 border-t border-gray-100">
+      <div className="flex justify-between items-center p-2 pt-3 sm:p-4 border-t border-gray-100">
         <button
           onClick={() => onModifyRequest(id)}
-          className="text-[#655590] hover:text-[#655590]/80 font-medium text-sm flex items-center"
+          className="text-[#655590] hover:text-[#655590]/80 font-medium text-xs sm:text-sm flex items-center"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} mr-1`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
           </svg>
           Modify Trip
         </button>
         <button
           onClick={saveTrip}
-          className="bg-green-100 hover:bg-green-200 text-green-700 px-3 sm:px-4 py-2 rounded-md transition-colors text-sm flex items-center"
+          className="bg-green-100 hover:bg-green-200 text-green-700 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md transition-colors text-xs sm:text-sm flex items-center"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} mr-1`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
           </svg>
           Save Trip
