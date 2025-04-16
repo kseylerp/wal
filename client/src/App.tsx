@@ -6,7 +6,7 @@ import NotFound from "@/pages/not-found";
 import ChatInterface from "@/pages/ChatInterface";
 import MapTest from "@/pages/MapTest";
 import SavedTrips from "@/pages/SavedTrips";
-import logo from "./assets/logo.png";
+import logo from "./assets/new-logo.png";
 
 function Router() {
   return (
@@ -15,8 +15,7 @@ function Router() {
         <div className="flex items-center">
           <Link href="/">
             <div className="flex items-center hover:opacity-90 transition-opacity cursor-pointer">
-              <img src={logo} alt="offbeat Logo" className="h-10 mr-3" />
-              <span className="font-bold text-xl text-primary">offbeat</span>
+              <img src={logo} alt="offbeat Logo" className="h-10" />
             </div>
           </Link>
         </div>
