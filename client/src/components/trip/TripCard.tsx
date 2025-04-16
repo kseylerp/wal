@@ -519,14 +519,14 @@ export default function TripCard({
           {/* Weather & Historical */}
           {(weather || historical) && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-              {weather && (
+              {weather && typeof weather === 'string' && (
                 <div className="bg-blue-50 p-3 rounded-md">
                   <h4 className="text-sm font-medium text-blue-700 mb-1">Weather Conditions</h4>
                   <p className="text-xs text-blue-800">{weather}</p>
                 </div>
               )}
               
-              {historical && (
+              {historical && typeof historical === 'string' && (
                 <div className="bg-amber-50 p-3 rounded-md">
                   <h4 className="text-sm font-medium text-amber-700 mb-1">Historical Notes</h4>
                   <p className="text-xs text-amber-800">{historical}</p>
@@ -536,13 +536,13 @@ export default function TripCard({
           )}
           
           {/* Trip Details Tabs - combined tabs for trip details sections */}
-          {(whyWeChoseThis || (recommendedOutfitters && recommendedOutfitters.length > 0) || 
+          {((whyWeChoseThis && typeof whyWeChoseThis === 'string') || (recommendedOutfitters && recommendedOutfitters.length > 0) || 
            (notes && notes.length > 0) || (warnings && warnings.length > 0)) && (
             <div className="mb-4 border border-gray-200 rounded-md overflow-hidden">
               <Tabs defaultValue="why" className="w-full">
                 <div className="border-b border-gray-200">
                   <TabsList className="h-10 w-full bg-gray-50 rounded-none grid grid-cols-3">
-                    {whyWeChoseThis && (
+                    {whyWeChoseThis && typeof whyWeChoseThis === 'string' && (
                       <TabsTrigger 
                         value="why" 
                         className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-[#655590] rounded-none text-xs"
@@ -569,7 +569,7 @@ export default function TripCard({
                   </TabsList>
                 </div>
                 
-                {whyWeChoseThis && (
+                {whyWeChoseThis && typeof whyWeChoseThis === 'string' && (
                   <TabsContent value="why" className="p-4">
                     <div className="text-sm text-gray-600">
                       <h4 className="text-sm font-medium text-gray-700 mb-2">Why We Chose This Trip</h4>
