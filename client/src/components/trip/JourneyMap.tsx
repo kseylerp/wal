@@ -545,7 +545,7 @@ const JourneyMap: React.FC<JourneyMapProps> = ({
       {/* The map container - aspect ratio is different on mobile vs desktop */}
       <div 
         ref={mapContainer} 
-        className={`w-full ${isMobile ? 'aspect-[4/3]' : 'aspect-square md:aspect-auto'} md:h-full min-h-[260px]`}
+        className={`w-full ${isMobile ? 'aspect-[4/3]' : 'aspect-square'} h-full min-h-[260px]`}
       />
       
       {/* Map controls - positioned differently on mobile */}
