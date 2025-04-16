@@ -7,7 +7,7 @@ import { tripsRouter } from "./api/trips";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
-  const { requireAuth } = setupAuth(app);
+  setupAuth(app);
   
   // Use the trips router for /api/trips
   app.use('/api/trips', tripsRouter);

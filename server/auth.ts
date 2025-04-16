@@ -7,12 +7,14 @@ import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
 
+// Extend Express.User with our user type
 declare global {
   namespace Express {
     interface User extends SelectUser {}
   }
 }
 
+// Utility functions for password hashing and verification
 const scryptAsync = promisify(scrypt);
 
 async function hashPassword(password: string) {
@@ -29,102 +31,99 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
-  // Set up session
+  // Session configuration
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || 'dev-secret-key-change-in-production',
+    secret: process.env.SESSION_SECRET || "wallytravelsecret", // Use environment variable in production
     resave: false,
     saveUninitialized: false,
-    store: storage.sessionStore,
     cookie: {
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax"
-    }
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    },
+    store: storage.sessionStore,
   };
 
+  // Setup session middleware
   app.set("trust proxy", 1);
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
 
-  // Set up passport
+  // Configure Passport Local Strategy
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
         const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(password, user.password))) {
-          return done(null, false, { message: "Invalid username or password" });
+        if (!user) {
+          return done(null, false, { message: "Incorrect username or password" });
         }
+        
+        const isValidPassword = await comparePasswords(password, user.password);
+        if (!isValidPassword) {
+          return done(null, false, { message: "Incorrect username or password" });
+        }
+        
         return done(null, user);
-      } catch (err) {
-        return done(err);
+      } catch (error) {
+        return done(error);
       }
     }),
   );
 
+  // Serialize & deserialize user
   passport.serializeUser((user, done) => {
     done(null, user.id);
   });
-  
+
   passport.deserializeUser(async (id: number, done) => {
     try {
       const user = await storage.getUser(id);
-      done(null, user || undefined);
-    } catch (err) {
-      done(err);
+      done(null, user);
+    } catch (error) {
+      done(error);
     }
   });
 
   // Authentication routes
   app.post("/api/register", async (req, res, next) => {
     try {
-      const { username, password } = req.body;
-      
-      if (!username || !password) {
-        return res.status(400).json({ message: "Username and password are required" });
-      }
-      
-      const existingUser = await storage.getUserByUsername(username);
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(req.body.username);
       if (existingUser) {
         return res.status(400).json({ message: "Username already exists" });
       }
 
-      const hashedPassword = await hashPassword(password);
+      // Create user with hashed password
+      const hashedPassword = await hashPassword(req.body.password);
       const user = await storage.createUser({
-        username,
-        password: hashedPassword
+        username: req.body.username,
+        password: hashedPassword,
       });
 
-      // Remove password from response
-      const userResponse = {
-        id: user.id,
-        username: user.username
-      };
-
+      // Log user in after registration
       req.login(user, (err) => {
         if (err) return next(err);
-        res.status(201).json(userResponse);
+        // Return user without password
+        const { password, ...userWithoutPassword } = user;
+        res.status(201).json(userWithoutPassword);
       });
-    } catch (err) {
-      next(err);
+    } catch (error) {
+      next(error);
     }
   });
 
   app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err: any, user: any, info: any) => {
+    passport.authenticate("local", (err: any, user: Express.User, info: { message?: string }) => {
       if (err) return next(err);
       if (!user) {
         return res.status(401).json({ message: info?.message || "Authentication failed" });
       }
-      req.login(user, (err: any) => {
+      
+      req.login(user, (err) => {
         if (err) return next(err);
-        // Remove password from response
-        const userResponse = {
-          id: user.id,
-          username: user.username
-        };
-        return res.status(200).json(userResponse);
+        // Return user without password
+        const { password, ...userWithoutPassword } = user;
+        res.status(200).json(userWithoutPassword);
       });
     })(req, res, next);
   });
@@ -132,11 +131,7 @@ export function setupAuth(app: Express) {
   app.post("/api/logout", (req, res, next) => {
     req.logout((err) => {
       if (err) return next(err);
-      req.session.destroy((err) => {
-        if (err) return next(err);
-        res.clearCookie('connect.sid');
-        res.status(200).json({ message: "Logged out successfully" });
-      });
+      res.sendStatus(200);
     });
   });
 
@@ -144,21 +139,68 @@ export function setupAuth(app: Express) {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Not authenticated" });
     }
-    // Remove password from response
-    const userResponse = {
-      id: req.user.id,
-      username: req.user.username
-    };
-    res.json(userResponse);
+    
+    // Return user without password
+    const { password, ...userWithoutPassword } = req.user;
+    res.json(userWithoutPassword);
   });
 
-  // Require authentication middleware
-  const requireAuth = (req: any, res: any, next: any) => {
+  // Trip routes related to the current user
+  app.get("/api/trips", async (req, res, next) => {
     if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Authentication required" });
+      return res.status(401).json({ message: "Not authenticated" });
     }
-    next();
-  };
+    
+    try {
+      const trips = await storage.getTripsByUserId(req.user.id);
+      res.json(trips);
+    } catch (error) {
+      next(error);
+    }
+  });
 
-  return { requireAuth };
+  app.post("/api/trips", async (req, res, next) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
+    try {
+      const trip = await storage.createTrip({
+        ...req.body,
+        userId: req.user.id,
+      });
+      res.status(201).json(trip);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.delete("/api/trips/:id", async (req, res, next) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
+    try {
+      const tripId = parseInt(req.params.id);
+      
+      // First check if the trip belongs to the user
+      const trip = await storage.getTrip(tripId);
+      if (!trip) {
+        return res.status(404).json({ message: "Trip not found" });
+      }
+      
+      if (trip.userId !== req.user.id) {
+        return res.status(403).json({ message: "Not authorized to delete this trip" });
+      }
+      
+      const success = await storage.deleteTrip(tripId);
+      if (success) {
+        res.status(200).json({ message: "Trip deleted successfully" });
+      } else {
+        res.status(404).json({ message: "Trip not found" });
+      }
+    } catch (error) {
+      next(error);
+    }
+  });
 }
