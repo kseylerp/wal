@@ -114,7 +114,7 @@ const TripCard: React.FC<TripCardProps> = ({
   };
 
   return (
-    <div className="w-full mb-8">
+    <div className="w-full mb-10 border border-gray-200 rounded-lg shadow-sm overflow-hidden">
       <div className="w-full bg-white">
         <div className="md:flex">
           {/* Left side: Trip details */}
@@ -122,7 +122,7 @@ const TripCard: React.FC<TripCardProps> = ({
             <h2 className="text-2xl font-bold mb-3 text-gray-800">{title}</h2>
             <div className="flex flex-wrap gap-2 mb-4">
               {location && (
-                <span className="bg-primary/10 text-primary text-xs px-3 py-1 rounded-full">
+                <span className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full">
                   {location}
                 </span>
               )}
@@ -132,12 +132,12 @@ const TripCard: React.FC<TripCardProps> = ({
                 </span>
               )}
               {difficultyLevel && (
-                <span className="bg-primary/5 text-primary/80 text-xs px-3 py-1 rounded-full">
+                <span className="bg-amber-100 text-amber-700 text-xs px-3 py-1 rounded-full">
                   {difficultyLevel}
                 </span>
               )}
               {priceEstimate && (
-                <span className="bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-full">
+                <span className="bg-emerald-100 text-emerald-700 text-xs px-3 py-1 rounded-full">
                   {priceEstimate}
                 </span>
               )}
