@@ -21,11 +21,11 @@ export interface IStorage {
   deleteTrip(id: number): Promise<boolean>;
   
   // Session store
-  sessionStore: session.SessionStore;
+  sessionStore: any; // Using any for SessionStore type
 }
 
 export class DatabaseStorage implements IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: any; // Using any for SessionStore type
   
   constructor() {
     this.sessionStore = new PostgresSessionStore({ 
