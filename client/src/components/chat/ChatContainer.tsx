@@ -47,9 +47,9 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
       <div className="chat-container flex-1 overflow-y-auto p-4 sm:px-6 space-y-6">
         {/* Title when no messages */}
         {messages.length === 0 && (
-          <div className="flex flex-col justify-center h-full max-w-3xl mx-auto">
+          <div className="flex flex-col justify-center h-full max-w-sm ml-6">
             <h1 className="font-jost text-[70px] leading-[65px] text-gray-800 text-left font-black mb-6">
-              GO BEYOND THE POST
+              GO BEYOND<br />THE POST
             </h1>
           </div>
         )}
