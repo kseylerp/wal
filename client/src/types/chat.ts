@@ -59,6 +59,7 @@ export interface TripData {
   journey: Journey;
   itinerary: ItineraryDay[];
   // Added fields
+  themes?: string[];
   bestSeasons?: string[];
   recommendedMonths?: string[];
   weather?: string;

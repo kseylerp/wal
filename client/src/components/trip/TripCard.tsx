@@ -71,6 +71,7 @@ interface TripCardProps {
   itinerary: any[];
   createdAt: string;
   onEdit?: (id: number) => void;
+  onModifyRequest?: (id: string) => void;
   // Additional properties
   themes?: string[];
   bestSeasons?: string[];
@@ -235,7 +236,8 @@ export default function TripCard({
   recommendedOutfitters,
   notes = [],
   warnings = [],
-  activities = []
+  activities = [],
+  priceRange
 }: TripCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -479,7 +481,7 @@ export default function TripCard({
               <span className="text-xs text-gray-500">Price</span>
               <div className="flex items-center text-gray-700 font-medium mt-1">
                 <DollarSign className="h-3.5 w-3.5 mr-1 text-[#655590]" />
-                {priceEstimate}
+                {priceRange ? formatPriceRange() : priceEstimate}
               </div>
             </div>
             

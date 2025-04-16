@@ -58,7 +58,7 @@ export function parseTripsFromResponse(response: any): TripData[] | undefined {
         id: trip.id || `trip-${Math.random().toString(36).substring(2, 9)}`,
         title: trip.title,
         description: trip.description,
-        whyWeChoseThis: Array.isArray(trip.whyWeChoseThis) ? trip.whyWeChoseThis.join('. ') : trip.whyWeChoseThis,
+        whyWeChoseThis: Array.isArray(trip.whyWeChoseThis) ? trip.whyWeChoseThis.join('. ') : trip.whyWeChoseThis || trip.why_we_chose_this || '',
         difficultyLevel: trip.intensity ? trip.intensity.charAt(0).toUpperCase() + trip.intensity.slice(1) : 'Moderate',
         priceEstimate: trip.price_range ? `$${trip.price_range.min} - $${trip.price_range.max}` : 'Varies',
         duration: trip.duration_days ? `${trip.duration_days} Days` : '3-5 Days',
@@ -86,9 +86,43 @@ export function parseTripsFromResponse(response: any): TripData[] | undefined {
             day: day.day,
             title: day.title,
             description: day.description,
-            activities: day.activities.map((a: any) => a.title || a)
+            activities: day.activities ? day.activities.map((a: any) => a.title || a) : []
           };
-        }) : []
+        }) : [],
+        
+        // Add additional fields
+        bestSeasons: trip.best_seasons || [],
+        recommendedMonths: trip.recommended_months || [],
+        weather: trip.weather_info || trip.weather || '',
+        historical: trip.historical || trip.historical_info || '',
+        recommendedOutfitters: trip.recommended_outfitters || [],
+        notes: trip.notes || [],
+        warnings: trip.safety_warnings || trip.warnings || [],
+        priceRange: trip.price_range ? {
+          min: trip.price_range.min || 0,
+          max: trip.price_range.max || 0,
+          currency: trip.price_range.currency || 'USD'
+        } : undefined,
+        activities: trip.activities && Array.isArray(trip.activities) ? trip.activities.map((activity: any) => ({
+          id: activity.id || `activity-${Math.random().toString(36).substr(2, 9)}`,
+          title: activity.title || activity.name || "",
+          type: activity.type || "hiking",
+          difficulty: activity.difficulty || "moderate",
+          duration_hours: activity.duration_hours || 2,
+          start_location: activity.start_location || "",
+          end_location: activity.end_location || "",
+          highlights: activity.highlights || [],
+          hazards: activity.hazards || [],
+          route_details: {
+            distance_miles: activity.route_details?.distance_miles || 0,
+            elevation_gain_ft: activity.route_details?.elevation_gain_ft || 0,
+            elevation_loss_ft: activity.route_details?.elevation_loss_ft || 0,
+            high_point_ft: activity.route_details?.high_point_ft || 0,
+            terrain: activity.route_details?.terrain || '',
+            route_type: activity.route_details?.route_type || ''
+          },
+          route_geometry: activity.route_geometry
+        })) : []
       };
       
       // Build journey segments from activities
