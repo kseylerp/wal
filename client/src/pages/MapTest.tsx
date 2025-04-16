@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { COLORADO_TRIP_DATA, prepareMapSegments } from '@/lib/tripData';
+import { TripData } from '@/types/chat';
+import { useLocation } from 'wouter';
+import { parseTripsFromResponse } from '@/lib/openai';
 
 type RouteSegment = {
   index: number;
@@ -13,59 +15,58 @@ type RouteSegment = {
   originalSegment: any;
 };
 
-// Use the actual trip data from the OpenAI response
-const TRIP_DATA = COLORADO_TRIP_DATA;
-
-// Extract waypoints from the markers in the trip data
-const WAYPOINTS = TRIP_DATA.markers;
-
-// Create activity points along the routes
-const ACTIVITY_POINTS: { 
-  name: string; 
-  coordinates: [number, number]; 
-  type: 'viewpoint' | 'rest' | 'meditation' | 'water' | 'photo';
+// Type for activity points derived from key_locations and other poi data
+type ActivityPoint = {
+  name: string;
+  coordinates: [number, number];
+  type: 'viewpoint' | 'rest' | 'meditation' | 'water' | 'photo' | 'trailhead' | 'landmark' | 'campground';
   description: string;
-}[] = [
-  { 
-    name: "Horse Gulch Trailhead", 
-    coordinates: [-107.8654, 37.2698],
-    type: 'viewpoint',
-    description: "Starting point for the warm-up rides with multiple trail options"
-  },
-  { 
-    name: "Million Dollar Highway Overlook", 
-    coordinates: [-107.7559, 37.5683],
-    type: 'photo',
-    description: "Breathtaking views of the San Juan Mountains and the winding highway below"
-  },
-  { 
-    name: "American Basin", 
-    coordinates: [-107.5411, 37.9284],
-    type: 'meditation',
-    description: "Beautiful alpine basin with wildflowers en route to Handies Peak"
-  },
-  { 
-    name: "Ouray Hot Springs", 
-    coordinates: [-107.6734, 38.0247],
-    type: 'water',
-    description: "Natural hot springs perfect for recovery after hiking"
-  },
-  { 
-    name: "Blue Lakes Trailhead", 
-    coordinates: [-107.7814, 37.9867],
-    type: 'rest',
-    description: "Stunning alpine lakes with towering peaks, great for a lunch break"
-  },
-  { 
-    name: "Animas River Put-in", 
-    coordinates: [-107.8821, 37.3182],
-    type: 'photo',
-    description: "Where the rafting adventure begins, with views of the river canyon"
-  }
-];
+  elevation?: number;
+};
 
-// Process the journey segments to use with MapBox
-const ROUTE_SEGMENTS: RouteSegment[] = prepareMapSegments(TRIP_DATA);
+// Helper function to prepare route segments for MapBox
+function prepareMapSegments(tripData: TripData): RouteSegment[] {
+  if (!tripData.journey || !tripData.journey.segments || tripData.journey.segments.length === 0) {
+    return [];
+  }
+
+  return tripData.journey.segments.map((segment, index) => {
+    // Get start and end coordinates from segment geometry
+    const startCoords = segment.geometry.coordinates[0] as [number, number];
+    const endCoords = segment.geometry.coordinates[segment.geometry.coordinates.length - 1] as [number, number];
+    
+    // Map activity types to valid MapBox profiles
+    let profile: 'driving' | 'walking' | 'cycling';
+    let color: string;
+    
+    // Type guard to handle the custom activity modes
+    const mode = segment.mode as string;
+    
+    if (mode === 'biking' || mode === 'cycling') {
+      profile = 'cycling';
+      color = '#f59e0b'; // amber
+    } else if (mode === 'hiking' || mode === 'walking') {
+      profile = 'walking';
+      color = '#10b981'; // green
+    } else if (mode === 'rafting') {
+      profile = 'walking'; // MapBox doesn't have rafting
+      color = '#3b82f6'; // blue
+    } else {
+      profile = 'driving';
+      color = '#6366f1'; // indigo
+    }
+    
+    return {
+      index,
+      start: startCoords,
+      end: endCoords,
+      color,
+      name: `${segment.from} to ${segment.to} (${mode})`,
+      profile,
+      originalSegment: segment
+    };
+  });
+}
 
 const MapTest: React.FC = () => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -75,6 +76,20 @@ const MapTest: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [routesLoaded, setRoutesLoaded] = useState(0);
+  
+  // State for the trip data
+  const [tripData, setTripData] = useState<TripData | null>(null);
+  const [tripLoaded, setTripLoaded] = useState(false);
+  
+  // Get the trip ID from the URL params
+  const [location] = useLocation();
+  const params = new URLSearchParams(location.split('?')[1]);
+  const tripId = params.get('id');
+  
+  // Derived values once trip data is loaded
+  const [waypoints, setWaypoints] = useState<Array<{name: string, coordinates: [number, number]}>>([]);
+  const [activityPoints, setActivityPoints] = useState<ActivityPoint[]>([]);
+  const [routeSegments, setRouteSegments] = useState<RouteSegment[]>([]);
 
   // Fetch directions from our proxy to the Mapbox API
   const fetchDirections = async (
@@ -150,8 +165,77 @@ const MapTest: React.FC = () => {
     });
   };
 
+  // Fetch trip data when the component loads or when the tripId changes
+  useEffect(() => {
+    async function fetchTripData() {
+      if (!tripId) {
+        setError('No trip ID provided. Please return to the chat and select a trip.');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Fetch messages from chat API to find the trip data
+        const response = await fetch('/api/chat');
+        const data = await response.json();
+        
+        // Parse out trip data based on the ID
+        if (data && data.messages) {
+          let foundTrip: TripData | null = null;
+          
+          // Go through messages in reverse to find the most recent
+          for (let i = data.messages.length - 1; i >= 0; i--) {
+            const message = data.messages[i];
+            if (message.tripData && message.tripData.length > 0) {
+              const foundTrips = message.tripData.filter((trip: TripData) => trip.id === tripId);
+              if (foundTrips.length > 0) {
+                foundTrip = foundTrips[0];
+                break;
+              }
+            }
+          }
+          
+          if (foundTrip) {
+            setTripData(foundTrip);
+            
+            // Set up derived values
+            setWaypoints(foundTrip.markers || []);
+            
+            // Convert any key locations or interesting points to activity points
+            const activityPointsData: ActivityPoint[] = [];
+            
+            // TODO: Extract activity points from the trip data
+            // This can be enhanced based on the actual API response
+            
+            setActivityPoints(activityPointsData);
+            
+            // Prepare route segments
+            setRouteSegments(prepareMapSegments(foundTrip));
+            
+            setTripLoaded(true);
+          } else {
+            setError(`No trip data found for ID: ${tripId}`);
+            setLoading(false);
+          }
+        } else {
+          setError('Failed to fetch chat data');
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('Error fetching trip data:', err);
+        setError(`Failed to fetch trip data: ${err instanceof Error ? err.message : String(err)}`);
+        setLoading(false);
+      }
+    }
+    
+    fetchTripData();
+  }, [tripId]);
+
   // Fetch the MapBox token and initialize map
   useEffect(() => {
+    // Don't initialize the map until we have trip data
+    if (!tripData || !tripLoaded) return;
+    
     async function initializeMap() {
       try {
         // Fetch MapBox token
@@ -176,10 +260,10 @@ const MapTest: React.FC = () => {
           return;
         }
         
-        // Calculate center of the map (average of all waypoints)
-        const center: [number, number] = [
-          WAYPOINTS.reduce((sum, wp) => sum + wp.coordinates[0], 0) / WAYPOINTS.length,
-          WAYPOINTS.reduce((sum, wp) => sum + wp.coordinates[1], 0) / WAYPOINTS.length
+        // Calculate center of the map (average of all waypoints or use provided center)
+        const center: [number, number] = tripData.mapCenter || [
+          waypoints.reduce((sum, wp) => sum + wp.coordinates[0], 0) / Math.max(1, waypoints.length),
+          waypoints.reduce((sum, wp) => sum + wp.coordinates[1], 0) / Math.max(1, waypoints.length)
         ];
         
         // Create the map
@@ -199,8 +283,8 @@ const MapTest: React.FC = () => {
           setMapLoaded(true);
           
           // Add all route segments
-          for (let i = 0; i < ROUTE_SEGMENTS.length; i++) {
-            const segment = ROUTE_SEGMENTS[i];
+          for (let i = 0; i < routeSegments.length; i++) {
+            const segment = routeSegments[i];
             const segmentIndex = i; // Get original segment index from journey data
             
             // First try to fetch directions from our proxy endpoint
@@ -225,44 +309,48 @@ const MapTest: React.FC = () => {
               console.log(`No API route found for segment ${i}, using provided geometry`);
               
               // Fall back to using the geometry data provided in the JSON
-              const originalSegment = TRIP_DATA.journey.segments[segmentIndex];
-              
-              if (originalSegment && originalSegment.geometry) {
-                console.log(`Using provided geometry for segment ${i} (${originalSegment.mode})`);
+              if (tripData && tripData.journey && tripData.journey.segments && segmentIndex < tripData.journey.segments.length) {
+                const originalSegment = tripData.journey.segments[segmentIndex];
                 
-                // Calculate rough distance using provided data
-                const distanceInMiles = (originalSegment.distance / 1609.34).toFixed(2);
-                const durationInMinutes = Math.floor(originalSegment.duration / 60);
-                
-                console.log(`Segment ${i} (${originalSegment.mode}):`, {
-                  from: originalSegment.from,
-                  to: originalSegment.to,
-                  distance: `${distanceInMiles} miles`,
-                  duration: `${durationInMinutes} minutes`
-                });
-                
-                // Add custom route to map using journey segment geometry
-                addRouteToMap(map, originalSegment.geometry, `route-${i}`, segment.color);
-                setRoutesLoaded(prev => prev + 1);
+                if (originalSegment && originalSegment.geometry) {
+                  console.log(`Using provided geometry for segment ${i} (${originalSegment.mode})`);
+                  
+                  // Calculate rough distance using provided data
+                  const distanceInMiles = (originalSegment.distance / 1609.34).toFixed(2);
+                  const durationInMinutes = Math.floor(originalSegment.duration / 60);
+                  
+                  console.log(`Segment ${i} (${originalSegment.mode}):`, {
+                    from: originalSegment.from,
+                    to: originalSegment.to,
+                    distance: `${distanceInMiles} miles`,
+                    duration: `${durationInMinutes} minutes`
+                  });
+                  
+                  // Add custom route to map using journey segment geometry
+                  addRouteToMap(map, originalSegment.geometry, `route-${i}`, segment.color);
+                  setRoutesLoaded(prev => prev + 1);
+                } else {
+                  console.error(`Failed to fetch or create directions for segment ${i}`);
+                }
               } else {
-                console.error(`Failed to fetch or create directions for segment ${i}`);
+                console.error(`No trip data or journey segment found for segment ${i}`);
               }
             }
           }
           
           // Add markers for main waypoints
-          WAYPOINTS.forEach((waypoint, index) => {
+          waypoints.forEach((waypoint, index) => {
             // Determine marker color based on position
             let color = '#3b82f6'; // Default blue
             if (index === 0) color = '#22c55e'; // Start: green
-            if (index === WAYPOINTS.length - 1) color = '#ef4444'; // End: red
+            if (index === waypoints.length - 1) color = '#ef4444'; // End: red
             
             // Create a popup with more info
             const popup = new mapboxgl.Popup({ offset: 25 })
               .setHTML(`
                 <div class="p-2">
                   <h3 class="font-bold text-lg">${waypoint.name}</h3>
-                  <p class="text-gray-600">${index === 0 ? 'Starting Point' : index === WAYPOINTS.length - 1 ? 'Destination' : 'Waypoint'}</p>
+                  <p class="text-gray-600">${index === 0 ? 'Starting Point' : index === waypoints.length - 1 ? 'Destination' : 'Waypoint'}</p>
                 </div>
               `);
             
@@ -274,7 +362,7 @@ const MapTest: React.FC = () => {
           });
           
           // Add activity markers along the hiking trail
-          ACTIVITY_POINTS.forEach((point) => {
+          activityPoints.forEach((point) => {
             // Choose icon color based on activity type
             let color = '#9333ea'; // Default purple
             
@@ -301,7 +389,6 @@ const MapTest: React.FC = () => {
             new mapboxgl.Marker({ 
               color, 
               scale: 0.8, // Slightly smaller than main waypoints
-              // Use different shapes for different types if we had SVG icons
             })
               .setLngLat(point.coordinates as [number, number])
               .setPopup(popup)
@@ -312,23 +399,25 @@ const MapTest: React.FC = () => {
           const bounds = new mapboxgl.LngLatBounds();
           
           // Add all waypoints to bounds
-          WAYPOINTS.forEach(waypoint => {
+          waypoints.forEach(waypoint => {
             bounds.extend(waypoint.coordinates as mapboxgl.LngLatLike);
           });
           
           // Add all activity points to bounds
-          ACTIVITY_POINTS.forEach(point => {
+          activityPoints.forEach(point => {
             bounds.extend(point.coordinates as mapboxgl.LngLatLike);
           });
           
-          // Add all route coordinates to the bounds
-          TRIP_DATA.journey.segments.forEach(segment => {
-            if (segment.geometry && segment.geometry.coordinates) {
-              segment.geometry.coordinates.forEach(coord => {
-                bounds.extend(coord as mapboxgl.LngLatLike);
-              });
-            }
-          });
+          // Add all route coordinates to the bounds if we have journey data
+          if (tripData && tripData.journey && tripData.journey.segments) {
+            tripData.journey.segments.forEach(segment => {
+              if (segment.geometry && segment.geometry.coordinates) {
+                segment.geometry.coordinates.forEach(coord => {
+                  bounds.extend(coord as mapboxgl.LngLatLike);
+                });
+              }
+            });
+          }
           
           // Fit map to show all waypoints with padding
           map.fitBounds(bounds, {
@@ -362,40 +451,54 @@ const MapTest: React.FC = () => {
     };
   }, []);
   
-  return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-2 text-primary">{TRIP_DATA.title}</h1>
-      <div className="flex flex-col md:flex-row gap-2 mb-4">
-        <span className="bg-primary/10 text-primary text-xs px-2 py-1 rounded">
-          {TRIP_DATA.location}
-        </span>
-        <span className="bg-primary/5 text-primary/80 text-xs px-2 py-1 rounded">
-          {TRIP_DATA.duration}
-        </span>
-        <span className="bg-primary/10 text-primary/90 text-xs px-2 py-1 rounded">
-          {TRIP_DATA.difficultyLevel}
-        </span>
-        <span className="bg-primary/5 text-primary/80 text-xs px-2 py-1 rounded">
-          {TRIP_DATA.priceEstimate}
-        </span>
-      </div>
-      
-      <p className="text-gray-700 mb-4">
-        {TRIP_DATA.description}
-      </p>
-      
-      {loading && (
-        <div className="mb-4 p-4 bg-blue-100 rounded">
-          <p>Loading interactive map and calculating routes...</p>
-        </div>
-      )}
-      
-      {error && (
+  // Early return if not loaded or error or no trip data
+  if (error) {
+    return (
+      <div className="container mx-auto p-4">
         <div className="mb-4 p-4 bg-red-100 text-red-700 rounded">
           <h3 className="font-bold">Error:</h3>
           <p>{error}</p>
         </div>
-      )}
+        <a href="/" className="text-primary hover:underline">← Return to Chat</a>
+      </div>
+    );
+  }
+  
+  if (loading || !tripData) {
+    return (
+      <div className="container mx-auto p-4">
+        <div className="mb-4 p-4 bg-blue-100 rounded">
+          <p>Loading trip data and map...</p>
+        </div>
+        <a href="/" className="text-primary hover:underline">← Return to Chat</a>
+      </div>
+    );
+  }
+  
+  // Main return with trip data
+  return (
+    <div className="container mx-auto p-4">
+      <a href="/" className="text-primary hover:underline mb-4 inline-block">← Return to Chat</a>
+      
+      <h1 className="text-2xl font-bold mb-2 text-primary">{tripData.title}</h1>
+      <div className="flex flex-col md:flex-row gap-2 mb-4">
+        <span className="bg-primary/10 text-primary text-xs px-2 py-1 rounded">
+          {tripData.location}
+        </span>
+        <span className="bg-primary/5 text-primary/80 text-xs px-2 py-1 rounded">
+          {tripData.duration}
+        </span>
+        <span className="bg-primary/10 text-primary/90 text-xs px-2 py-1 rounded">
+          {tripData.difficultyLevel}
+        </span>
+        <span className="bg-primary/5 text-primary/80 text-xs px-2 py-1 rounded">
+          {tripData.priceEstimate}
+        </span>
+      </div>
+      
+      <p className="text-gray-700 mb-4">
+        {tripData.description}
+      </p>
       
       <div 
         ref={mapContainerRef} 
@@ -406,18 +509,18 @@ const MapTest: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div className="p-4 bg-gray-50 rounded shadow-sm">
           <h3 className="font-bold mb-2">Trip Highlights</h3>
-          <p className="text-gray-600 mb-4">{TRIP_DATA.whyWeChoseThis}</p>
+          <p className="text-gray-600 mb-4">{tripData.whyWeChoseThis}</p>
           
           <h4 className="font-medium text-sm mb-2">SUGGESTED GUIDES</h4>
           <ul className="list-disc pl-5 mb-4">
-            {TRIP_DATA.suggestedGuides.map((guide, i) => (
+            {tripData.suggestedGuides.map((guide: string, i: number) => (
               <li key={i} className="text-sm text-gray-700">{guide}</li>
             ))}
           </ul>
           
           <h4 className="font-medium text-sm mb-2">KEY LOCATIONS</h4>
           <div className="space-y-2">
-            {WAYPOINTS.map((waypoint, i) => (
+            {waypoints.map((waypoint, i) => (
               <div key={i} className="flex items-start">
                 <div className="w-2 h-2 rounded-full bg-primary mt-1.5 flex-shrink-0"></div>
                 <div className="ml-2">
@@ -434,12 +537,12 @@ const MapTest: React.FC = () => {
         <div className="p-4 bg-gray-50 rounded shadow-sm">
           <h3 className="font-bold mb-2">Itinerary Preview</h3>
           <div className="space-y-4">
-            {TRIP_DATA.itinerary.map((day) => (
+            {tripData.itinerary.map((day: any) => (
               <div key={day.day} className="border-l-2 border-primary/30 pl-3">
                 <h4 className="font-medium">Day {day.day}: {day.title}</h4>
                 <p className="text-sm text-gray-600 mb-2">{day.description}</p>
                 <div className="text-xs space-y-1">
-                  {day.activities.slice(0, 2).map((activity, i) => (
+                  {day.activities.slice(0, 2).map((activity: string, i: number) => (
                     <div key={i} className="flex items-start">
                       <span className="text-primary mt-0.5">•</span>
                       <span className="ml-1 text-gray-700">{activity}</span>
@@ -460,19 +563,19 @@ const MapTest: React.FC = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
           <div>
             <span className="font-medium">Routes:</span> 
-            <span className="ml-2">{routesLoaded}/{ROUTE_SEGMENTS.length}</span>
+            <span className="ml-2">{routesLoaded}/{routeSegments.length}</span>
           </div>
           <div>
             <span className="font-medium">Waypoints:</span> 
-            <span className="ml-2">{WAYPOINTS.length}</span>
+            <span className="ml-2">{waypoints.length}</span>
           </div>
           <div>
             <span className="font-medium">Activities:</span> 
-            <span className="ml-2">{ACTIVITY_POINTS.length}</span>
+            <span className="ml-2">{activityPoints.length}</span>
           </div>
           <div>
             <span className="font-medium">Total Distance:</span> 
-            <span className="ml-2">{(TRIP_DATA.journey.totalDistance / 1609.34).toFixed(1)} miles</span>
+            <span className="ml-2">{tripData.journey?.totalDistance ? (tripData.journey.totalDistance / 1609.34).toFixed(1) : 0} miles</span>
           </div>
         </div>
         
@@ -481,7 +584,7 @@ const MapTest: React.FC = () => {
           <div className="mb-3">
             <h4 className="text-sm font-medium text-gray-600 mb-1">Transportation Modes:</h4>
             <div className="flex flex-col space-y-1">
-              {ROUTE_SEGMENTS.map((segment, i) => (
+              {routeSegments.map((segment, i) => (
                 <div key={i} className="flex items-center">
                   <div 
                     className="w-4 h-4 mr-2 rounded-full" 
