@@ -2,8 +2,16 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { processChatMessage } from "./api/chat";
+import { setupAuth } from "./auth";
+import { tripsRouter } from "./api/trips";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Set up authentication
+  const { requireAuth } = setupAuth(app);
+  
+  // Use the trips router for /api/trips
+  app.use('/api/trips', tripsRouter);
+  
   // prefix all routes with /api
   
   // Config endpoint to safely expose necessary environment variables to the client
