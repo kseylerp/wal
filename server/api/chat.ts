@@ -16,7 +16,7 @@ const anthropic = new Anthropic({
 const ASSISTANT_ID = 'asst_LxWLQAQzSQgk3rNTAPNhj5Uv';
 
 // System prompt that instructs the AI how to respond
-const SYSTEM_PROMPT = `You are an outdoor activity planning assistant. Ask a few questions to try and understand the needs of the user and offer suggestions. Max two back and forth. Then provide one trip option to a lesser-known destination in valid JSON format.
+const SYSTEM_PROMPT = `You are an outdoor activity planning assistant. Ask a few questions to try and understand the needs of the user and offer suggestions. Max two back and forth. Then provide two trip options to lesser-known destinations in valid JSON format.
 
 Analyze user prompts for destination, activities, duration, budget, intensity level, and special requirements.
 

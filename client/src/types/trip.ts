@@ -1,85 +1,48 @@
-export interface RouteDetails {
-  distance_miles: number;
-  elevation_gain_ft: number;
-  elevation_loss_ft: number;
-  high_point_ft: number;
-  terrain: string;
-  route_type: string;
-}
+import { Journey, ItineraryDay, Marker } from './chat';
 
-export interface Activity {
-  title: string;
-  type: string;
-  difficulty: string;
-  duration_hours: number;
-  start_location: string;
-  end_location: string;
-  highlights: string[];
-  hazards: string[];
-  route_details: RouteDetails;
-  day?: number;
-  route_geometry?: {
-    type: string;
-    coordinates: [number, number][];
-  };
-}
-
-export interface TripDay {
-  day: number;
-  title?: string;
-  description?: string;
-  activities: string[];
-  accommodations?: string;
-}
-
-export interface Trip {
-  id: number | string;
+export interface TripCardProps {
+  id: string;
   title: string;
   description: string;
-  location: string;
-  duration: string;
+  whyWeChoseThis: string;
   difficultyLevel: string;
-  createdAt: string;
+  priceEstimate: string;
+  duration: string;
+  location: string;
+  suggestedGuides: string[];
   mapCenter: [number, number];
-  itinerary: TripDay[];
-  journey: {
-    markers?: {
-      position: [number, number];
-      label?: string;
-      type?: string;
-    }[];
-    route?: {
-      type: string;
-      coordinates: [number, number][];
-    };
-  };
-  priceEstimate?: string;
-  themes?: string[];
-  bestSeasons?: string[];
-  recommendedMonths?: string[];
-  weather?: string;
-  historical?: string;
-  intensity?: string;
-  whyWeChoseThis?: string;
-  recommendedOutfitters?: {
-    name: string;
-    website?: string;
-    description?: string;
-  }[];
-  notes?: string[];
-  warnings?: string[];
-  activities?: Activity[];
-  priceRange?: {
-    min: number;
-    max: number;
-    currency: string;
-  };
-  sharing?: {
-    isShared: boolean;
-    shareableId?: string;
-    shareableLink?: string;
-  };
-  offlineId?: string;
-  syncStatus?: 'pending' | 'synced' | 'failed';
-  lastModified?: string;
+  markers: Marker[];
+  journey: Journey;
+  itinerary: ItineraryDay[];
+  onModifyRequest: (tripId: string) => void;
+}
+
+export interface JourneyMapProps {
+  mapId: string;
+  center: [number, number];
+  markers: Marker[];
+  journey: Journey;
+  isExpanded: boolean;
+  toggleExpand: () => void;
+}
+
+export interface ItineraryListProps {
+  itinerary: ItineraryDay[];
+  suggestedGuides: string[];
+  onActivityClick?: (activity: string, coordinates: [number, number][]) => void;
+  onActivityHover?: (activity: string, isHovering: boolean) => void;
+  journey?: Journey;
+}
+
+export interface SegmentOption {
+  id: string;
+  label: string;
+  mode: string;
+  from: string;
+  to: string;
+}
+
+export interface ActivityOption {
+  type: string;
+  duration: string;
 }
