@@ -1,48 +1,52 @@
-// Point of Interest for activities
-export interface PointOfInterest {
-  name: string;
-  description?: string;
-  coordinates: [number, number]; // [longitude, latitude]
-  type?: 'viewpoint' | 'rest' | 'water' | 'photo' | 'landmark' | 'danger';
+export interface RouteDetails {
+  distance_miles: number;
+  elevation_gain_ft: number;
+  elevation_loss_ft: number;
+  high_point_ft: number;
+  route_type: string;
 }
 
-// Activity interface
 export interface Activity {
-  id?: string;
   title: string;
-  type?: string;
-  description?: string;
-  day?: number;
-  difficulty?: string;
-  duration_hours?: number;
-  distance?: number;
-  elevation_gain?: number;
+  type: string;
+  difficulty: string;
+  duration_hours: number;
   location?: string;
-  route?: [number, number][]; // Array of [longitude, latitude] coordinates
-  start_location?: [number, number];
-  end_location?: [number, number];
+  start_location?: string;
+  end_location?: string;
+  distance?: number;
+  day?: number;
   highlights?: string[];
   hazards?: string[];
-  water_sources?: string[];
-  photo_spots?: string[];
-  points_of_interest?: PointOfInterest[];
-  requiresPermit?: boolean;
-  bestTimeOfDay?: string;
-  bestTimeOfYear?: string;
+  description?: string;
+  route_details?: RouteDetails;
+  route_geometry?: {
+    type: string;
+    coordinates: [number, number][];
+  };
 }
 
-// Trip interface (simplified for this component)
 export interface TripData {
   id: string;
   title: string;
   description: string;
   location: string;
-  mapCenter: [number, number]; // [longitude, latitude]
-  journeyData: {
-    markers: any[];
-    segments: any[];
-    bounds: [[number, number], [number, number]];
+  duration: string;
+  difficultyLevel: string;
+  priceEstimate: string;
+  mapCenter: [number, number];
+  activities: Activity[];
+  themes?: string[];
+  bestSeasons?: string[];
+  recommendedMonths?: string[];
+  weather?: string;
+  historical?: string;
+  intensity?: string;
+  notes?: string[];
+  warnings?: string[];
+  priceRange?: {
+    min: number;
+    max: number;
+    currency: string;
   };
-  activities?: Activity[];
-  // Other trip properties...
 }
