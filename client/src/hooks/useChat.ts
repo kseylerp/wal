@@ -5,14 +5,7 @@ import { sendChatMessage, parseTripsFromResponse } from '../lib/openai';
 
 export function useChat() {
   const [chatState, setChatState] = useState<ChatState>({
-    messages: [
-      {
-        id: uuidv4(),
-        role: 'assistant',
-        content: "Hi there! I'm your adventure trip planning assistant. I'll help you discover amazing destinations and activities tailored to your preferences.\n\nLet me know what kind of trip you're interested in - where you'd like to go, activities you enjoy, duration, who's joining, etc.\n\nFor example: \"I want to bike, hike, and raft in Colorado with friends and my 12-year-old son for 10 days.\"",
-        timestamp: new Date().toISOString(),
-      },
-    ],
+    messages: [],
     thinking: {
       isActive: false,
       content: '',
@@ -24,7 +17,15 @@ export function useChat() {
 
   const scrollToBottom = useCallback(() => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      // Scroll to bottom with a better view of the new message at the top of viewport
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      
+      // For mobile devices, sometimes we need to force scroll after a short delay
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 200);
     }
   }, []);
 

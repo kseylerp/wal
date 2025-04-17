@@ -5,11 +5,13 @@ import { z } from "zod";
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
   password: text("password").notNull(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
+  email: true,
   password: true,
 });
 
@@ -26,11 +28,14 @@ export const trips = pgTable("trips", {
   journeyData: jsonb("journey_data").notNull(),
   itinerary: jsonb("itinerary").notNull(),
   createdAt: text("created_at").notNull(),
+  shareableId: text("shareable_id").unique(),
+  isPublic: boolean("is_public").default(false),
 });
 
 export const insertTripSchema = createInsertSchema(trips).omit({
   id: true,
   createdAt: true,
+  shareableId: true,
 });
 
 export const chatMessages = pgTable("chat_messages", {

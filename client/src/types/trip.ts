@@ -4,6 +4,7 @@ export interface TripCardProps {
   id: string;
   title: string;
   description: string;
+  whyWeChoseThis: string;
   difficultyLevel: string;
   priceEstimate: string;
   duration: string;
@@ -19,11 +20,8 @@ export interface TripCardProps {
 export interface JourneyMapProps {
   mapId: string;
   center: [number, number];
-  zoom: number;
   markers: Marker[];
   journey: Journey;
-  selectedSegment?: string;
-  onSegmentChange?: (segmentId: string) => void;
   isExpanded: boolean;
   toggleExpand: () => void;
 }
@@ -31,6 +29,9 @@ export interface JourneyMapProps {
 export interface ItineraryListProps {
   itinerary: ItineraryDay[];
   suggestedGuides: string[];
+  onActivityClick?: (activity: string, coordinates: [number, number][]) => void;
+  onActivityHover?: (activity: string, isHovering: boolean) => void;
+  journey?: Journey;
 }
 
 export interface SegmentOption {

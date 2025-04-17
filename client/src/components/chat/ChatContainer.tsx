@@ -3,6 +3,8 @@ import { Message } from '@/types/chat';
 import MessageBubble from './MessageBubble';
 import ThinkingIndicator from './ThinkingIndicator';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import hikerImage from '@/assets/hiker_mountain.png';
+import { useIsMobile } from '@/hooks/use-mobile';
 // Create local formatThinking function
 const formatThinking = (thinking: string): string => {
   if (!thinking) return '';
@@ -25,6 +27,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
   messagesEndRef,
   onModifyRequest
 }) => {
+  const isMobile = useIsMobile();
   const [thinkingDialog, setThinkingDialog] = useState<{
     isOpen: boolean;
     content: string;
@@ -44,21 +47,51 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
 
   return (
     <main className="flex-1 flex flex-col overflow-hidden">
-      <div className="chat-container flex-1 overflow-y-auto p-4 sm:px-6 space-y-6">
-        {messages.map((message) => (
-          <MessageBubble
-            key={message.id}
-            message={message}
-            onShowThinking={() => handleShowThinking(message.thinking)}
-            onModifyRequest={onModifyRequest}
-          />
-        ))}
+      <div className="chat-container flex-1 overflow-y-auto p-3 sm:p-4 sm:px-6 space-y-4 sm:space-y-6">
+        {/* Title when no messages */}
+        {messages.length === 0 && (
+          <div className={`${isMobile ? 'flex-col' : 'flex justify-between'} items-center h-full ${isMobile ? 'px-4' : 'px-10'}`}>
+            <div className={`flex-shrink-0 ${isMobile ? 'max-w-full text-center mb-6' : 'max-w-md pr-8 text-left'}`}>
+              <h1 className={`font-jost ${isMobile ? 'text-[40px] leading-[42px]' : 'text-[70px] leading-[65px]'} text-gray-800 font-black mb-3`}>
+                GO BEYOND<br />THE POST
+              </h1>
+              <h2 className={`font-jost ${isMobile ? 'text-[20px] leading-[24px]' : 'text-[30px] leading-[36px]'} text-gray-800 font-semibold`}>
+                Meet <span className="text-[#FB8C9A]">Wally</span>: powered by local guides.
+              </h2>
+            </div>
+            <div className={`flex-shrink-0 ${isMobile ? '' : 'pl-4'}`}>
+              <img 
+                src={hikerImage} 
+                alt="Hiker on mountain trail" 
+                className={`rounded-lg ${isMobile ? 'h-[240px]' : 'h-[380px]'} w-auto object-cover shadow-lg`}
+              />
+            </div>
+          </div>
+        )}
+        
+        {messages.length > 0 && (
+          <div className="flex flex-col gap-4 sm:gap-6">
+            {messages.map((message) => (
+              <MessageBubble
+                key={message.id}
+                message={message}
+                onShowThinking={() => handleShowThinking(message.thinking)}
+                onModifyRequest={onModifyRequest}
+              />
+            ))}
+          </div>
+        )}
         
         {/* Thinking indicator */}
-        <ThinkingIndicator thinking={thinking} />
+        {thinking.isActive && (
+          <div className="mt-2">
+            <ThinkingIndicator thinking={thinking} />
+          </div>
+        )}
         
-        {/* Invisible element to help with scrolling to bottom */}
-        <div ref={messagesEndRef} />
+        {/* Invisible element to help with scrolling to latest message 
+             Positioned after the last message to ensure it scrolls to show the newest message */}
+        <div ref={messagesEndRef} className="h-12" />
       </div>
 
       {/* Thinking dialog */}
