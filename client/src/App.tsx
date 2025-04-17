@@ -11,6 +11,7 @@ import SavedTrips from "@/pages/SavedTrips";
 import AuthPage from "@/pages/AuthPage";
 import ProfilePage from "@/pages/ProfilePage";
 import SharedTripPage from "@/pages/SharedTripPage";
+import ActivityDemo from "@/pages/ActivityDemo";
 import logo from "./assets/new-logo.png";
 import { useAuth } from "@/hooks/useAuth";
 import { User, LogOut } from "lucide-react";
@@ -36,6 +37,11 @@ function Navigation() {
         <Link href="/saved-trips">
           <div className="mx-2 px-3 py-1.5 rounded hover:bg-gray-100 transition-colors text-gray-700 cursor-pointer">
             Saved Trips
+          </div>
+        </Link>
+        <Link href="/activity-demo">
+          <div className="mx-2 px-3 py-1.5 rounded hover:bg-gray-100 transition-colors text-gray-700 cursor-pointer">
+            Activity Demo
           </div>
         </Link>
         
@@ -79,6 +85,7 @@ function Router() {
           <Route path="/auth" component={AuthPage} />
           <Route path="/profile" component={ProfilePage} />
           <Route path="/trips/shared/:shareableId" component={SharedTripPage} />
+          <Route path="/activity-demo" component={ActivityDemo} />
           <Route component={NotFound} />
         </Switch>
       </div>

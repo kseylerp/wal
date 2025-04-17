@@ -157,6 +157,61 @@ export default function SavedTrips() {
           </Button>
         </Link>
       </div>
+      
+      {/* Offline status */}
+      <OfflineStatus
+        isOnline={syncStatus.isOnline}
+        pendingSyncCount={pendingSyncCount}
+        lastSyncAttempt={syncStatus.lastSyncAttempt}
+        onSyncClick={handleSyncAll}
+        isSyncing={isSyncing}
+      />
+      
+      {/* Tabs for filtering trips */}
+      <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="mb-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="all" className="flex items-center gap-2">
+            <Database className="h-4 w-4" />
+            <span>All Trips</span>
+            {allTrips.length > 0 && (
+              <span className="ml-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs">
+                {allTrips.length}
+              </span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="online" className="flex items-center gap-2">
+            <svg 
+              className="h-4 w-4" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24" 
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" 
+              />
+            </svg>
+            <span>Online</span>
+            {onlineTrips && onlineTrips.length > 0 && (
+              <span className="ml-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs">
+                {onlineTrips.length}
+              </span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="offline" className="flex items-center gap-2">
+            <HardDrive className="h-4 w-4" />
+            <span>Offline</span>
+            {offlineTrips.length > 0 && (
+              <span className="ml-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs">
+                {offlineTrips.length}
+              </span>
+            )}
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       {isLoading ? (
         <div className="flex justify-center p-8">
@@ -209,7 +264,7 @@ export default function SavedTrips() {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {trips?.map((trip) => (
+          {displayedTrips.map((trip: Trip) => (
             <TripCard
               key={trip.id}
               id={trip.id}
