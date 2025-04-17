@@ -31,6 +31,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import JourneyMap from './JourneyMap';
 import { cn } from '@/lib/utils';
+import { ActivityTimelineView } from '@/components/activity/ActivityTimelineView';
 
 // Define interfaces
 interface RouteDetails {
@@ -658,155 +659,167 @@ export default function TripCard({
               <span className="text-xs text-gray-500">{itinerary?.length || 0} days</span>
             </div>
             
-            <div className="space-y-4">
-              {itinerary && itinerary.map((day, index) => (
-                <div key={index} className="bg-gray-50 p-3 rounded-md">
-                  <h5 className="font-medium text-sm">Day {day.day}: {day.title || ''}</h5>
-                  <p className="text-xs text-gray-600 mt-1 mb-2">{day.description || ''}</p>
-                  
-                  {/* Activities List */}
-                  {day.activities && day.activities.length > 0 && (
-                    <div className="mt-2">
-                      <h6 className="text-xs font-medium text-gray-500 mb-1.5">Activities:</h6>
-                      <div className="space-y-2">
-                        {day.activities.map((activityName: string, actIndex: number) => {
-                          // Try to find the matching activity in the activities array
-                          const activity = activities.find(a => 
-                            a.title.toLowerCase() === activityName.toLowerCase() ||
-                            activityName.toLowerCase().includes(a.title.toLowerCase())
-                          );
-                          
-                          return (
-                            <div 
-                              key={actIndex}
-                              className={cn(
-                                "p-2 rounded-md border cursor-pointer transition-all",
-                                selectedActivity === activityName 
-                                  ? "border-[#655590] bg-[#655590]/5" 
-                                  : "border-gray-200"
-                              )}
-                              onClick={() => handleActivityClick(activityName)}
-                            >
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <h6 className="text-sm font-medium">{activityName}</h6>
-                                  {activity && (
-                                    <div className="flex flex-wrap gap-2 mt-1">
-                                      <span className="text-xs bg-gray-200 px-1.5 py-0.5 rounded">
-                                        {activity.type}
-                                      </span>
-                                      <span className="text-xs bg-gray-200 px-1.5 py-0.5 rounded">
-                                        {activity.difficulty}
-                                      </span>
-                                      <span className="text-xs bg-gray-200 px-1.5 py-0.5 rounded">
-                                        {activity.duration_hours}h
-                                      </span>
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="text-[#655590]">
-                                  {selectedActivity === activityName ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                                </div>
-                              </div>
-                              
-                              {/* Activity Details (expanded view) */}
-                              {selectedActivity === activityName && activity && (
-                                <div className="mt-3 pt-3 border-t border-dashed border-gray-200">
-                                  <div className="grid grid-cols-2 gap-2 text-xs mb-2">
-                                    <div>
-                                      <span className="text-gray-500">Start:</span> {activity.start_location}
-                                    </div>
-                                    <div>
-                                      <span className="text-gray-500">End:</span> {activity.end_location}
-                                    </div>
+            {/* Timeline-based Activity Display */}
+            {activities && activities.length > 0 ? (
+              <div className="mb-4 bg-white rounded-md p-3 border border-gray-200">
+                <h5 className="font-medium text-sm mb-3">Activity Timeline</h5>
+                <ActivityTimelineView activities={activities} />
+              </div>
+            ) : itinerary && itinerary.length > 0 ? (
+              <div className="space-y-4">
+                {itinerary.map((day, index) => (
+                  <div key={index} className="bg-gray-50 p-3 rounded-md">
+                    <h5 className="font-medium text-sm">Day {day.day}: {day.title || ''}</h5>
+                    <p className="text-xs text-gray-600 mt-1 mb-2">{day.description || ''}</p>
+                    
+                    {/* Activities List */}
+                    {day.activities && day.activities.length > 0 && (
+                      <div className="mt-2">
+                        <h6 className="text-xs font-medium text-gray-500 mb-1.5">Activities:</h6>
+                        <div className="space-y-2">
+                          {day.activities.map((activityName: string, actIndex: number) => {
+                            // Try to find the matching activity in the activities array
+                            const activity = activities && activities.find(a => 
+                              a.title.toLowerCase() === activityName.toLowerCase() ||
+                              activityName.toLowerCase().includes(a.title.toLowerCase())
+                            );
+                            
+                            return (
+                              <div 
+                                key={actIndex}
+                                className={cn(
+                                  "p-2 rounded-md border cursor-pointer transition-all",
+                                  selectedActivity === activityName 
+                                    ? "border-[#655590] bg-[#655590]/5" 
+                                    : "border-gray-200"
+                                )}
+                                onClick={() => handleActivityClick(activityName)}
+                              >
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <h6 className="text-sm font-medium">{activityName}</h6>
+                                    {activity && (
+                                      <div className="flex flex-wrap gap-2 mt-1">
+                                        <span className="text-xs bg-gray-200 px-1.5 py-0.5 rounded">
+                                          {activity.type}
+                                        </span>
+                                        <span className="text-xs bg-gray-200 px-1.5 py-0.5 rounded">
+                                          {activity.difficulty}
+                                        </span>
+                                        <span className="text-xs bg-gray-200 px-1.5 py-0.5 rounded">
+                                          {activity.duration_hours}h
+                                        </span>
+                                      </div>
+                                    )}
                                   </div>
-                                  
-                                  {/* Route Details */}
-                                  {activity.route_details && (
-                                    <div className="bg-white p-2 rounded border border-gray-100 mt-2 mb-2">
-                                      <h6 className="text-xs font-medium mb-1">Route Details:</h6>
-                                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                                        <div>
-                                          <span className="text-gray-500">Distance:</span> {activity.route_details.distance_miles} miles
-                                        </div>
-                                        <div>
-                                          <span className="text-gray-500">Elev. Gain:</span> {activity.route_details.elevation_gain_ft} ft
-                                        </div>
-                                        <div>
-                                          <span className="text-gray-500">Elev. Loss:</span> {activity.route_details.elevation_loss_ft} ft
-                                        </div>
-                                        <div>
-                                          <span className="text-gray-500">High Point:</span> {activity.route_details.high_point_ft} ft
-                                        </div>
-                                        <div>
-                                          <span className="text-gray-500">Terrain:</span> {activity.route_details.terrain}
-                                        </div>
-                                        <div>
-                                          <span className="text-gray-500">Type:</span> {activity.route_details.route_type}
-                                        </div>
+                                  <div className="text-[#655590]">
+                                    {selectedActivity === activityName ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                  </div>
+                                </div>
+                                
+                                {/* Activity Details (expanded view) */}
+                                {selectedActivity === activityName && activity && (
+                                  <div className="mt-3 pt-3 border-t border-dashed border-gray-200">
+                                    <div className="grid grid-cols-2 gap-2 text-xs mb-2">
+                                      <div>
+                                        <span className="text-gray-500">Start:</span> {activity.start_location}
+                                      </div>
+                                      <div>
+                                        <span className="text-gray-500">End:</span> {activity.end_location}
                                       </div>
                                     </div>
-                                  )}
-                                  
-                                  {/* Highlights */}
-                                  {activity.highlights && activity.highlights.length > 0 && (
-                                    <div className="mb-2">
-                                      <h6 className="text-xs font-medium mb-1">Highlights:</h6>
-                                      <ul className="list-disc pl-4 text-xs space-y-0.5">
-                                        {activity.highlights.map((highlight, i) => (
-                                          <li key={i}>{highlight}</li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  )}
-                                  
-                                  {/* Hazards */}
-                                  {activity.hazards && activity.hazards.length > 0 && (
-                                    <div>
-                                      <h6 className="text-xs font-medium mb-1 text-amber-700">Hazards:</h6>
-                                      <ul className="list-disc pl-4 text-xs space-y-0.5 text-amber-700">
-                                        {activity.hazards.map((hazard, i) => (
-                                          <li key={i}>{hazard}</li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  )}
-                                  
-                                  {/* View on Map Button */}
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="mt-3 w-full text-xs"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      if (!isMapExpanded) toggleMapExpand();
-                                      scrollToMap(); // Scroll to the map section
-                                    }}
-                                  >
-                                    View Route on Map
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
+                                    
+                                    {/* Route Details */}
+                                    {activity.route_details && (
+                                      <div className="bg-white p-2 rounded border border-gray-100 mt-2 mb-2">
+                                        <h6 className="text-xs font-medium mb-1">Route Details:</h6>
+                                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                                          <div>
+                                            <span className="text-gray-500">Distance:</span> {activity.route_details.distance_miles} miles
+                                          </div>
+                                          <div>
+                                            <span className="text-gray-500">Elev. Gain:</span> {activity.route_details.elevation_gain_ft} ft
+                                          </div>
+                                          <div>
+                                            <span className="text-gray-500">Elev. Loss:</span> {activity.route_details.elevation_loss_ft} ft
+                                          </div>
+                                          <div>
+                                            <span className="text-gray-500">High Point:</span> {activity.route_details.high_point_ft} ft
+                                          </div>
+                                          <div>
+                                            <span className="text-gray-500">Terrain:</span> {activity.route_details.terrain}
+                                          </div>
+                                          <div>
+                                            <span className="text-gray-500">Type:</span> {activity.route_details.route_type}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+                                    
+                                    {/* Highlights */}
+                                    {activity.highlights && activity.highlights.length > 0 && (
+                                      <div className="mb-2">
+                                        <h6 className="text-xs font-medium mb-1">Highlights:</h6>
+                                        <ul className="list-disc pl-4 text-xs space-y-0.5">
+                                          {activity.highlights.map((highlight, i) => (
+                                            <li key={i}>{highlight}</li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    )}
+                                    
+                                    {/* Hazards */}
+                                    {activity.hazards && activity.hazards.length > 0 && (
+                                      <div>
+                                        <h6 className="text-xs font-medium mb-1 text-amber-700">Hazards:</h6>
+                                        <ul className="list-disc pl-4 text-xs space-y-0.5 text-amber-700">
+                                          {activity.hazards.map((hazard, i) => (
+                                            <li key={i}>{hazard}</li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    )}
+                                    
+                                    {/* View on Map Button */}
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="mt-3 w-full text-xs"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (!isMapExpanded) toggleMapExpand();
+                                        scrollToMap(); // Scroll to the map section
+                                      }}
+                                    >
+                                      View Route on Map
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  
-                  {/* Accommodation if available */}
-                  {day.accommodations && (
-                    <div className="mt-3 pt-2 border-t border-dashed border-gray-200">
-                      <div className="flex items-center gap-1">
-                        <p className="text-xs text-gray-600">
-                          <span className="font-medium">Accommodations:</span> {day.accommodations}
-                        </p>
+                    )}
+                    
+                    {/* Accommodation if available */}
+                    {day.accommodations && (
+                      <div className="mt-3 pt-2 border-t border-dashed border-gray-200">
+                        <div className="flex items-center gap-1">
+                          <p className="text-xs text-gray-600">
+                            <span className="font-medium">Accommodations:</span> {day.accommodations}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 italic py-4">
+                No itinerary information available
+              </div>
+            )}
           </div>
           
           {/* Action Buttons */}
