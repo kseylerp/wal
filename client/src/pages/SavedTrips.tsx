@@ -1,32 +1,149 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
-import { useQuery } from '@tanstack/react-query';
-import { getQueryFn } from '@/lib/queryClient';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { getQueryFn, apiRequest, queryClient } from '@/lib/queryClient';
 import { Trip } from '@shared/schema';
-import { Loader2, Plus } from 'lucide-react';
+import { Loader2, Plus, Database, HardDrive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import TripCard from '@/components/trip/TripCard';
 import { useAuth } from '@/hooks/useAuth';
+import { useOfflineStorage } from '@/hooks/useOfflineStorage';
+import { useToast } from '@/hooks/use-toast';
+import { OfflineStatus } from '@/components/offline/OfflineStatus';
+import { OfflineTripBadge } from '@/components/offline/OfflineTripBadge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function SavedTrips() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [, navigate] = useLocation();
+  const [activeTab, setActiveTab] = useState<string>("all");
+  const [isSyncing, setIsSyncing] = useState(false);
   
+  // Hook for offline storage
+  const {
+    offlineTrips,
+    syncStatus,
+    saveOfflineTrip,
+    removeOfflineTrip,
+    updateTripSyncStatus,
+    updateLastSyncAttempt
+  } = useOfflineStorage();
+
   // Fetch the user's saved trips from the API
   const { 
-    data: trips,
+    data: onlineTrips,
     isLoading,
-    error
+    error,
+    refetch
   } = useQuery<Trip[]>({
     queryKey: ['/api/trips'],
     queryFn: getQueryFn({ on401: 'throw' }),
-    enabled: !!user,
+    enabled: !!user && syncStatus.isOnline,
   });
   
+  // Calculate the number of pending sync trips
+  const pendingSyncCount = offlineTrips.filter(trip => trip.syncStatus === 'pending').length;
+  
+  // Combine online and offline trips
+  const allTrips = React.useMemo(() => {
+    const combined = [...(onlineTrips || [])];
+    
+    // Add offline trips that aren't already included in online trips
+    offlineTrips.forEach(offlineTrip => {
+      const alreadyExists = combined.some(onlineTrip => 
+        typeof onlineTrip.id === 'number' && 
+        typeof offlineTrip.id === 'number' && 
+        onlineTrip.id === offlineTrip.id
+      );
+      
+      if (!alreadyExists) {
+        combined.push(offlineTrip as Trip);
+      }
+    });
+    
+    return combined;
+  }, [onlineTrips, offlineTrips]);
+  
+  // Filter trips based on active tab
+  const displayedTrips = React.useMemo(() => {
+    if (activeTab === "all") return allTrips;
+    if (activeTab === "online") return onlineTrips || [];
+    if (activeTab === "offline") return offlineTrips as Trip[];
+    return allTrips;
+  }, [activeTab, allTrips, onlineTrips, offlineTrips]);
+
+  // Sync trip mutation
+  const syncTripMutation = useMutation({
+    mutationFn: async (trip: Trip) => {
+      return await apiRequest('POST', '/api/trips', trip);
+    },
+    onSuccess: async (response, trip) => {
+      const syncedTrip = await response.json();
+      updateTripSyncStatus(trip.id, 'synced');
+      queryClient.invalidateQueries({ queryKey: ['/api/trips'] });
+      toast({
+        title: 'Trip synced',
+        description: `${trip.title} has been synced to your account`,
+      });
+    },
+    onError: (error, trip) => {
+      updateTripSyncStatus(trip.id, 'failed');
+      console.error('Error syncing trip:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Sync failed',
+        description: `Failed to sync ${trip.title}. Will try again later.`,
+      });
+    }
+  });
+
+  // Handle sync all offline trips
+  const handleSyncAll = async () => {
+    if (!syncStatus.isOnline || pendingSyncCount === 0) return;
+    
+    setIsSyncing(true);
+    updateLastSyncAttempt();
+    
+    try {
+      const pendingTrips = offlineTrips.filter(trip => trip.syncStatus === 'pending');
+      
+      // Process trips one by one
+      for (const trip of pendingTrips) {
+        await syncTripMutation.mutateAsync(trip as Trip);
+      }
+      
+      // Refresh the trips list
+      await refetch();
+      
+      toast({
+        title: 'Sync complete',
+        description: `${pendingTrips.length} trips have been synced to your account`,
+      });
+    } catch (error) {
+      console.error('Error syncing trips:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Sync error',
+        description: 'Some trips could not be synced. Please try again later.',
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+  
+  // Handle edit trip
   const handleEditTrip = (id: number) => {
     // This would typically open a trip details view
     console.log(`Editing trip ${id}`);
   };
+  
+  // Handle connection status changes
+  useEffect(() => {
+    if (syncStatus.isOnline && !isLoading && !onlineTrips) {
+      refetch();
+    }
+  }, [syncStatus.isOnline, refetch, isLoading, onlineTrips]);
 
   return (
     <div className="container mx-auto px-4 py-6">
