@@ -570,214 +570,163 @@ export default function TripCard({
               <span className="text-xs text-gray-500">{itinerary?.length || 0} days</span>
             </div>
             
-            {/* Activity Timeline - Two Column Layout */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Left Column: Activity Timeline */}
-              <div className="md:col-span-1">
-                <h5 className="font-medium text-sm mb-3">Activity Timeline</h5>
-                {activities && activities.length > 0 ? (
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
-                    <ActivityTimelineView activities={activities} />
-                  </div>
-                ) : itinerary && itinerary.length > 0 ? (
-                  <div className="space-y-4">
-                    {itinerary.map((day, index) => (
-                      <div key={index} className="bg-gray-50 p-3 rounded-md">
-                        <h5 className="font-medium text-sm">Day {day.day}: {day.title || ''}</h5>
-                        <p className="text-xs text-gray-600 mt-1 mb-2">{day.description || ''}</p>
-                        
-                        {/* Activities List */}
-                        {day.activities && day.activities.length > 0 && (
-                          <div className="mt-2">
-                            <h6 className="text-xs font-medium text-gray-500 mb-1.5">Activities:</h6>
-                            <div className="space-y-2">
-                              {day.activities.map((activityName: string, actIndex: number) => {
-                                // Try to find the matching activity in the activities array
-                                const activity = activities && activities.find(a => 
-                                  a.title.toLowerCase() === activityName.toLowerCase() ||
-                                  activityName.toLowerCase().includes(a.title.toLowerCase())
-                                );
-                                
-                                return (
+            {/* Full-width Activity Timeline */}
+            <div>
+              {activities && activities.length > 0 ? (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                  <ActivityTimelineView activities={activities} />
+                </div>
+              ) : itinerary && itinerary.length > 0 ? (
+                <div className="space-y-4">
+                  {itinerary.map((day, index) => (
+                    <div key={index} className="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200">
+                      <h5 className="font-medium text-sm flex items-center mb-2">
+                        <Calendar className="h-4 w-4 mr-2 text-gray-500" />
+                        Day {day.day}: {day.title || ''}
+                      </h5>
+                      <p className="text-sm text-gray-600 mb-3">{day.description || ''}</p>
+                      
+                      {/* Activities List */}
+                      {day.activities && day.activities.length > 0 && (
+                        <div className="space-y-3 mt-3">
+                          <h6 className="text-xs font-medium text-gray-700 flex items-center">
+                            <Mountain className="h-4 w-4 mr-1.5 text-[#655590]" />
+                            Activities
+                          </h6>
+                          <div className="pl-1.5 border-l-2 border-l-gray-200 space-y-3">
+                            {day.activities.map((activityName: string, actIndex: number) => {
+                              // Try to find the matching activity in the activities array
+                              const activity = activities && activities.find(a => 
+                                a.title.toLowerCase() === activityName.toLowerCase() ||
+                                activityName.toLowerCase().includes(a.title.toLowerCase())
+                              );
+                              
+                              return (
+                                <div key={actIndex} className="pl-3 -ml-1.5 relative">
+                                  {/* Dot in timeline */}
+                                  <div className="absolute top-1.5 left-0 w-3 h-3 rounded-full bg-[#655590]"></div>
+                                  
                                   <div 
-                                    key={actIndex}
                                     className={cn(
-                                      "p-2 rounded-md border cursor-pointer transition-all",
+                                      "p-3 rounded-lg border cursor-pointer transition-all",
                                       selectedActivity === activityName 
-                                        ? "border-[#655590] bg-[#655590]/5" 
-                                        : "border-gray-200"
+                                        ? "border-[#655590] bg-white shadow-sm" 
+                                        : "border-gray-200 bg-gray-50 hover:bg-white"
                                     )}
                                     onClick={() => handleActivityClick(activityName)}
                                   >
                                     <div className="flex justify-between items-start">
-                                      <div>
-                                        <h6 className="text-sm font-medium">{activityName}</h6>
+                                      <div className="flex-1">
+                                        <h6 className="text-sm font-medium text-gray-800">{activityName}</h6>
                                         {activity && (
-                                          <div className="flex flex-wrap gap-2 mt-1">
-                                            <span className="text-xs bg-gray-200 px-1.5 py-0.5 rounded">
+                                          <div className="flex flex-wrap gap-2 mt-1.5">
+                                            <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-800">
                                               {activity.type}
                                             </span>
-                                            <span className="text-xs bg-gray-200 px-1.5 py-0.5 rounded">
+                                            <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
                                               {activity.difficulty}
                                             </span>
-                                            <span className="text-xs bg-gray-200 px-1.5 py-0.5 rounded">
+                                            <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-800">
                                               {activity.duration_hours}h
                                             </span>
                                           </div>
                                         )}
+                                        
+                                        {/* Expanded Info */}
+                                        {selectedActivity === activityName && activity && (
+                                          <div className="mt-3 pt-3 border-t border-dashed border-gray-200">
+                                            {/* Start/End Location */}
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+                                              <div className="flex items-center text-xs">
+                                                <Navigation className="h-3.5 w-3.5 mr-1.5 text-green-600 flex-shrink-0" />
+                                                <span className="text-gray-500 font-medium mr-1">Start:</span>
+                                                <span className="text-gray-700">{activity.start_location}</span>
+                                              </div>
+                                              <div className="flex items-center text-xs">
+                                                <MapPin className="h-3.5 w-3.5 mr-1.5 text-red-600 flex-shrink-0" />
+                                                <span className="text-gray-500 font-medium mr-1">End:</span>
+                                                <span className="text-gray-700">{activity.end_location}</span>
+                                              </div>
+                                            </div>
+                                            
+                                            {/* Highlights */}
+                                            {activity.highlights && activity.highlights.length > 0 && (
+                                              <div className="mt-2">
+                                                <h6 className="text-xs font-medium mb-1">Highlights:</h6>
+                                                <ul className="list-disc pl-4 text-xs space-y-1">
+                                                  {activity.highlights.slice(0, 2).map((highlight, i) => (
+                                                    <li key={i}>{highlight}</li>
+                                                  ))}
+                                                  {activity.highlights.length > 2 && (
+                                                    <li className="text-gray-500 italic">
+                                                      +{activity.highlights.length - 2} more highlights
+                                                    </li>
+                                                  )}
+                                                </ul>
+                                              </div>
+                                            )}
+                                                
+                                            {/* View on Map Button */}
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              className="mt-3 w-full text-xs"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (!isMapExpanded) toggleMapExpand();
+                                                scrollToMap();
+                                              }}
+                                            >
+                                              <Map className="h-3.5 w-3.5 mr-1.5" />
+                                              View Route on Map
+                                            </Button>
+                                          </div>
+                                        )}
                                       </div>
-                                      <div className="text-[#655590]">
-                                        {selectedActivity === activityName ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                                      </div>
+                                      
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className="h-6 w-6 p-0 rounded-full"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleActivityClick(activityName);
+                                        }}
+                                      >
+                                        {selectedActivity === activityName ? 
+                                          <ChevronUp size={16} className="text-gray-500" /> : 
+                                          <ChevronDown size={16} className="text-gray-500" />
+                                        }
+                                      </Button>
                                     </div>
                                   </div>
-                                );
-                              })}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Accommodation if available */}
+                      {day.accommodations && (
+                        <div className="mt-4 pt-3 border-t border-gray-200">
+                          <div className="flex items-center">
+                            <Home className="h-4 w-4 mr-2 text-amber-600" />
+                            <div>
+                              <h6 className="text-xs font-medium text-gray-700">Accommodation</h6>
+                              <p className="text-sm text-gray-600 mt-0.5">{day.accommodations}</p>
                             </div>
                           </div>
-                        )}
-                        
-                        {/* Accommodation if available */}
-                        {day.accommodations && (
-                          <div className="mt-3 pt-2 border-t border-dashed border-gray-200">
-                            <div className="flex items-center gap-1">
-                              <p className="text-xs text-gray-600">
-                                <span className="font-medium">Accommodations:</span> {day.accommodations}
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center text-gray-500 italic py-4">
-                    No itinerary information available
-                  </div>
-                )}
-              </div>
-              
-              {/* Right Column: Activity Details */}
-              <div className="md:col-span-2">
-                <h5 className="font-medium text-sm mb-3">Activity Details</h5>
-                {activeActivity ? (
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h3 className="font-medium text-base">{activeActivity.title}</h3>
-                        <div className="flex flex-wrap gap-2 mt-1.5">
-                          <span className="text-xs bg-gray-100 text-gray-800 px-2 py-0.5 rounded-full">
-                            {activeActivity.type}
-                          </span>
-                          <span className="text-xs bg-gray-100 text-gray-800 px-2 py-0.5 rounded-full">
-                            {activeActivity.difficulty}
-                          </span>
-                          <span className="text-xs bg-gray-100 text-gray-800 px-2 py-0.5 rounded-full">
-                            {activeActivity.duration_hours}h
-                          </span>
                         </div>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-xs"
-                        onClick={() => {
-                          if (!isMapExpanded) toggleMapExpand();
-                          scrollToMap();
-                        }}
-                      >
-                        <Map className="h-3.5 w-3.5 mr-1.5" />
-                        View on Map
-                      </Button>
+                      )}
                     </div>
-                    
-                    {/* Location Details */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                      <div className="flex items-center bg-gray-50 p-2 rounded">
-                        <Navigation className="h-4 w-4 mr-2 text-green-600" />
-                        <div>
-                          <div className="text-xs text-gray-500">Starting Point</div>
-                          <div className="text-sm">{activeActivity.start_location}</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center bg-gray-50 p-2 rounded">
-                        <MapPin className="h-4 w-4 mr-2 text-red-600" />
-                        <div>
-                          <div className="text-xs text-gray-500">Ending Point</div>
-                          <div className="text-sm">{activeActivity.end_location}</div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Route Details */}
-                    {activeActivity.route_details && (
-                      <div className="bg-gray-50 p-3 rounded mb-4">
-                        <h6 className="text-xs font-medium mb-2">Route Information</h6>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 text-sm">
-                          <div>
-                            <span className="text-xs text-gray-500 block">Distance</span>
-                            <span>{activeActivity.route_details.distance_miles} miles</span>
-                          </div>
-                          <div>
-                            <span className="text-xs text-gray-500 block">Elevation Gain</span>
-                            <span>{activeActivity.route_details.elevation_gain_ft} ft</span>
-                          </div>
-                          <div>
-                            <span className="text-xs text-gray-500 block">Route Type</span>
-                            <span>{activeActivity.route_details.route_type}</span>
-                          </div>
-                          <div>
-                            <span className="text-xs text-gray-500 block">High Point</span>
-                            <span>{activeActivity.route_details.high_point_ft} ft</span>
-                          </div>
-                          <div>
-                            <span className="text-xs text-gray-500 block">Terrain</span>
-                            <span>{activeActivity.route_details.terrain}</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Highlights & Hazards in tabs */}
-                    <Tabs defaultValue="highlights">
-                      <TabsList className="mb-2">
-                        <TabsTrigger value="highlights">Highlights</TabsTrigger>
-                        <TabsTrigger value="hazards">Hazards</TabsTrigger>
-                      </TabsList>
-                      <TabsContent value="highlights">
-                        {activeActivity.highlights && activeActivity.highlights.length > 0 ? (
-                          <ul className="list-disc pl-5 space-y-1">
-                            {activeActivity.highlights.map((highlight, idx) => (
-                              <li key={idx} className="text-sm">{highlight}</li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="text-sm text-gray-500 italic">No highlights listed</p>
-                        )}
-                      </TabsContent>
-                      <TabsContent value="hazards">
-                        {activeActivity.hazards && activeActivity.hazards.length > 0 ? (
-                          <ul className="list-disc pl-5 space-y-1 text-amber-700">
-                            {activeActivity.hazards.map((hazard, idx) => (
-                              <li key={idx} className="text-sm">{hazard}</li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="text-sm text-gray-500 italic">No hazards listed</p>
-                        )}
-                      </TabsContent>
-                    </Tabs>
-                  </div>
-                ) : (
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-                    <Map className="h-10 w-10 mx-auto mb-3 text-gray-400" />
-                    <h5 className="text-sm font-medium text-gray-700 mb-1">Select an Activity</h5>
-                    <p className="text-xs text-gray-500">
-                      Choose an activity from the timeline to view detailed information and route maps
-                    </p>
-                  </div>
-                )}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-gray-500 italic py-6 bg-gray-50 rounded-lg border border-gray-200">
+                  No itinerary information available
+                </div>
+              )}
             </div>
           </div>
           
