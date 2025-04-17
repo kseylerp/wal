@@ -1,48 +1,48 @@
-import { Journey, ItineraryDay, Marker } from './chat';
+// Point of Interest for activities
+export interface PointOfInterest {
+  name: string;
+  description?: string;
+  coordinates: [number, number]; // [longitude, latitude]
+  type?: 'viewpoint' | 'rest' | 'water' | 'photo' | 'landmark' | 'danger';
+}
 
-export interface TripCardProps {
+// Activity interface
+export interface Activity {
+  id?: string;
+  title: string;
+  type?: string;
+  description?: string;
+  day?: number;
+  difficulty?: string;
+  duration_hours?: number;
+  distance?: number;
+  elevation_gain?: number;
+  location?: string;
+  route?: [number, number][]; // Array of [longitude, latitude] coordinates
+  start_location?: [number, number];
+  end_location?: [number, number];
+  highlights?: string[];
+  hazards?: string[];
+  water_sources?: string[];
+  photo_spots?: string[];
+  points_of_interest?: PointOfInterest[];
+  requiresPermit?: boolean;
+  bestTimeOfDay?: string;
+  bestTimeOfYear?: string;
+}
+
+// Trip interface (simplified for this component)
+export interface TripData {
   id: string;
   title: string;
   description: string;
-  whyWeChoseThis: string;
-  difficultyLevel: string;
-  priceEstimate: string;
-  duration: string;
   location: string;
-  suggestedGuides: string[];
-  mapCenter: [number, number];
-  markers: Marker[];
-  journey: Journey;
-  itinerary: ItineraryDay[];
-  onModifyRequest: (tripId: string) => void;
-}
-
-export interface JourneyMapProps {
-  mapId: string;
-  center: [number, number];
-  markers: Marker[];
-  journey: Journey;
-  isExpanded: boolean;
-  toggleExpand: () => void;
-}
-
-export interface ItineraryListProps {
-  itinerary: ItineraryDay[];
-  suggestedGuides: string[];
-  onActivityClick?: (activity: string, coordinates: [number, number][]) => void;
-  onActivityHover?: (activity: string, isHovering: boolean) => void;
-  journey?: Journey;
-}
-
-export interface SegmentOption {
-  id: string;
-  label: string;
-  mode: string;
-  from: string;
-  to: string;
-}
-
-export interface ActivityOption {
-  type: string;
-  duration: string;
+  mapCenter: [number, number]; // [longitude, latitude]
+  journeyData: {
+    markers: any[];
+    segments: any[];
+    bounds: [[number, number], [number, number]];
+  };
+  activities?: Activity[];
+  // Other trip properties...
 }

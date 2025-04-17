@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'wouter';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { getQueryFn, apiRequest, queryClient } from '@/lib/queryClient';
@@ -175,7 +176,7 @@ export default function SavedTrips() {
             Retry
           </Button>
         </div>
-      ) : trips?.length === 0 ? (
+      ) : displayedTrips.length === 0 ? (
         <div className="bg-gray-50 rounded-lg p-8 text-center">
           <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
             <svg 
